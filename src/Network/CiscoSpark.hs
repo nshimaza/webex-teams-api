@@ -75,6 +75,7 @@ module Network.CiscoSpark
 
     , Timestamp (..)
     -- * Functions
+    , streamPersonList
     , getPersonDetail
     , getPersonDetailEither
     , streamTeamList
@@ -131,7 +132,7 @@ isNextRel = hasNextRel . linkHeaderParams
 
 
 
-
+-- | Building common part of 'Request' for List APIs.
 makeCommonListReq
     :: Request      -- ^ Common request components
     -> ByteString   -- ^ API category part of REST URL path
@@ -140,6 +141,11 @@ makeCommonListReq base path = setRequestPath ("/v1/" <> path)
                             $ setRequestMethod "GET"
                             $ base
 
+{-|
+    Common worker function for List APIs.
+    It accesses List API with given 'Request', unwrap result into list of items, stream them to Conduit pipe
+    and finally it automatically accesses next page designated via HTTP Link header if available.
+-}
 streamList :: (MonadIO m, SparkListItem i) => Authorization -> Request -> Source m i
 streamList auth req = do
     res <- httpJSON $ addAuthorizationHeader auth req
@@ -159,28 +165,8 @@ streamListLoop auth res = case getNextUrl res of
 streamTeamList :: MonadIO m => Authorization -> Request -> Source m Team
 streamTeamList auth base = streamList auth $ makeCommonListReq base "teams"
 
--- streamTeamList' :: MonadIO m => Request -> Authorization -> Source m Team
--- streamTeamList' base auth = do
---     let req = addAuthorizationHeader auth $ makeCommonListReq base "teams"
---     res <- httpJSON req
---     let (TeamList teams) = getResponseBody res
---     yieldMany teams
---     streamRestTeamList base auth res
---
--- streamRestTeamList :: MonadIO m => Request -> Authorization -> Response TeamList -> Source m Team
--- streamRestTeamList base auth res = do
---     case getNextUrl res of
---         Nothing     -> pure ()
---         Just url    -> do
---             let maybeNextReq = parseRequest $ "GET " <> (C8.unpack url)
---             case maybeNextReq of
---                 Nothing         -> pure ()
---                 Just nextReq    -> do
---                     nextRes <- httpJSON $ addAuthorizationHeader auth $ nextReq
---                     let (TeamList teams) = getResponseBody nextRes
---                     yieldMany teams
---                     streamRestTeamList base auth nextRes
-
+streamPersonList :: MonadIO m => Authorization -> Request -> Source m Person
+streamPersonList auth base = streamList auth $ makeCommonListReq base "people"
 
 
 makeCommonDetailReq

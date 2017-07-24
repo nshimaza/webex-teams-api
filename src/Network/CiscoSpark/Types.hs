@@ -22,7 +22,7 @@ import           Data.Text                   (Text)
 
 import           Network.CiscoSpark.Internal
 
-class (FromJSON (ToList i)) => SparkListItem i where
+class FromJSON (ToList i) => SparkListItem i where
     type ToList i :: *
     unwrap :: ToList i -> [i]
 

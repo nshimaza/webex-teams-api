@@ -182,6 +182,45 @@ spec = do
                              , personLoginEnabled  = Just True
                              , personType          = Nothing
                              }
+            personGen i = Person { personId            = PersonId . pack $ "PersonId" <> i
+                                 , personEmails        = [Email . pack $ "email" <> i <> "@foomail.com", Email . pack $ "email" <> i <> "@barmail.com"]
+                                 , personDisplayName   = DisplayName . pack $ "John Andersen" <> i
+                                 , personNickName      = Nothing
+                                 , personFirstName     = Just (FirstName . pack $ "John" <> i)
+                                 , personLastName      = Just (LastName . pack $ "Andersen" <> i)
+                                 , personAvatar        = Just (AvatarUrl . pack $ "https://AvatarUrl" <> i)
+                                 , personOrgId         = OrganizationId . pack $ "OrganizationId" <> i
+                                 , personRoles         = Just [ RoleId . pack $ "RoleIdA" <> i
+                                                              , RoleId . pack $ "RoleIdB" <> i]
+                                 , personLicenses      = Just [ LicenseId . pack $ "LicenseIdX" <> i
+                                                              , LicenseId . pack $ "LicenseIdY" <> i]
+                                 , personCreated       = Timestamp . pack $ "Created" <> i
+                                 , personTimezone      = Just (Timezone . pack $ "Timezone" <> i)
+                                 , personLastActivity  = Just (Timestamp . pack $ "LastActivity" <> i)
+                                 , personStatus        = Just PersonStatusActive
+                                 , personInvitePending = Just False
+                                 , personLoginEnabled  = Just True
+                                 , personType          = Nothing
+                                 }
+            personList j = [ personGen $ j ++ show i | i <- [1..3] ]
+            personListList = [ personList [c] | c <- ['a'..'d'] ]
+
+        it "streamPersonList streams Team" $ do
+            let testData = personList $ ['Z']
+            svr <- startMockServer $ simpleApp $ encode (PersonList testData)
+
+            res <- runConduit $ streamPersonList dummyAuth mockBaseRequest .| sinkList
+            res `shouldBe` testData
+
+            stopMockServer svr
+
+        it "streamPersonList streams Team with automatic pagination" $ do
+            svr <- startMockServer $ paginationApp $ map (\pl -> encode $ PersonList pl) personListList
+
+            res <- runConduit $ streamPersonList dummyAuth mockBaseRequest .| sinkList
+            res `shouldBe` concat personListList
+
+            stopMockServer svr
 
         it "getPersonDetail returns a Person" $ do
             receivedReqMVar <- newEmptyMVar
@@ -225,7 +264,7 @@ spec = do
                         , teamCreated   = Timestamp "2015-10-18T14:26:16+00:00"
                         }
 
-        it "getTeamList streams Team" $ do
+        it "streamTeamList streams Team" $ do
             let testData = teamList $ ['Z']
             svr <- startMockServer $ simpleApp $ encode (TeamList testData)
 
@@ -234,7 +273,7 @@ spec = do
 
             stopMockServer svr
 
-        it "getTeamList streams Team with automatic pagination" $ do
+        it "streamTeamList streams Team with automatic pagination" $ do
             svr <- startMockServer $ paginationApp $ map (\tl -> encode $ TeamList tl) teamListList
 
             res <- runConduit $ streamTeamList dummyAuth mockBaseRequest .| sinkList
