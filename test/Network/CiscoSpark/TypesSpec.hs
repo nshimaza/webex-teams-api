@@ -7,7 +7,7 @@ import           Data.Monoid                  ((<>))
 
 import           Test.Hspec
 
-import           Network.CiscoSpark
+import           Network.CiscoSpark.Types
 
 spec :: Spec
 spec = do
@@ -86,6 +86,9 @@ spec = do
             personListJson = "{\"items\":[" <> personJson1 <> "," <> personJson2 <> "]}"
             personList = PersonList [ person1, person2 ]
 
+        it "can be unwrapped from PersonList" $ do
+            unwrap personList `shouldBe` [ person1, person2 ]
+
         it "decodes People API response JSON" $ do
             eitherDecode personJson1 `shouldBe` Right person1
             (decode . encode) person1 `shouldBe` Just person1
@@ -139,6 +142,9 @@ spec = do
             teamListJson = "{\"items\":[" <> teamJson <> "]}"
             teamList = TeamList [ team ]
 
+        it "can be unwrapped from TeamList" $ do
+            unwrap teamList `shouldBe` [ team ]
+
         it "decodes Team API response JSON" $ do
             eitherDecode teamJson `shouldBe` Right team
             (decode . encode) team `shouldBe` Just team
@@ -181,6 +187,9 @@ spec = do
                                             }
             teamMembershipListJson = "{\"items\":[" <> teamMembershipJson <> "]}"
             teamMembershipList = TeamMembershipList [ teamMembership ]
+
+        it "can be unwrapped from TeamMembershipList" $ do
+            unwrap teamMembershipList `shouldBe` [ teamMembership ]
 
         it "decodes Team Membership API response JSON" $ do
             eitherDecode teamMembershipJson `shouldBe` Right teamMembership
