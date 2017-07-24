@@ -140,11 +140,13 @@ makeCommonListReq base path = setRequestPath ("/v1/" <> path)
                             $ setRequestMethod "GET"
                             $ base
 
--- streamList :: (MonadIO m, FromJSON a) => Request -> Authorization -> Source m a
+-- streamList :: (MonadIO m, SparkList a, FromJSON a) => Request -> Authorization -> Source m a
 -- streamList req auth = do
 --     res <- httpJSON $ addAuthorizationHeader auth $ req
---     let (TeamList teams) = getResponseBody res
---     yieldMany teams
+--     let listDetail = getResponseBody res
+--     let list = unwrap listDetail
+--     yieldMany list
+--     yieldMany $ unwrap $ getResponseBody res
 --     streamRestTeamList base auth res
 
 

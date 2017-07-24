@@ -21,9 +21,9 @@ import           Data.Text                   (Text)
 
 import           Network.CiscoSpark.Internal
 
-class SparkList l where
-    type Elem l :: *
-    unwrap :: l -> [Elem l]
+class SparkListItem i where
+    type ToList i :: *
+    unwrap :: ToList i -> [i]
 
 {-| Type representing timestamp.  For now, it is just copied from API response JSON.  -}
 newtype Timestamp   = Timestamp Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
@@ -117,13 +117,13 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 6, omitNothingFiel
 
 {-| 'PersonList' is decoded from response JSON of List People REST call.  It is list of 'Person'. -}
 newtype PersonList = PersonList { personListItems :: [Person] } deriving (Eq, Show)
+$(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFields = True } ''PersonList)
+-- ^ 'PersonList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
-instance SparkList PersonList where
-    type Elem PersonList = Person
+instance SparkListItem Person where
+    type ToList Person = PersonList
     unwrap = personListItems
 
--- | 'PersonList' derives ToJSON and FromJSON via deriveJSON template haskell function.
-$(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFields = True } ''PersonList)
 
 {-| 'CreatePerson' is encoded to request body JSON of Create a Person REST call. -}
 data CreatePerson = CreatePerson
@@ -177,13 +177,12 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 4, omitNothingFiel
 
 {-| 'TeamList' is decoded from response JSON of List Teams REST call.  It is list of 'Team'. -}
 newtype TeamList = TeamList { teamListItems :: [Team] } deriving (Eq, Show)
-
-instance SparkList TeamList where
-    type Elem TeamList = Team
-    unwrap = teamListItems
-
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 8, omitNothingFields = True } ''TeamList)
 -- ^ 'TeamList' derives ToJSON and FromJSON via deriveJSON template haskell function.
+
+instance SparkListItem Team where
+    type ToList Team = TeamList
+    unwrap = teamListItems
 
 {-| 'CreateTeam' is encoded to request body JSON of Create a Team REST call. -}
 newtype CreateTeam = CreateTeam { createTeamName :: TeamName } deriving (Eq, Show)
@@ -221,13 +220,12 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 14, omitNothingFie
 
 {-| 'TeamMembershipList' is decoded from response JSON of List Team Memberships REST call.  It is list of 'TeamMembership'. -}
 newtype TeamMembershipList = TeamMembershipList { teamMembershipListItems :: [TeamMembership] } deriving (Eq, Show)
-
-instance SparkList TeamMembershipList where
-    type Elem TeamMembershipList = TeamMembership
-    unwrap = teamMembershipListItems
-
--- | 'TeamMembershipList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 18, omitNothingFields = True } ''TeamMembershipList)
+-- ^ 'TeamMembershipList' derives ToJSON and FromJSON via deriveJSON template haskell function.
+
+instance SparkListItem TeamMembership where
+    type ToList TeamMembership = TeamMembershipList
+    unwrap = teamMembershipListItems
 
 {-| 'CreateTeamMembership' is encoded to request body JSON of Create a Team Membership REST call. -}
 data CreateTeamMembership = CreateTeamMembership
@@ -284,13 +282,8 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 4, omitNothingFiel
 
 {-| 'RoomList' is decoded from response JSON of List Rooms REST call.  It is list of 'Room'. -}
 newtype RoomList = RoomList { roomListItems :: [Room] } deriving (Eq, Show)
-
-instance SparkList RoomList where
-    type Elem RoomList = Room
-    unwrap = roomListItems
-
--- | 'RoomList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 8, omitNothingFields = True } ''RoomList)
+-- ^ 'RoomList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 {-| 'CreateRoom' is encoded to request body JSON of Create a Room REST call. -}
 data CreateRoom = CreateRoom
@@ -343,13 +336,8 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 7, omitNothingFiel
 
 {-| 'MessageList' is decoded from response JSON of List Messages REST call.  It is list of 'Message'. -}
 newtype MessageList = MessageList { messageListItems :: [Message] } deriving (Eq, Show)
-
-instance SparkList MessageList where
-    type Elem MessageList = Message
-    unwrap = messageListItems
-
--- | 'MessageList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 11, omitNothingFields = True } ''MessageList)
+-- ^ 'MessageList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 {-| 'CreateMessage' is encoded to request body JSON of Create a Message REST call. -}
 data CreateMessage = CreateMessage
@@ -391,13 +379,8 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFie
 
 {-| 'MembershipList' is decoded from response JSON of List Memberships REST call.  It is list of 'Membership'. -}
 newtype MembershipList = MembershipList { membershipListItems :: [Membership] } deriving (Eq, Show)
-
-instance SparkList MembershipList where
-    type Elem MembershipList = Membership
-    unwrap = membershipListItems
-
--- | 'MembershipList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 14, omitNothingFields = True } ''MembershipList)
+-- ^ 'MembershipList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 {-| 'CreateMembership' is encoded to request body JSON of Create a Membership REST call. -}
 data CreateMembership = CreateMembership
@@ -436,13 +419,8 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 12, omitNothingFie
 
 {-| 'OrganizationList' is decoded from response JSON of List Organizations REST call.  It is list of 'Organization'. -}
 newtype OrganizationList = OrganizationList { organizationListItems :: [Organization] } deriving (Eq, Show)
-
-instance SparkList OrganizationList where
-    type Elem OrganizationList = Organization
-    unwrap = organizationListItems
-
--- | 'OrganizationList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 16, omitNothingFields = True } ''OrganizationList)
+-- ^ 'OrganizationList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 {-| Display name of License -}
 newtype LicenseDisplayName  = LicenseDisplayName Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
@@ -466,13 +444,8 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 7, omitNothingFiel
 
 {-| 'LicenseList' is decoded from response JSON of List Licenses REST call.  It is list of 'License'. -}
 newtype LicenseList = LicenseList { licenseListItems :: [License] } deriving (Eq, Show)
-
-instance SparkList LicenseList where
-    type Elem LicenseList = License
-    unwrap = licenseListItems
-
--- | 'LicenseList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 11, omitNothingFields = True } ''LicenseList)
+-- ^ 'LicenseList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 {-| Name of 'Role' -}
 newtype RoleName    = RoleName Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
@@ -492,12 +465,7 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 4, omitNothingFiel
 
 {-| 'RoleList' is decoded from response JSON of List Role REST call.  It is list of 'Role'. -}
 newtype RoleList = RoleList { roleListItems :: [Role] } deriving (Eq, Show)
-
-instance SparkList RoleList where
-    type Elem RoleList = Role
-    unwrap = roleListItems
-
--- | 'RoleList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 8, omitNothingFields = True } ''RoleList)
+-- ^ 'RoleList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 
