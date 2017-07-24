@@ -214,7 +214,7 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp (encode (PersonList testData)) req respond
 
-            res <- runConduit $ streamPersonList dummyAuth mockBaseRequest .| sinkList
+            res <- runConduit $ streamPersonList dummyAuth mockBaseRequest defaultPersonQuery .| sinkList
             res `shouldBe` testData
             path <- rawPathInfo <$> takeMVar receivedReqMVar
             path `shouldBe` "/v1/people"
@@ -225,7 +225,7 @@ spec = do
         it "streamPersonList streams Team with automatic pagination" $ do
             svr <- startMockServer $ paginationApp $ map (\pl -> encode $ PersonList pl) personListList
 
-            res <- runConduit $ streamPersonList dummyAuth mockBaseRequest .| sinkList
+            res <- runConduit $ streamPersonList dummyAuth mockBaseRequest defaultPersonQuery .| sinkList
             res `shouldBe` concat personListList
 
             stopMockServer svr

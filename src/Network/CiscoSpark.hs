@@ -75,6 +75,7 @@ module Network.CiscoSpark
 
     , Timestamp (..)
     -- * Functions
+    , defaultPersonQuery
     , streamPersonList
     , getPersonDetail
     , getPersonDetailEither
@@ -88,6 +89,7 @@ import           Conduit
 import           Data.Aeson                  (FromJSON)
 import           Data.ByteString             (ByteString)
 import           Data.ByteString.Char8        as C8 (unpack)
+import Data.Maybe (maybeToList)
 import           Data.Monoid                 ((<>))
 import           Data.Text                   (Text)
 import           Data.Text.Encoding          (encodeUtf8)
@@ -162,11 +164,17 @@ streamListLoop auth res = case getNextUrl res of
             yieldMany . unwrap $ getResponseBody nextRes
             streamListLoop auth nextRes
 
+streamPersonList :: MonadIO m => Authorization -> Request -> PersonQuery -> Source m Person
+streamPersonList auth base query = do
+    let email       = maybeToList $ (\(Email e) -> ("email", Just (encodeUtf8 e))) <$> personQueryEmail query
+        displayName = maybeToList $ (\(DisplayName n) -> ("displayName", Just (encodeUtf8 n))) <$> personQueryDisplayName query
+        orgId       = maybeToList $ (\(OrganizationId o) -> ("orgId", Just (encodeUtf8 o))) <$> personQueryOrgId query
+        queryList   = email <> displayName <> orgId
+    streamList auth $ setRequestQueryString queryList $ makeCommonListReq base "people"
+
 streamTeamList :: MonadIO m => Authorization -> Request -> Source m Team
 streamTeamList auth base = streamList auth $ makeCommonListReq base "teams"
 
-streamPersonList :: MonadIO m => Authorization -> Request -> Source m Person
-streamPersonList auth base = streamList auth $ makeCommonListReq base "people"
 
 
 makeCommonDetailReq

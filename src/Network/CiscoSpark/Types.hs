@@ -18,7 +18,9 @@ import           Data.Aeson.TH               (constructorTagModifier,
                                               defaultOptions, deriveJSON,
                                               fieldLabelModifier,
                                               omitNothingFields)
+import           Data.ByteString             (ByteString)
 import           Data.Text                   (Text)
+import Data.Text.Encoding (encodeUtf8)
 
 import           Network.CiscoSpark.Internal
 
@@ -125,6 +127,14 @@ instance SparkListItem Person where
     type ToList Person = PersonList
     unwrap = personListItems
 
+data PersonQuery = PersonQuery
+    { personQueryEmail       :: Maybe Email
+    , personQueryDisplayName :: Maybe DisplayName
+    , personQueryOrgId       :: Maybe OrganizationId
+    } deriving (Eq, Show)
+
+defaultPersonQuery :: PersonQuery
+defaultPersonQuery = PersonQuery Nothing Nothing Nothing
 
 {-| 'CreatePerson' is encoded to request body JSON of Create a Person REST call. -}
 data CreatePerson = CreatePerson
@@ -228,6 +238,11 @@ instance SparkListItem TeamMembership where
     type ToList TeamMembership = TeamMembershipList
     unwrap = teamMembershipListItems
 
+newtype TeamMembershipQuery = TeamMembershipQuery { teamMembershipQueryTeamId :: Maybe TeamId } deriving (Eq, Show)
+
+defaultTeamMembershipQuery :: TeamMembershipQuery
+defaultTeamMembershipQuery = TeamMembershipQuery Nothing
+
 {-| 'CreateTeamMembership' is encoded to request body JSON of Create a Team Membership REST call. -}
 data CreateTeamMembership = CreateTeamMembership
     { createTeamMembershipTeamId      :: TeamId         -- ^ Identifier of 'Team' which the user will be added to.
@@ -290,6 +305,18 @@ instance SparkListItem Room where
     type ToList Room = RoomList
     unwrap = roomListItems
 
+data RoomQuery = RoomQuery
+    { roomQueryTeamId   :: Maybe TeamId
+    , roomQueryRoomType :: Maybe RoomType
+    } deriving (Eq, Show)
+
+defaultRoomQuery :: RoomQuery
+defaultRoomQuery = RoomQuery Nothing Nothing
+
+roomTypeToQueryString :: RoomType -> ByteString
+roomTypeToQueryString RoomTypeDirect = "direct"
+roomTypeToQueryString RoomTypeGroup  = "group"
+
 {-| 'CreateRoom' is encoded to request body JSON of Create a Room REST call. -}
 data CreateRoom = CreateRoom
     { createRoomTitle  :: RoomTitle     -- ^ Title text of newly created Room.
@@ -348,6 +375,22 @@ instance SparkListItem Message where
     type ToList Message = MessageList
     unwrap = messageListItems
 
+data MentionedPeople = MentionedPeopleMe | MentionedPeople PersonId deriving (Eq, Show)
+
+data MessageQuery = MessageQuery
+    { messageQueryRoomId          :: RoomId
+    , messageQueryMentionedPeople :: Maybe MentionedPeople
+    , messageQueryBefore          :: Maybe Timestamp
+    , messageQueryBeforeMessage   :: Maybe MessageId
+    } deriving (Eq, Show)
+
+defaultMessageQuery :: RoomId -> MessageQuery
+defaultMessageQuery roomId = MessageQuery roomId Nothing Nothing Nothing
+
+mentionedPeopleToQueryString :: MentionedPeople -> ByteString
+mentionedPeopleToQueryString MentionedPeopleMe                     = "me"
+mentionedPeopleToQueryString (MentionedPeople (PersonId personId)) = encodeUtf8 personId
+
 {-| 'CreateMessage' is encoded to request body JSON of Create a Message REST call. -}
 data CreateMessage = CreateMessage
     { createMessageRoomId        :: Maybe RoomId            -- ^ Identifier of the 'Room' the message will be posted to.
@@ -394,6 +437,15 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 14, omitNothingFie
 instance SparkListItem Membership where
     type ToList Membership = MembershipList
     unwrap = membershipListItems
+
+data MembershipQuery = MembershipQuery
+    { membershipQueryRoomId      :: Maybe RoomId
+    , membershipQueryPersonId    :: Maybe PersonId
+    , membershipQueryPersonEmail :: Maybe Email
+    } deriving (Eq, Show)
+
+defaultMembershipQuery :: MembershipQuery
+defaultMembershipQuery = MembershipQuery Nothing Nothing Nothing
 
 {-| 'CreateMembership' is encoded to request body JSON of Create a Membership REST call. -}
 data CreateMembership = CreateMembership
@@ -467,6 +519,11 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 11, omitNothingFie
 instance SparkListItem License where
     type ToList License = LicenseList
     unwrap = licenseListItems
+
+newtype LicenseQuery = LicenseQuery { licenseQueryOrgId :: Maybe OrganizationId } deriving (Eq, Show)
+
+defaultLicenseQuery :: LicenseQuery
+defaultLicenseQuery = LicenseQuery Nothing
 
 {-| Name of 'Role' -}
 newtype RoleName    = RoleName Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
