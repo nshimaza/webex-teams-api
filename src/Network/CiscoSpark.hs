@@ -81,7 +81,6 @@ module Network.CiscoSpark
     , getTeamDetailEither
     , getTeamDetail
     , ciscoSparkBaseRequest
-    , addAuthorizationHeader
     ) where
 
 import           Conduit
@@ -103,12 +102,13 @@ import           Network.CiscoSpark.Types
 
 
 
-
+-- | Authorization string against Spark API to be contained in HTTP Authorization header of every request.
 newtype Authorization = Authorization ByteString deriving (Eq, Show)
 
 makeReqPath :: ByteString -> ByteString
 makeReqPath path = "/v1/" <> path
 
+-- | Common part of 'Request' against Spark API.
 ciscoSparkBaseRequest :: Request
 ciscoSparkBaseRequest
     = addRequestHeader "Content-Type" "application/json; charset=utf-8"
@@ -141,51 +141,53 @@ makeCommonListReq base path = setRequestPath ("/v1/" <> path)
                             $ base
 
 
-streamTeamList :: MonadIO m => Request -> Source m Team
-streamTeamList base = do
-    let req = makeCommonListReq base "teams"
+streamTeamList :: MonadIO m => Request -> Authorization -> Source m Team
+streamTeamList base auth = do
+    let req = addAuthorizationHeader auth $ makeCommonListReq base "teams"
     res <- httpJSON req
     let (TeamList teams) = getResponseBody res
     yieldMany teams
-    streamRestTeamList base res
+    streamRestTeamList base auth res
 
-streamRestTeamList :: MonadIO m => Request -> Response TeamList -> Source m Team
-streamRestTeamList base res = do
+streamRestTeamList :: MonadIO m => Request -> Authorization -> Response TeamList -> Source m Team
+streamRestTeamList base auth res = do
     case getNextUrl res of
         Nothing     -> pure ()
         Just url    -> do
-            let auth = head $ getRequestHeader "Authorization" base
             let maybeNextReq = parseRequest $ "GET " <> (C8.unpack url)
             case maybeNextReq of
                 Nothing         -> pure ()
                 Just nextReq    -> do
-                    nextRes <- httpJSON $ addRequestHeader "Authorization" auth $ nextReq
+                    nextRes <- httpJSON $ addAuthorizationHeader auth $ nextReq
                     let (TeamList teams) = getResponseBody nextRes
                     yieldMany teams
-                    streamRestTeamList base nextRes
+                    streamRestTeamList base auth nextRes
 
 
 
 makeCommonDetailReq
-    :: Request      -- ^ Common request components
-    -> ByteString   -- ^ API category part of REST URL path
-    -> Text         -- ^ Identifier string part of REST URL path
+    :: Request          -- ^ Common request components.
+    -> Authorization    -- ^ Authorization string against Spark API.
+    -> ByteString       -- ^ API category part of REST URL path.
+    -> Text             -- ^ Identifier string part of REST URL path.
     -> Request
-makeCommonDetailReq base path idStr = setRequestPath ("/v1/" <> path <> "/" <> encodeUtf8 idStr)
-                                    $ setRequestMethod "GET"
-                                    $ base
+makeCommonDetailReq base auth path idStr
+    = setRequestPath ("/v1/" <> path <> "/" <> encodeUtf8 idStr)
+    $ setRequestMethod "GET"
+    $ addAuthorizationHeader auth
+    $ base
 
-getTeamDetail :: MonadIO m => Request -> TeamId -> m (Response Team)
-getTeamDetail base (TeamId idStr) = httpJSON $ makeCommonDetailReq base "teams" idStr
+getTeamDetail :: MonadIO m => Request -> Authorization -> TeamId -> m (Response Team)
+getTeamDetail base auth (TeamId idStr) = httpJSON $ makeCommonDetailReq base auth "teams" idStr
 
-getTeamDetailEither :: MonadIO m => Request -> TeamId -> m (Response (Either JSONException Team))
-getTeamDetailEither base (TeamId idStr) = httpJSONEither $ makeCommonDetailReq base "teams" idStr
+getTeamDetailEither :: MonadIO m => Request -> Authorization -> TeamId -> m (Response (Either JSONException Team))
+getTeamDetailEither base auth (TeamId idStr) = httpJSONEither $ makeCommonDetailReq base auth "teams" idStr
 
-getPersonDetail :: MonadIO m => Request -> PersonId -> m (Response Person)
-getPersonDetail base (PersonId idStr) = httpJSON $ makeCommonDetailReq base "people" idStr
+getPersonDetail :: MonadIO m => Request -> Authorization -> PersonId -> m (Response Person)
+getPersonDetail base auth (PersonId idStr) = httpJSON $ makeCommonDetailReq base auth "people" idStr
 
-getPersonDetailEither :: MonadIO m => Request -> PersonId -> m (Response (Either JSONException Person))
-getPersonDetailEither base (PersonId idStr) = httpJSONEither $ makeCommonDetailReq base "people" idStr
+getPersonDetailEither :: MonadIO m => Request -> Authorization -> PersonId -> m (Response (Either JSONException Person))
+getPersonDetailEither base auth (PersonId idStr) = httpJSONEither $ makeCommonDetailReq base auth "people" idStr
 
 
 

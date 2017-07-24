@@ -44,8 +44,8 @@ mockBaseRequest
     $ C.setRequestSecure False
     $ C.defaultRequest
 
-mockCommonRequest :: C.Request
-mockCommonRequest = addAuthorizationHeader (Authorization "dummyAuth") mockBaseRequest
+dummyAuth :: Authorization
+dummyAuth = Authorization "dummyAuth"
 
 extractRight :: Show err => Either err r -> r
 extractRight (Right r)  = r
@@ -102,7 +102,7 @@ spec = do
             receivedReqMVar <- newEmptyMVar
             let req = setRequestPath ("/v1/teams")
                     $ setRequestMethod "GET"
-                    $ mockCommonRequest
+                    $ mockBaseRequest
                 testData = TeamList $ teamList ['Z']
 
             svr <- startMockServer $ \req respond -> do
@@ -116,14 +116,13 @@ spec = do
             receivedReq <- takeMVar receivedReqMVar
             requestMethod receivedReq `shouldBe` "GET"
             rawPathInfo receivedReq `shouldBe` "/v1/teams"
-            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
             (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
 
         it "pagenation mock app returns list of team and Link header" $ do
             receivedReqMVar <- newEmptyMVar
             let req = setRequestPath ("/v1/teams")
                     $ setRequestMethod "GET"
-                    $ mockCommonRequest
+                    $ mockBaseRequest
                 testData = map (\tl -> encode $ TeamList tl) teamListList
 
             svr <- startMockServer $ \req respond -> do
@@ -140,7 +139,7 @@ spec = do
             path `shouldBe` Just "http://localhost:3000/1"
 
             req2 <- parseRequest $ "GET " <> (C8.unpack $ fromJust path)
-            res2 <- httpJSON $ addAuthorizationHeader (Authorization "dummyAuth") req2
+            res2 <- httpJSON req2
             getResponseBody res2 `shouldBe` TeamList (teamListList !! 1)
 
             stopMockServer svr
@@ -191,7 +190,7 @@ spec = do
                 putMVar receivedReqMVar req
                 respond $ responseLBS status200 [] personJson1
 
-            resPerson <- getResponseBody <$> getPersonDetail mockCommonRequest (PersonId "testPersonId")
+            resPerson <- getResponseBody <$> getPersonDetail mockBaseRequest dummyAuth (PersonId "testPersonId")
             resPerson `shouldBe` person1
 
             stopMockServer svr
@@ -208,7 +207,7 @@ spec = do
                 putMVar receivedReqMVar req
                 respond $ responseLBS status200 [] personJson1
 
-            (Right resPerson) <- getResponseBody <$> getPersonDetailEither mockCommonRequest (PersonId "testPersonId")
+            (Right resPerson) <- getResponseBody <$> getPersonDetailEither mockBaseRequest dummyAuth (PersonId "testPersonId")
             resPerson `shouldBe` person1
 
             stopMockServer svr
@@ -230,7 +229,7 @@ spec = do
             let testData = teamList $ ['Z']
             svr <- startMockServer $ simpleApp $ encode (TeamList testData)
 
-            res <- runConduit $ streamTeamList mockCommonRequest .| sinkList
+            res <- runConduit $ streamTeamList mockBaseRequest dummyAuth .| sinkList
             res `shouldBe` testData
 
             stopMockServer svr
@@ -238,7 +237,7 @@ spec = do
         it "getTeamList streams Team with automatic pagination" $ do
             svr <- startMockServer $ paginationApp $ map (\tl -> encode $ TeamList tl) teamListList
 
-            res <- runConduit $ streamTeamList mockCommonRequest .| sinkList
+            res <- runConduit $ streamTeamList mockBaseRequest dummyAuth .| sinkList
             res `shouldBe` concat teamListList
 
             stopMockServer svr
@@ -250,7 +249,7 @@ spec = do
                 putMVar receivedReqMVar req
                 respond $ responseLBS status200 [] teamJson
 
-            resTeam <- getResponseBody <$> getTeamDetail mockCommonRequest (TeamId "testTeamId")
+            resTeam <- getResponseBody <$> getTeamDetail mockBaseRequest dummyAuth (TeamId "testTeamId")
             resTeam `shouldBe` team
 
             stopMockServer svr
@@ -267,7 +266,7 @@ spec = do
                 putMVar receivedReqMVar req
                 respond $ responseLBS status200 [] teamJson
 
-            (Right resTeam) <- getResponseBody <$> getTeamDetailEither mockCommonRequest (TeamId "testTeamId")
+            (Right resTeam) <- getResponseBody <$> getTeamDetailEither mockBaseRequest dummyAuth (TeamId "testTeamId")
             resTeam `shouldBe` team
 
             stopMockServer svr
