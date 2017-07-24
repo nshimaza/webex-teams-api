@@ -286,6 +286,10 @@ newtype RoomList = RoomList { roomListItems :: [Room] } deriving (Eq, Show)
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 8, omitNothingFields = True } ''RoomList)
 -- ^ 'RoomList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+instance SparkListItem Room where
+    type ToList Room = RoomList
+    unwrap = roomListItems
+
 {-| 'CreateRoom' is encoded to request body JSON of Create a Room REST call. -}
 data CreateRoom = CreateRoom
     { createRoomTitle  :: RoomTitle     -- ^ Title text of newly created Room.
@@ -340,6 +344,10 @@ newtype MessageList = MessageList { messageListItems :: [Message] } deriving (Eq
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 11, omitNothingFields = True } ''MessageList)
 -- ^ 'MessageList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+instance SparkListItem Message where
+    type ToList Message = MessageList
+    unwrap = messageListItems
+
 {-| 'CreateMessage' is encoded to request body JSON of Create a Message REST call. -}
 data CreateMessage = CreateMessage
     { createMessageRoomId        :: Maybe RoomId            -- ^ Identifier of the 'Room' the message will be posted to.
@@ -383,6 +391,10 @@ newtype MembershipList = MembershipList { membershipListItems :: [Membership] } 
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 14, omitNothingFields = True } ''MembershipList)
 -- ^ 'MembershipList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+instance SparkListItem Membership where
+    type ToList Membership = MembershipList
+    unwrap = membershipListItems
+
 {-| 'CreateMembership' is encoded to request body JSON of Create a Membership REST call. -}
 data CreateMembership = CreateMembership
     { createMembershipRoomId      :: RoomId         -- ^ Identifier of 'Room' which the Person will be added to.
@@ -423,6 +435,10 @@ newtype OrganizationList = OrganizationList { organizationListItems :: [Organiza
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 16, omitNothingFields = True } ''OrganizationList)
 -- ^ 'OrganizationList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+instance SparkListItem Organization where
+    type ToList Organization = OrganizationList
+    unwrap = organizationListItems
+
 {-| Display name of License -}
 newtype LicenseDisplayName  = LicenseDisplayName Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
 {-| Counting number of granted or consumed License -}
@@ -448,6 +464,10 @@ newtype LicenseList = LicenseList { licenseListItems :: [License] } deriving (Eq
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 11, omitNothingFields = True } ''LicenseList)
 -- ^ 'LicenseList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+instance SparkListItem License where
+    type ToList License = LicenseList
+    unwrap = licenseListItems
+
 {-| Name of 'Role' -}
 newtype RoleName    = RoleName Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
 
@@ -469,4 +489,7 @@ newtype RoleList = RoleList { roleListItems :: [Role] } deriving (Eq, Show)
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 8, omitNothingFields = True } ''RoleList)
 -- ^ 'RoleList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+instance SparkListItem Role where
+    type ToList Role = RoleList
+    unwrap = roleListItems
 

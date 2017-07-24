@@ -112,11 +112,12 @@ spec = do
             res <- getResponseBody <$> httpJSON req
             res `shouldBe` testData
 
-            stopMockServer svr
             receivedReq <- takeMVar receivedReqMVar
             requestMethod receivedReq `shouldBe` "GET"
             rawPathInfo receivedReq `shouldBe` "/v1/teams"
             (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+
+            stopMockServer svr
 
         it "pagenation mock app returns list of team and Link header" $ do
             receivedReqMVar <- newEmptyMVar
@@ -207,12 +208,19 @@ spec = do
 
         it "streamPersonList streams Team" $ do
             let testData = personList $ ['Z']
-            svr <- startMockServer $ simpleApp $ encode (PersonList testData)
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                simpleApp (encode (PersonList testData)) req respond
 
             res <- runConduit $ streamPersonList dummyAuth mockBaseRequest .| sinkList
             res `shouldBe` testData
+            path <- rawPathInfo <$> takeMVar receivedReqMVar
+            path `shouldBe` "/v1/people"
 
             stopMockServer svr
+
 
         it "streamPersonList streams Team with automatic pagination" $ do
             svr <- startMockServer $ paginationApp $ map (\pl -> encode $ PersonList pl) personListList
@@ -232,12 +240,13 @@ spec = do
             resPerson <- getResponseBody <$> getPersonDetail mockBaseRequest dummyAuth (PersonId "testPersonId")
             resPerson `shouldBe` person1
 
-            stopMockServer svr
             receivedReq <- takeMVar receivedReqMVar
             requestMethod receivedReq `shouldBe` "GET"
             rawPathInfo receivedReq `shouldBe` "/v1/people/testPersonId"
             (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
             (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+
+            stopMockServer svr
 
         it "getPersonDetailEither returns a (Right Person)" $ do
             receivedReqMVar <- newEmptyMVar
@@ -266,10 +275,16 @@ spec = do
 
         it "streamTeamList streams Team" $ do
             let testData = teamList $ ['Z']
-            svr <- startMockServer $ simpleApp $ encode (TeamList testData)
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                simpleApp (encode (TeamList testData)) req respond
 
             res <- runConduit $ streamTeamList dummyAuth mockBaseRequest .| sinkList
             res `shouldBe` testData
+            path <- rawPathInfo <$> takeMVar receivedReqMVar
+            path `shouldBe` "/v1/teams"
 
             stopMockServer svr
 
@@ -291,12 +306,13 @@ spec = do
             resTeam <- getResponseBody <$> getTeamDetail mockBaseRequest dummyAuth (TeamId "testTeamId")
             resTeam `shouldBe` team
 
-            stopMockServer svr
             receivedReq <- takeMVar receivedReqMVar
             requestMethod receivedReq `shouldBe` "GET"
             rawPathInfo receivedReq `shouldBe` "/v1/teams/testTeamId"
             (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
             (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+
+            stopMockServer svr
 
         it "getTeamDetailEither returns a (Right Team)" $ do
             receivedReqMVar <- newEmptyMVar
@@ -304,7 +320,6 @@ spec = do
             svr <- startMockServer $ \req respond -> do
                 putMVar receivedReqMVar req
                 respond $ responseLBS status200 [] teamJson
-
             (Right resTeam) <- getResponseBody <$> getTeamDetailEither mockBaseRequest dummyAuth (TeamId "testTeamId")
             resTeam `shouldBe` team
 
