@@ -140,37 +140,46 @@ makeCommonListReq base path = setRequestPath ("/v1/" <> path)
                             $ setRequestMethod "GET"
                             $ base
 
--- streamList :: (MonadIO m, SparkList a, FromJSON a) => Request -> Authorization -> Source m a
--- streamList req auth = do
---     res <- httpJSON $ addAuthorizationHeader auth $ req
---     let listDetail = getResponseBody res
---     let list = unwrap listDetail
---     yieldMany list
---     yieldMany $ unwrap $ getResponseBody res
+streamList :: (MonadIO m, SparkListItem i) => Authorization -> Request -> Source m i
+streamList auth req = do
+    res <- httpJSON $ addAuthorizationHeader auth req
+    yieldMany . unwrap $ getResponseBody res
+    streamListLoop auth res
+
+streamListLoop :: (MonadIO m, FromJSON a, SparkListItem i) => Authorization -> Response a -> Source m i
+streamListLoop auth res = case getNextUrl res of
+    Nothing     -> pure ()
+    Just url    -> case parseRequest $ "GET " <> (C8.unpack url) of
+        Nothing         -> pure ()
+        Just nextReq    -> do
+            nextRes <- httpJSON $ addAuthorizationHeader auth nextReq
+            yieldMany . unwrap $ getResponseBody nextRes
+            streamListLoop auth nextRes
+
+streamTeamList :: MonadIO m => Authorization -> Request -> Source m Team
+streamTeamList auth base = streamList auth $ makeCommonListReq base "teams"
+
+-- streamTeamList' :: MonadIO m => Request -> Authorization -> Source m Team
+-- streamTeamList' base auth = do
+--     let req = addAuthorizationHeader auth $ makeCommonListReq base "teams"
+--     res <- httpJSON req
+--     let (TeamList teams) = getResponseBody res
+--     yieldMany teams
 --     streamRestTeamList base auth res
-
-
-streamTeamList :: MonadIO m => Request -> Authorization -> Source m Team
-streamTeamList base auth = do
-    let req = addAuthorizationHeader auth $ makeCommonListReq base "teams"
-    res <- httpJSON req
-    let (TeamList teams) = getResponseBody res
-    yieldMany teams
-    streamRestTeamList base auth res
-
-streamRestTeamList :: MonadIO m => Request -> Authorization -> Response TeamList -> Source m Team
-streamRestTeamList base auth res = do
-    case getNextUrl res of
-        Nothing     -> pure ()
-        Just url    -> do
-            let maybeNextReq = parseRequest $ "GET " <> (C8.unpack url)
-            case maybeNextReq of
-                Nothing         -> pure ()
-                Just nextReq    -> do
-                    nextRes <- httpJSON $ addAuthorizationHeader auth $ nextReq
-                    let (TeamList teams) = getResponseBody nextRes
-                    yieldMany teams
-                    streamRestTeamList base auth nextRes
+--
+-- streamRestTeamList :: MonadIO m => Request -> Authorization -> Response TeamList -> Source m Team
+-- streamRestTeamList base auth res = do
+--     case getNextUrl res of
+--         Nothing     -> pure ()
+--         Just url    -> do
+--             let maybeNextReq = parseRequest $ "GET " <> (C8.unpack url)
+--             case maybeNextReq of
+--                 Nothing         -> pure ()
+--                 Just nextReq    -> do
+--                     nextRes <- httpJSON $ addAuthorizationHeader auth $ nextReq
+--                     let (TeamList teams) = getResponseBody nextRes
+--                     yieldMany teams
+--                     streamRestTeamList base auth nextRes
 
 
 

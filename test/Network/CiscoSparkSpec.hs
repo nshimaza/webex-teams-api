@@ -229,7 +229,7 @@ spec = do
             let testData = teamList $ ['Z']
             svr <- startMockServer $ simpleApp $ encode (TeamList testData)
 
-            res <- runConduit $ streamTeamList mockBaseRequest dummyAuth .| sinkList
+            res <- runConduit $ streamTeamList dummyAuth mockBaseRequest .| sinkList
             res `shouldBe` testData
 
             stopMockServer svr
@@ -237,7 +237,7 @@ spec = do
         it "getTeamList streams Team with automatic pagination" $ do
             svr <- startMockServer $ paginationApp $ map (\tl -> encode $ TeamList tl) teamListList
 
-            res <- runConduit $ streamTeamList mockBaseRequest dummyAuth .| sinkList
+            res <- runConduit $ streamTeamList dummyAuth mockBaseRequest .| sinkList
             res `shouldBe` concat teamListList
 
             stopMockServer svr

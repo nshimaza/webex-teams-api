@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveAnyClass      #-}
 {-# LANGUAGE DeriveGeneric       #-}
+{-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell     #-}
@@ -21,7 +22,7 @@ import           Data.Text                   (Text)
 
 import           Network.CiscoSpark.Internal
 
-class SparkListItem i where
+class (FromJSON (ToList i)) => SparkListItem i where
     type ToList i :: *
     unwrap :: ToList i -> [i]
 
