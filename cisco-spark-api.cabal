@@ -1,0 +1,71 @@
+name:                cisco-spark-api
+version:             0.0.1.0
+-- synopsis:
+-- description:
+homepage:            https://github.com/nshimaza/cisco-spark-api#readme
+license:             MIT
+license-file:        LICENSE
+author:              Naoto Shimazaki
+maintainer:          Naoto.Shimazaki@gmail.com
+copyright:           Copyright: (c) 2017 Naoto Shimazaki
+category:            Web
+build-type:          Simple
+extra-source-files:  README.md
+cabal-version:       >=1.10
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     Network.CiscoSpark
+                     , Network.CiscoSpark.Internal
+                     , Network.CiscoSpark.Types
+  build-depends:       base >= 4.7 && < 5
+                     , aeson
+                     , attoparsec
+                     , bytestring
+                     , conduit-combinators
+                     , http-conduit
+                     , http-link-header
+                     , text
+                     , transformers-base
+                     , bitset-word8
+  default-language:    Haskell2010
+
+executable cisco-spark-api-exe
+  hs-source-dirs:      app
+  main-is:             Main.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  build-depends:       base
+                     , aeson
+                     , bytestring
+                     , http-conduit
+                     , utf8-string
+                     , cisco-spark-api
+  default-language:    Haskell2010
+
+test-suite cisco-spark-api-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  other-modules:       Network.CiscoSparkSpec
+                     , Network.CiscoSpark.InternalSpec
+                     , Network.CiscoSpark.TypesSpec
+  build-depends:       base
+                     , aeson
+                     , attoparsec
+                     , bytestring
+                     , conduit-combinators
+                     , http-client
+                     , http-conduit
+                     , http-types
+                     , text
+                     , wai
+                     , warp
+                     , hspec
+                     , cisco-spark-api
+                     , thread-hierarchy
+  ghc-options:         -rtsopts
+  default-language:    Haskell2010
+
+source-repository head
+  type:     git
+  location: https://github.com/nshimaza/cisco-spark-api
