@@ -21,6 +21,7 @@ module Network.CiscoSpark
     , PersonStatus (..)
     , PersonType (..)
     , PersonList (..)
+    , PersonQuery (..)
     , CreatePerson (..)
     , UpdatePerson (..)
 
@@ -29,12 +30,14 @@ module Network.CiscoSpark
     , RoomTitle (..)
     , RoomType (..)
     , RoomList (..)
+    , RoomQuery (..)
     , CreateRoom (..)
     , UpdateRoom (..)
 
     , Membership (..)
     , MembershipId (..)
     , MembershipList (..)
+    , MembershipQuery (..)
     , CreateMembership (..)
     , UpdateMembership (..)
 
@@ -45,6 +48,7 @@ module Network.CiscoSpark
     , MessageMarkdown (..)
     , FileUrl (..)
     , MessageList (..)
+    , MessageQuery (..)
     , CreateMessage (..)
 
     , TeamName (..)
@@ -57,6 +61,7 @@ module Network.CiscoSpark
     , TeamMembership (..)
     , TeamMembershipId (..)
     , TeamMembershipList (..)
+    , TeamMembershipQuery (..)
     , CreateTeamMembership (..)
     , UpdateTeamMembership (..)
 
@@ -68,6 +73,7 @@ module Network.CiscoSpark
     , LicenseDisplayName (..)
     , LicenseUnit (..)
     , LicenseList (..)
+    , LicenseQuery (..)
 
     , Role (..)
     , RoleName (..)
@@ -79,9 +85,14 @@ module Network.CiscoSpark
     , streamPersonList
     , getPersonDetail
     , getPersonDetailEither
+    , defaultRoomQuery
+    , defaultMembershipQuery
+    , defaultMessageQuery
     , streamTeamList
     , getTeamDetailEither
     , getTeamDetail
+    , defaultTeamMembershipQuery
+    , defaultLicenseQuery
     , ciscoSparkBaseRequest
     ) where
 

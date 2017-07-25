@@ -20,7 +20,7 @@ import           Data.Aeson.TH               (constructorTagModifier,
                                               omitNothingFields)
 import           Data.ByteString             (ByteString)
 import           Data.Text                   (Text)
-import Data.Text.Encoding (encodeUtf8)
+import           Data.Text.Encoding          (encodeUtf8)
 
 import           Network.CiscoSpark.Internal
 
