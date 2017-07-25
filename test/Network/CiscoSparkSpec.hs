@@ -350,6 +350,112 @@ spec = do
 
             stopMockServer svr
 
+    describe "TeamMemberShip" $ do
+        let teamMembershipJson = "{\
+                                 \  \"id\" : \"Y2lzY29zcGFyazovL3VzL1RFQU1fTUVNQkVSU0hJUC8wZmNmYTJiOC1hZGNjLTQ1ZWEtYTc4Mi1lNDYwNTkyZjgxZWY6MTNlMThmNDAtNDJmYy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5\",\
+                                 \  \"teamId\" : \"Y2lzY29zcGFyazovL3VzL1RFQU0vMTNlMThmNDAtNDJmYy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5\",\
+                                 \  \"personId\" : \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY\",\
+                                 \  \"personEmail\" : \"john.andersen@example.com\",\
+                                 \  \"personDisplayName\" : \"John Andersen\",\
+                                 \  \"personOrgId\" : \"Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE\",\
+                                 \  \"isModerator\" : true,\
+                                 \  \"created\" : \"2015-10-18T14:26:16.057Z\"\
+                                 \}"
+            teamMembership = TeamMembership { teamMembershipId                  = TeamMembershipId "Y2lzY29zcGFyazovL3VzL1RFQU1fTUVNQkVSU0hJUC8wZmNmYTJiOC1hZGNjLTQ1ZWEtYTc4Mi1lNDYwNTkyZjgxZWY6MTNlMThmNDAtNDJmYy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5"
+                                            , teamMembershipTeamId              = TeamId "Y2lzY29zcGFyazovL3VzL1RFQU0vMTNlMThmNDAtNDJmYy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5"
+                                            , teamMembershipPersonId            = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
+                                            , teamMembershipPersonEmail         = Email "john.andersen@example.com"
+                                            , teamMembershipPersonDisplayName   = DisplayName "John Andersen"
+                                            , teamMembershipPersonOrgId         = OrganizationId "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE"
+                                            , teamMembershipIsModerator         = True
+                                            , teamMembershipCreated             = Timestamp "2015-10-18T14:26:16.057Z"
+                                            }
+            teamMembershipGen i = TeamMembership { teamMembershipId                  = TeamMembershipId . pack $ "teamMembershipId" <> i
+                                                 , teamMembershipTeamId              = TeamId . pack $ "teamId" <> i
+                                                 , teamMembershipPersonId            = PersonId . pack $ "personId" <> i
+                                                 , teamMembershipPersonEmail         = Email . pack $ "email" <> i <> "@example.com"
+                                                 , teamMembershipPersonDisplayName   = DisplayName . pack $ "DisplayName" <> i
+                                                 , teamMembershipPersonOrgId         = OrganizationId . pack $ "OrganizationId" <> i
+                                                 , teamMembershipIsModerator         = True
+                                                 , teamMembershipCreated             = Timestamp . pack $ "Timestamp" <> i
+                                                 }
+            teamMembershipList j = [ teamMembershipGen $ j ++ show i | i <- [1..3] ]
+            teamMembershipListList = [ teamMembershipList [c] | c <- ['a'..'d'] ]
+
+        it "streamTeamMembershipList streams TeamMembership" $ do
+            let testData = teamMembershipList $ ['Z']
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                simpleApp (encode (TeamMembershipList testData)) req respond
+
+            res <- runConduit $ streamTeamMembershipList dummyAuth mockBaseRequest defaultTeamMembershipQuery .| sinkList
+            res `shouldBe` testData
+
+            receivedReq <- takeMVar receivedReqMVar
+            rawPathInfo receivedReq `shouldBe` "/v1/team/memberships"
+            queryString receivedReq `shouldBe` []
+
+            stopMockServer svr
+
+
+        it "streamMembershipList passes query strings build from TeamMembershipQuery to server" $ do
+            let testData = teamMembershipList $ ['Z']
+                teamMembershipQuery = TeamMembershipQuery . Just $ TeamId "DummyTeamId"
+
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                simpleApp (encode (TeamMembershipList testData)) req respond
+
+            res <- runConduit $ streamTeamMembershipList dummyAuth mockBaseRequest teamMembershipQuery .| sinkList
+            res `shouldBe` testData
+
+            receivedReq <- takeMVar receivedReqMVar
+            rawPathInfo receivedReq `shouldBe` "/v1/team/memberships"
+            queryString receivedReq `shouldBe` [ ("teamId", Just "DummyTeamId") ]
+
+            stopMockServer svr
+
+        it "streamTeamMembershipList streams TeamMembership with automatic pagination" $ do
+            svr <- startMockServer $ paginationApp $ map (\pl -> encode $ TeamMembershipList pl) teamMembershipListList
+
+            res <- runConduit $ streamTeamMembershipList dummyAuth mockBaseRequest defaultTeamMembershipQuery .| sinkList
+            res `shouldBe` concat teamMembershipListList
+
+            stopMockServer svr
+
+        it "getTeamMembershipDetail returns a TeamMembership" $ do
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                respond $ responseLBS status200 [] teamMembershipJson
+
+            resTeamMembership <- getResponseBody <$> getTeamMembershipDetail mockBaseRequest dummyAuth (TeamMembershipId "testTeamMembershipId")
+            resTeamMembership `shouldBe` teamMembership
+
+            receivedReq <- takeMVar receivedReqMVar
+            requestMethod receivedReq `shouldBe` "GET"
+            rawPathInfo receivedReq `shouldBe` "/v1/team/memberships/testTeamMembershipId"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+
+            stopMockServer svr
+
+
+        it "getTeamMembershipDetailEither returns a (Right TeamMembership)" $ do
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                respond $ responseLBS status200 [] teamMembershipJson
+            (Right resTeamMembership) <- getResponseBody <$> getTeamMembershipDetailEither mockBaseRequest dummyAuth (TeamMembershipId "testTeamMembershipId")
+            resTeamMembership `shouldBe` teamMembership
+
+            stopMockServer svr
 
     describe "WaiTest" $ do
         it "start and stop server" $ do

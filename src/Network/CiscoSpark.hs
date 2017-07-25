@@ -92,6 +92,9 @@ module Network.CiscoSpark
     , getTeamDetailEither
     , getTeamDetail
     , defaultTeamMembershipQuery
+    , streamTeamMembershipList
+    , getTeamMembershipDetail
+    , getTeamMembershipDetailEither
     , defaultLicenseQuery
     , ciscoSparkBaseRequest
     ) where
@@ -175,6 +178,11 @@ streamPersonList auth base query = do
 streamTeamList :: MonadIO m => Authorization -> Request -> Source m Team
 streamTeamList auth base = streamList auth $ makeCommonListReq base "teams"
 
+-- | Query list of 'TeamMembership' and stream it into Conduit pipe.  It automatically performs pagination.
+streamTeamMembershipList :: MonadIO m => Authorization -> Request -> TeamMembershipQuery -> Source m TeamMembership
+streamTeamMembershipList auth base query = do
+    let queryList = maybeToList $ (\(TeamId t) -> ("teamId", Just (encodeUtf8 t))) <$> teamMembershipQueryTeamId query
+    streamList auth $ setRequestQueryString queryList $ makeCommonListReq base "team/memberships"
 
 
 makeCommonDetailReq
@@ -189,17 +197,23 @@ makeCommonDetailReq base auth path idStr
     $ addAuthorizationHeader auth
     $ base
 
+getPersonDetail :: MonadIO m => Request -> Authorization -> PersonId -> m (Response Person)
+getPersonDetail base auth (PersonId idStr) = httpJSON $ makeCommonDetailReq base auth "people" idStr
+
+getPersonDetailEither :: MonadIO m => Request -> Authorization -> PersonId -> m (Response (Either JSONException Person))
+getPersonDetailEither base auth (PersonId idStr) = httpJSONEither $ makeCommonDetailReq base auth "people" idStr
+
 getTeamDetail :: MonadIO m => Request -> Authorization -> TeamId -> m (Response Team)
 getTeamDetail base auth (TeamId idStr) = httpJSON $ makeCommonDetailReq base auth "teams" idStr
 
 getTeamDetailEither :: MonadIO m => Request -> Authorization -> TeamId -> m (Response (Either JSONException Team))
 getTeamDetailEither base auth (TeamId idStr) = httpJSONEither $ makeCommonDetailReq base auth "teams" idStr
 
-getPersonDetail :: MonadIO m => Request -> Authorization -> PersonId -> m (Response Person)
-getPersonDetail base auth (PersonId idStr) = httpJSON $ makeCommonDetailReq base auth "people" idStr
+getTeamMembershipDetail :: MonadIO m => Request -> Authorization -> TeamMembershipId -> m (Response TeamMembership)
+getTeamMembershipDetail base auth (TeamMembershipId idStr) = httpJSON $ makeCommonDetailReq base auth "team/memberships" idStr
 
-getPersonDetailEither :: MonadIO m => Request -> Authorization -> PersonId -> m (Response (Either JSONException Person))
-getPersonDetailEither base auth (PersonId idStr) = httpJSONEither $ makeCommonDetailReq base auth "people" idStr
+getTeamMembershipDetailEither :: MonadIO m => Request -> Authorization -> TeamMembershipId -> m (Response (Either JSONException TeamMembership))
+getTeamMembershipDetailEither base auth (TeamMembershipId idStr) = httpJSONEither $ makeCommonDetailReq base auth "team/memberships" idStr
 
 
 
