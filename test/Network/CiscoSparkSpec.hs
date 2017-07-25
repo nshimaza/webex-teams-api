@@ -3,7 +3,7 @@
 
 module Network.CiscoSparkSpec where
 
-import Conduit
+import           Conduit
 import           Control.Concurrent.MVar      (MVar, newEmptyMVar, putMVar,
                                                takeMVar)
 import           Control.Monad                (void)
@@ -11,6 +11,7 @@ import           Data.Aeson                   (encode)
 import           Data.Attoparsec.ByteString   (parseOnly)
 import           Data.ByteString.Char8        as C8 (unpack)
 import           Data.ByteString.Lazy         as L (ByteString)
+import           Data.List                    (sort)
 import           Data.Maybe                   (fromJust)
 import           Data.Monoid                  ((<>))
 import           Data.Text                    (pack)
@@ -28,7 +29,7 @@ import           Control.Concurrent.Hierarchy (ThreadMap, killThreadHierarchy,
                                                newChild, newThreadMap)
 import           Network.CiscoSpark
 import           Network.CiscoSpark.Internal  (LinkHeader (..), LinkParam (..),
-                                               linkHeader, getNextUrl)
+                                               getNextUrl, linkHeader)
 
 
 import           Data.Typeable                (typeOf)
@@ -216,11 +217,35 @@ spec = do
 
             res <- runConduit $ streamPersonList dummyAuth mockBaseRequest defaultPersonQuery .| sinkList
             res `shouldBe` testData
-            path <- rawPathInfo <$> takeMVar receivedReqMVar
-            path `shouldBe` "/v1/people"
+
+            receivedReq <- takeMVar receivedReqMVar
+            rawPathInfo receivedReq `shouldBe` "/v1/people"
+            queryString receivedReq `shouldBe` []
 
             stopMockServer svr
 
+        it "streamPersonList passes query strings build from PersonQuery to server" $ do
+            let testData = personList $ ['Z']
+                personQuery = PersonQuery (Just $ Email "person@query.com")
+                                          (Just $ DisplayName "DisplayNameQuery")
+                                          (Just $ OrganizationId "OrgIdQuery")
+
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                simpleApp (encode (PersonList testData)) req respond
+
+            res <- runConduit $ streamPersonList dummyAuth mockBaseRequest personQuery .| sinkList
+            res `shouldBe` testData
+
+            receivedReq <- takeMVar receivedReqMVar
+            rawPathInfo receivedReq `shouldBe` "/v1/people"
+            (sort . queryString) receivedReq `shouldBe` sort [ ("orgId", Just "OrgIdQuery")
+                                                             , ("displayName", Just "DisplayNameQuery")
+                                                             , ("email", Just "person@query.com") ]
+
+            stopMockServer svr
 
         it "streamPersonList streams Team with automatic pagination" $ do
             svr <- startMockServer $ paginationApp $ map (\pl -> encode $ PersonList pl) personListList

@@ -2,8 +2,8 @@
 
 module Network.CiscoSpark.TypesSpec where
 
-import           Data.Aeson                   (decode, eitherDecode, encode)
-import           Data.Monoid                  ((<>))
+import           Data.Aeson               (decode, eitherDecode, encode)
+import           Data.Monoid              ((<>))
 
 import           Test.Hspec
 

@@ -17,7 +17,7 @@ import           Data.BitSetWord8           (member, rfc3986UriReference,
                                              rfc7230QDText, rfc7230QuotedPair,
                                              rfc7230TChar)
 
-import           Network.HTTP.Simple        (getResponseHeader, Response)
+import           Network.HTTP.Simple        (Response, getResponseHeader)
 
 
 {-|
