@@ -88,8 +88,8 @@ module Network.CiscoSpark
 import           Conduit
 import           Data.Aeson                  (FromJSON)
 import           Data.ByteString             (ByteString)
-import           Data.ByteString.Char8        as C8 (unpack)
-import Data.Maybe (maybeToList)
+import           Data.ByteString.Char8       as C8 (unpack)
+import           Data.Maybe                  (maybeToList)
 import           Data.Monoid                 ((<>))
 import           Data.Text                   (Text)
 import           Data.Text.Encoding          (encodeUtf8)
@@ -108,9 +108,6 @@ import           Network.CiscoSpark.Types
 -- | Authorization string against Spark API to be contained in HTTP Authorization header of every request.
 newtype Authorization = Authorization ByteString deriving (Eq, Show)
 
-makeReqPath :: ByteString -> ByteString
-makeReqPath path = "/v1/" <> path
-
 -- | Common part of 'Request' against Spark API.
 ciscoSparkBaseRequest :: Request
 ciscoSparkBaseRequest
@@ -120,19 +117,9 @@ ciscoSparkBaseRequest
     $ setRequestSecure True
     $ defaultRequest
 
+-- | Add given Authorization into request header.
 addAuthorizationHeader :: Authorization -> Request -> Request
 addAuthorizationHeader (Authorization auth) = addRequestHeader "Authorization" ("Bearer " <> auth)
-
-
-
-
-hasNextRel :: [(LinkParam, ByteString)] -> Bool
-hasNextRel = any (\(param, str) -> param == Rel && str == "next")
-
-isNextRel :: LinkHeader -> Bool
-isNextRel = hasNextRel . linkHeaderParams
-
-
 
 -- | Building common part of 'Request' for List APIs.
 makeCommonListReq
@@ -164,6 +151,7 @@ streamListLoop auth res = case getNextUrl res of
             yieldMany . unwrap $ getResponseBody nextRes
             streamListLoop auth nextRes
 
+-- | Query list of 'Person' and stream it into Conduit pipe.  It automatically performs pagination.
 streamPersonList :: MonadIO m => Authorization -> Request -> PersonQuery -> Source m Person
 streamPersonList auth base query = do
     let email       = maybeToList $ (\(Email e) -> ("email", Just (encodeUtf8 e))) <$> personQueryEmail query
@@ -172,6 +160,7 @@ streamPersonList auth base query = do
         queryList   = email <> displayName <> orgId
     streamList auth $ setRequestQueryString queryList $ makeCommonListReq base "people"
 
+-- | Query list of 'Team' and stream it into Conduit pipe.  It automatically performs pagination.
 streamTeamList :: MonadIO m => Authorization -> Request -> Source m Team
 streamTeamList auth base = streamList auth $ makeCommonListReq base "teams"
 
