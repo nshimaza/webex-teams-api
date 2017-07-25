@@ -24,9 +24,7 @@ library
                      , bytestring
                      , conduit-combinators
                      , http-conduit
-                     , http-link-header
                      , text
-                     , transformers-base
                      , bitset-word8
   default-language:    Haskell2010
 
@@ -54,7 +52,6 @@ test-suite cisco-spark-api-test
                      , attoparsec
                      , bytestring
                      , conduit-combinators
-                     , http-client
                      , http-conduit
                      , http-types
                      , text
