@@ -283,6 +283,8 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 20, omitNothingFie
 newtype RoomId      = RoomId Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
 -- | Title text of 'Room'.
 newtype RoomTitle   = RoomTitle Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
+-- | SIP address.
+newtype SipAddr     = SipAddr Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
 
 -- | 'RoomType' indicates if the 'Room' is for 1:1 user or group of users.
 data RoomType   = RoomTypeDirect    -- ^ The Room is for 1:1.  Decoded from \"direct\".
@@ -306,6 +308,7 @@ data Room = Room
     , roomTitle        :: RoomTitle     -- ^ Title text of the Room.
     , roomType         :: RoomType      -- ^ Indicates if the Room is for 1:1 or group.
     , roomIsLocked     :: Bool          -- ^ True if the Room is locked.
+    , roomSipAddress   :: Maybe SipAddr -- ^ SIP address of the Room.
     , roomLastActivity :: Timestamp     -- ^ Timestamp when the last activity was happen on the Room.
     , roomTeamId       :: Maybe TeamId  -- ^ Identifier of the 'Team' which the Room belongs to.
     , roomCreatorId    :: PersonId      -- ^ Identifier of 'Person' who created the Room.

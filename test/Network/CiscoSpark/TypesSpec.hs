@@ -115,17 +115,19 @@ spec = do
                                                      , LicenseId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX" ]
                     }
                 dst = "{\
-                      \\"emails\":[\"johnny.chang@foomail.com\",\"jchang@barmail.com\"],\
-                      \\"displayName\":\"John Andersen\",\
-                      \\"firstName\":\"John\",\
-                      \\"lastName\":\"Andersen\",\
-                      \\"avatar\":\"https://1efa7a94ed21783e352-c62266528714497a17239ececf39e9e2.ssl.cf1.rackcdn.com/V1~54c844c89e678e5a7b16a306bc2897b9~wx29yGtlTpilEFlYzqPKag==~1600\",\
-                      \\"orgId\":\"Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE\",\
-                      \\"roles\":[\"Y2lzY29zcGFyazovL3VzL1JPT00vOGNkYzQwYzQtZjA5ZS0zY2JhLThjMjYtZGQwZTcwYWRlY2Iy\",\"Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX\"],\
-                      \\"licenses\":[\"Y2lzY29zcGFyazovL3VzL1JPT00vOGNkYzQwYzQtZjA5ZS0zY2JhLThjMjYtZGQwZTcwYWRlY2Iy\",\"Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX\"]\
+                      \  \"emails\" : [ \"johnny.chang@foomail.com\", \"jchang@barmail.com\" ],\
+                      \  \"displayName\" : \"John Andersen\",\
+                      \  \"firstName\" : \"John\",\
+                      \  \"lastName\" : \"Andersen\",\
+                      \  \"avatar\" : \"https://1efa7a94ed21783e352-c62266528714497a17239ececf39e9e2.ssl.cf1.rackcdn.com/V1~54c844c89e678e5a7b16a306bc2897b9~wx29yGtlTpilEFlYzqPKag==~1600\",\
+                      \  \"orgId\" : \"Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE\",\
+                      \  \"roles\" : [ \"Y2lzY29zcGFyazovL3VzL1JPT00vOGNkYzQwYzQtZjA5ZS0zY2JhLThjMjYtZGQwZTcwYWRlY2Iy\", \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX\" ],\
+                      \  \"licenses\" : [ \"Y2lzY29zcGFyazovL3VzL1JPT00vOGNkYzQwYzQtZjA5ZS0zY2JhLThjMjYtZGQwZTcwYWRlY2Iy\", \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX\" ]\
                       \}"
-            encode src `shouldBe` dst
-            (decode . encode) src `shouldBe` Just src
+            eitherDecode dst `shouldBe` Right src
+            (decode . encode) src `shouldBe` (decode dst :: Maybe CreatePerson)
+--             encode src `shouldBe` dst
+--             (decode . encode) src `shouldBe` Just src
 
     describe "Team" $ do
         let teamJson = "{\
@@ -207,13 +209,13 @@ spec = do
                       , createTeamMembershipIsModerator = Just True
                       }
                 dst = "{\
-                      \\"personId\":\"Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY\",\
-                      \\"personEmail\":\"johnny.chang@foomail.com\",\
-                      \\"isModerator\":true,\
-                      \\"teamId\":\"Y2lzY29zcGFyazovL3VzL1RFQU0vMTNlMThmNDAtNDJmYy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5\"\
+                      \  \"teamId\" : \"Y2lzY29zcGFyazovL3VzL1RFQU0vMTNlMThmNDAtNDJmYy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5\",\
+                      \  \"personId\" : \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY\",\
+                      \  \"personEmail\" : \"johnny.chang@foomail.com\",\
+                      \  \"isModerator\" : true\
                       \}"
-            encode src `shouldBe` dst
-            (decode . encode) src `shouldBe` Just src
+            eitherDecode dst `shouldBe` Right src
+            (decode . encode) src `shouldBe` (decode dst :: Maybe CreateTeamMembership)
 
         it "encodes UpdateTeamMembership to JSON" $ do
             let src = UpdateTeamMembership { updateTeamMembershipIsModerator = False }
@@ -221,13 +223,76 @@ spec = do
             encode src `shouldBe` dst
             (decode . encode) src `shouldBe` Just src
 
-    describe "WaiTest" $ do
-        it "start and stop server" $ do
---             svr <- startMockServer helloApp
---             threadDelay (30 * 1000000)
---             stopMockServer svr
---             svr <- startMockServer helloApp
---             stopMockServer svr
+    describe "Room" $ do
+        let roomJson = "{\
+                       \  \"id\" : \"Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0\",\
+                       \  \"title\" : \"Project Unicorn - Sprint 0\",\
+                       \  \"type\" : \"group\",\
+                       \  \"isLocked\" : true,\
+                       \  \"sipAddress\" : \"01234567890@meet.ciscospark.com\",\
+                       \  \"teamId\" : \"Y2lzY29zcGFyazovL3VzL1JPT00vNjRlNDVhZTAtYzQ2Yi0xMWU1LTlkZjktMGQ0MWUzNDIxOTcz\",\
+                       \  \"lastActivity\" : \"2016-04-21T19:12:48.920Z\",\
+                       \  \"creatorId\": \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY\",\
+                       \  \"created\" : \"2016-04-21T19:01:55.966Z\"\
+                       \}"
+            room = Room { roomId = RoomId  "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
+                        , roomTitle = RoomTitle "Project Unicorn - Sprint 0"
+                        , roomType = RoomTypeGroup
+                        , roomIsLocked = True
+                        , roomSipAddress = Just $ SipAddr "01234567890@meet.ciscospark.com"
+                        , roomLastActivity = Timestamp "2016-04-21T19:12:48.920Z"
+                        , roomTeamId = Just $ TeamId "Y2lzY29zcGFyazovL3VzL1JPT00vNjRlNDVhZTAtYzQ2Yi0xMWU1LTlkZjktMGQ0MWUzNDIxOTcz"
+                        , roomCreatorId = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
+                        , roomCreated = Timestamp "2016-04-21T19:01:55.966Z"
+                        }
+            roomListJson = "{\"items\":[" <> roomJson <> "]}"
+            roomList = RoomList [ room ]
+
+        it "can be unwrapped from RoomList" $ do
+            unwrap roomList `shouldBe` [ room ]
+
+        it "decodes Room API response JSON" $ do
+            eitherDecode roomJson `shouldBe` Right room
+            (decode . encode) room `shouldBe` Just room
+
+        it "decodes Room list" $ do
+            eitherDecode roomListJson `shouldBe` Right roomList
+            (decode . encode) roomList `shouldBe` Just roomList
+
+        it "encodes CreateRoom to JSON" $ do
+            let src = CreateRoom { createRoomTitle = RoomTitle "Project Unicorn - Sprint 0"
+                                 , createRoomTeamId = Just $ TeamId "Y2lzY29zcGFyazovL3VzL1JPT00vNjRlNDVhZTAtYzQ2Yi0xMWU1LTlkZjktMGQ0MWUzNDIxOTcz"
+                                 }
+                dst = "{\
+                      \  \"title\" : \"Project Unicorn - Sprint 0\",\
+                      \  \"teamId\" : \"Y2lzY29zcGFyazovL3VzL1JPT00vNjRlNDVhZTAtYzQ2Yi0xMWU1LTlkZjktMGQ0MWUzNDIxOTcz\"\
+                      \}"
+            eitherDecode dst `shouldBe` Right src
+            (decode . encode) src `shouldBe` (decode dst :: Maybe CreateRoom)
+
+        it "encodes UpdateRoom to JSON" $ do
+            let src = UpdateRoom { updateRoomTitle =  RoomTitle "Project Unicorn - Sprint 0" }
+                dst = "{\"title\":\"Project Unicorn - Sprint 0\"}"
+            encode src `shouldBe` dst
+            (decode . encode) src `shouldBe` Just src
+
+
+    describe "Message" $ do
+        it "Message tests" $ do
             pending
 
+    describe "Membership" $ do
+        it "Membership tests" $ do
+            pending
 
+    describe "Organization" $ do
+        it "Organization tests" $ do
+            pending
+
+    describe "License" $ do
+        it "License tests" $ do
+            pending
+
+    describe "Role" $ do
+        it "Role tests" $ do
+            pending
