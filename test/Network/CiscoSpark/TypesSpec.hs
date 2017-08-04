@@ -126,8 +126,6 @@ spec = do
                       \}"
             eitherDecode dst `shouldBe` Right src
             (decode . encode) src `shouldBe` (decode dst :: Maybe CreatePerson)
---             encode src `shouldBe` dst
---             (decode . encode) src `shouldBe` Just src
 
     describe "Team" $ do
         let teamJson = "{\
