@@ -29,8 +29,10 @@ module Network.CiscoSpark
     , RoomId (..)
     , RoomTitle (..)
     , RoomType (..)
+    , SipAddr (..)
     , RoomList (..)
     , RoomQuery (..)
+    , RoomQuerySortBy (..)
     , CreateRoom (..)
     , UpdateRoom (..)
 
@@ -86,6 +88,9 @@ module Network.CiscoSpark
     , getPersonDetail
     , getPersonDetailEither
     , defaultRoomQuery
+    , streamRoomList
+    , getRoomDetail
+    , getRoomDetailEither
     , defaultMembershipQuery
     , defaultMessageQuery
     , streamTeamList
@@ -174,6 +179,15 @@ streamPersonList auth base query = do
         queryList   = email <> displayName <> orgId
     streamList auth $ setRequestQueryString queryList $ makeCommonListReq base "people"
 
+-- | Query list of 'Room' and stream it into Conduit pipe.  It automatically performs pagination.
+streamRoomList :: MonadIO m => Authorization -> Request -> RoomQuery -> Source m Room
+streamRoomList auth base query = do
+    let teamId    = maybeToList $ (\(TeamId e) -> ("teamId", Just (encodeUtf8 e))) <$> roomQueryTeamId query
+        roomType  = maybeToList $ (\t -> ("type", Just $ roomTypeToQueryString t)) <$> roomQueryRoomType query
+        sortBy    = maybeToList $ (\o -> ("sortBy", Just $ roomQuerySortByToQueryString o)) <$> roomQuerySortBy query
+        queryList = teamId <> roomType <> sortBy
+    streamList auth $ setRequestQueryString queryList $ makeCommonListReq base "rooms"
+
 -- | Query list of 'Team' and stream it into Conduit pipe.  It automatically performs pagination.
 streamTeamList :: MonadIO m => Authorization -> Request -> Source m Team
 streamTeamList auth base = streamList auth $ makeCommonListReq base "teams"
@@ -202,6 +216,14 @@ getPersonDetail base auth (PersonId idStr) = httpJSON $ makeCommonDetailReq base
 
 getPersonDetailEither :: MonadIO m => Request -> Authorization -> PersonId -> m (Response (Either JSONException Person))
 getPersonDetailEither base auth (PersonId idStr) = httpJSONEither $ makeCommonDetailReq base auth "people" idStr
+
+getRoomDetail :: MonadIO m => Request -> Authorization -> RoomId -> m (Response Room)
+getRoomDetail base auth (RoomId idStr) = httpJSON $ makeCommonDetailReq base auth "rooms" idStr
+
+getRoomDetailEither :: MonadIO m => Request -> Authorization -> RoomId -> m (Response (Either JSONException Room))
+getRoomDetailEither base auth (RoomId idStr) = httpJSONEither $ makeCommonDetailReq base auth "rooms" idStr
+
+
 
 getTeamDetail :: MonadIO m => Request -> Authorization -> TeamId -> m (Response Team)
 getTeamDetail base auth (TeamId idStr) = httpJSON $ makeCommonDetailReq base auth "teams" idStr

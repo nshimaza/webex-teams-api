@@ -399,7 +399,6 @@ spec = do
 
             stopMockServer svr
 
-
         it "streamMembershipList passes query strings build from TeamMembershipQuery to server" $ do
             let testData = teamMembershipList $ ['Z']
                 teamMembershipQuery = TeamMembershipQuery . Just $ TeamId "DummyTeamId"
@@ -445,7 +444,6 @@ spec = do
 
             stopMockServer svr
 
-
         it "getTeamMembershipDetailEither returns a (Right TeamMembership)" $ do
             receivedReqMVar <- newEmptyMVar
 
@@ -457,13 +455,136 @@ spec = do
 
             stopMockServer svr
 
-    describe "WaiTest" $ do
-        it "start and stop server" $ do
---             svr <- startMockServer helloApp
---             threadDelay (30 * 1000000)
---             stopMockServer svr
---             svr <- startMockServer helloApp
---             stopMockServer svr
+    describe "Room" $ do
+        let roomJson = "{\
+                       \  \"id\" : \"Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0\",\
+                       \  \"title\" : \"Project Unicorn - Sprint 0\",\
+                       \  \"type\" : \"group\",\
+                       \  \"isLocked\" : true,\
+                       \  \"sipAddress\" : \"01234567890@meet.ciscospark.com\",\
+                       \  \"teamId\" : \"Y2lzY29zcGFyazovL3VzL1JPT00vNjRlNDVhZTAtYzQ2Yi0xMWU1LTlkZjktMGQ0MWUzNDIxOTcz\",\
+                       \  \"lastActivity\" : \"2016-04-21T19:12:48.920Z\",\
+                       \  \"creatorId\": \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY\",\
+                       \  \"created\" : \"2016-04-21T19:01:55.966Z\"\
+                       \}"
+            room = Room { roomId = RoomId  "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
+                        , roomTitle = RoomTitle "Project Unicorn - Sprint 0"
+                        , roomType = RoomTypeGroup
+                        , roomIsLocked = True
+                        , roomSipAddress = Just $ SipAddr "01234567890@meet.ciscospark.com"
+                        , roomLastActivity = Timestamp "2016-04-21T19:12:48.920Z"
+                        , roomTeamId = Just $ TeamId "Y2lzY29zcGFyazovL3VzL1JPT00vNjRlNDVhZTAtYzQ2Yi0xMWU1LTlkZjktMGQ0MWUzNDIxOTcz"
+                        , roomCreatorId = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
+                        , roomCreated = Timestamp "2016-04-21T19:01:55.966Z"
+                        }
+            roomGen i = Room { roomId           = RoomId . pack $ "roomId" <> i
+                             , roomTitle        = RoomTitle . pack $ "roomTitle" <> i
+                             , roomType         = RoomTypeGroup
+                             , roomIsLocked     = True
+                             , roomSipAddress   = Just $ SipAddr . pack $ "rooomSipAddress" <> i <> "@meet.ciscospark.com"
+                             , roomLastActivity = Timestamp . pack $ "roomLastActivity" <> i
+                             , roomTeamId       = Just $ TeamId . pack $ "roomTeamId" <> i
+                             , roomCreatorId    = PersonId . pack $ "personId" <> i
+                             , roomCreated      = Timestamp .pack $ "roomCreated" <> i
+                             }
+            roomList j = [ roomGen $ j ++ show i | i <- [1..3] ]
+            roomListList = [ roomList [c] | c <- ['a'..'d'] ]
+
+        it "streamRoomList streams Room" $ do
+            let testData = roomList $ ['Z']
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                simpleApp (encode (RoomList testData)) req respond
+
+            res <- runConduit $ streamRoomList dummyAuth mockBaseRequest defaultRoomQuery .| sinkList
+            res `shouldBe` testData
+
+            receivedReq <- takeMVar receivedReqMVar
+            rawPathInfo receivedReq `shouldBe` "/v1/rooms"
+            queryString receivedReq `shouldBe` []
+
+            stopMockServer svr
+
+        it "streamRoomList passes query strings build from RoomQuery to server" $ do
+            let testData = roomList $ ['Z']
+                roomQuery = RoomQuery (Just $ TeamId "dummyTeamId")
+                                      (Just RoomTypeGroup)
+                                      (Just RoomQuerySortByLastActivity)
+
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                simpleApp (encode (RoomList testData)) req respond
+
+            res <- runConduit $ streamRoomList dummyAuth mockBaseRequest roomQuery .| sinkList
+            res `shouldBe` testData
+
+            receivedReq <- takeMVar receivedReqMVar
+            rawPathInfo receivedReq `shouldBe` "/v1/rooms"
+            (sort . queryString) receivedReq `shouldBe` sort [ ("type", Just "group")
+                                                             , ("sortBy", Just "lastactivity")
+                                                             , ("teamId", Just "dummyTeamId") ]
+
+            stopMockServer svr
+
+        it "streamRoomList streams Room with automatic pagination" $ do
+            svr <- startMockServer $ paginationApp $ map (\rl -> encode $ RoomList rl) roomListList
+
+            res <- runConduit $ streamRoomList dummyAuth mockBaseRequest defaultRoomQuery .| sinkList
+            res `shouldBe` concat roomListList
+
+            stopMockServer svr
+
+        it "getRoomDetail returns a Room" $ do
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                respond $ responseLBS status200 [] roomJson
+
+            resRoom <- getResponseBody <$> getRoomDetail mockBaseRequest dummyAuth (RoomId "testRoomId")
+            resRoom `shouldBe` room
+
+            receivedReq <- takeMVar receivedReqMVar
+            requestMethod receivedReq `shouldBe` "GET"
+            rawPathInfo receivedReq `shouldBe` "/v1/rooms/testRoomId"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+
+            stopMockServer svr
+
+        it "getRoomDetailEither returns a (Right Room)" $ do
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                respond $ responseLBS status200 [] roomJson
+            (Right resRoom) <- getResponseBody <$> getRoomDetailEither mockBaseRequest dummyAuth (RoomId "testRoomId")
+            resRoom `shouldBe` room
+
+            stopMockServer svr
+
+    describe "Message" $ do
+        it "Message tests" $ do
+            pending
+
+    describe "Membership" $ do
+        it "Membership tests" $ do
+            pending
+
+    describe "Organization" $ do
+        it "Organization tests" $ do
+            pending
+
+    describe "License" $ do
+        it "License tests" $ do
+            pending
+
+    describe "Role" $ do
+        it "Role tests" $ do
             pending
 
 

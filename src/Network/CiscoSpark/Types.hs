@@ -327,20 +327,29 @@ instance SparkListItem Room where
     type ToList Room = RoomList
     unwrap = roomListItems
 
+data RoomQuerySortBy = RoomQuerySortById | RoomQuerySortByLastActivity | RoomQuerySortByCreated deriving (Eq, Show)
+
 -- | Optional query strings for room list API
 data RoomQuery = RoomQuery
-    { roomQueryTeamId   :: Maybe TeamId     -- ^ List rooms only in given team.
-    , roomQueryRoomType :: Maybe RoomType   -- ^ List given type rooms only.
+    { roomQueryTeamId   :: Maybe TeamId             -- ^ List rooms only in given team.
+    , roomQueryRoomType :: Maybe RoomType           -- ^ List given type rooms only.
+    , roomQuerySortBy   :: Maybe RoomQuerySortBy    -- ^ Sort response by given option.
     } deriving (Eq, Show)
 
 -- | Default value of query strings for room list API.
 defaultRoomQuery :: RoomQuery
-defaultRoomQuery = RoomQuery Nothing Nothing
+defaultRoomQuery = RoomQuery Nothing Nothing Nothing
 
 -- | Sum type to ByteString converter for 'RoomType'.
 roomTypeToQueryString :: RoomType -> ByteString
 roomTypeToQueryString RoomTypeDirect = "direct"
 roomTypeToQueryString RoomTypeGroup  = "group"
+
+-- | Sum type to ByteString converter for 'RoomQuerySortBy'.
+roomQuerySortByToQueryString :: RoomQuerySortBy -> ByteString
+roomQuerySortByToQueryString RoomQuerySortById           = "id"
+roomQuerySortByToQueryString RoomQuerySortByLastActivity = "lastactivity"
+roomQuerySortByToQueryString RoomQuerySortByCreated      = "created"
 
 -- | 'CreateRoom' is encoded to request body JSON of Create a Room REST call.
 data CreateRoom = CreateRoom
