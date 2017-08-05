@@ -535,9 +535,9 @@ instance SparkListItem Organization where
     unwrap = organizationListItems
 
 -- | Display name of License
-newtype LicenseDisplayName  = LicenseDisplayName Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
+newtype LicenseName  = LicenseName Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
 -- | Counting number of granted or consumed License
-newtype LicenseUnit         = LicenseUnit Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
+newtype LicenseUnit         = LicenseUnit Integer deriving (Eq, Show, Generic, ToJSON, FromJSON)
 
 {-|
     'License' is allowance for features and services of Cisco Spark subscription.
@@ -545,10 +545,10 @@ newtype LicenseUnit         = LicenseUnit Text deriving (Eq, Show, Generic, ToJS
     It is also element type of response of List Licenses call.
 -}
 data License = License
-    { licenseId            :: LicenseId             -- ^ Identifier of the License.
-    , licenseDisplayName   :: LicenseDisplayName    -- ^ Display name of the License.
-    , licenseTotalUnits    :: LicenseUnit           -- ^ Number of granted License.
-    , licenseConsumedUnits :: LicenseUnit           -- ^ Number of currently consumed License.
+    { licenseId            :: LicenseId      -- ^ Identifier of the License.
+    , licenseName          :: LicenseName    -- ^ Name of the License.
+    , licenseTotalUnits    :: LicenseUnit    -- ^ Number of granted License.
+    , licenseConsumedUnits :: LicenseUnit    -- ^ Number of currently consumed License.
     } deriving (Eq, Show)
 
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 7, omitNothingFields = True } ''License)

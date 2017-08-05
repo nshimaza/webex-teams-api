@@ -72,7 +72,7 @@ module Network.CiscoSpark
     , OrganizationList (..)
 
     , License (..)
-    , LicenseDisplayName (..)
+    , LicenseName (..)
     , LicenseUnit (..)
     , LicenseList (..)
     , LicenseQuery (..)
@@ -103,7 +103,16 @@ module Network.CiscoSpark
     , streamTeamMembershipList
     , getTeamMembershipDetail
     , getTeamMembershipDetailEither
+    , streamOrganizationList
+    , getOrganizationDetail
+    , getOrganizationDetailEither
     , defaultLicenseQuery
+    , streamLicenseList
+    , getLicenseDetail
+    , getLicenseDetailEither
+    , streamRoleList
+    , getRoleDetail
+    , getRoleDetailEither
     , ciscoSparkBaseRequest
     ) where
 
@@ -200,6 +209,8 @@ streamMembershipList auth base query = do
         queryList = roomId <> personId <> email
     streamList auth $ setRequestQueryString queryList $ makeCommonListReq base "memberships"
 
+
+
 -- | Query list of 'Team' and stream it into Conduit pipe.  It automatically performs pagination.
 streamTeamList :: MonadIO m => Authorization -> Request -> Source m Team
 streamTeamList auth base = streamList auth $ makeCommonListReq base "teams"
@@ -209,6 +220,20 @@ streamTeamMembershipList :: MonadIO m => Authorization -> Request -> TeamMembers
 streamTeamMembershipList auth base query = do
     let queryList = maybeToList $ (\(TeamId t) -> ("teamId", Just (encodeUtf8 t))) <$> teamMembershipQueryTeamId query
     streamList auth $ setRequestQueryString queryList $ makeCommonListReq base "team/memberships"
+
+-- | Query list of 'Organization' and stream it into Conduit pipe.  It automatically performs pagination.
+streamOrganizationList :: MonadIO m => Authorization -> Request -> Source m Organization
+streamOrganizationList auth base = streamList auth $ makeCommonListReq base "organizations"
+
+-- | Query list of 'License' and stream it into Conduit pipe.  It automatically performs pagination.
+streamLicenseList :: MonadIO m => Authorization -> Request -> LicenseQuery -> Source m License
+streamLicenseList auth base query = do
+    let queryList = maybeToList $ (\(OrganizationId o) -> ("orgId", Just (encodeUtf8 o))) <$> licenseQueryOrgId query
+    streamList auth $ setRequestQueryString queryList $ makeCommonListReq base "licenses"
+
+-- | Query list of 'Role' and stream it into Conduit pipe.  It automatically performs pagination.
+streamRoleList :: MonadIO m => Authorization -> Request -> Source m Role
+streamRoleList auth base = streamList auth $ makeCommonListReq base "roles"
 
 
 makeCommonDetailReq
@@ -265,6 +290,28 @@ getTeamMembershipDetail base auth (TeamMembershipId idStr) = httpJSON $ makeComm
 getTeamMembershipDetailEither :: MonadIO m => Request -> Authorization -> TeamMembershipId -> m (Response (Either JSONException TeamMembership))
 getTeamMembershipDetailEither base auth (TeamMembershipId idStr) = httpJSONEither $ makeCommonDetailReq base auth "team/memberships" idStr
 
+-- | Get details for 'Organization' by ID.  A JSONException runtime exception will be thrown on an JSON parse errors.
+getOrganizationDetail :: MonadIO m => Request -> Authorization -> OrganizationId -> m (Response Organization)
+getOrganizationDetail base auth (OrganizationId idStr) = httpJSON $ makeCommonDetailReq base auth "organizations" idStr
 
+-- | Get details for 'Organization' by ID.  A Left value will be returned on an JSON parse errors.
+getOrganizationDetailEither :: MonadIO m => Request -> Authorization -> OrganizationId -> m (Response (Either JSONException Organization))
+getOrganizationDetailEither base auth (OrganizationId idStr) = httpJSONEither $ makeCommonDetailReq base auth "organizations" idStr
+
+-- | Get details for 'License' by ID.  A JSONException runtime exception will be thrown on an JSON parse errors.
+getLicenseDetail :: MonadIO m => Request -> Authorization -> LicenseId -> m (Response License)
+getLicenseDetail base auth (LicenseId idStr) = httpJSON $ makeCommonDetailReq base auth "licenses" idStr
+
+-- | Get details for 'License' by ID.  A Left value will be returned on an JSON parse errors.
+getLicenseDetailEither :: MonadIO m => Request -> Authorization -> LicenseId -> m (Response (Either JSONException License))
+getLicenseDetailEither base auth (LicenseId idStr) = httpJSONEither $ makeCommonDetailReq base auth "licenses" idStr
+
+-- | Get details for 'Role' by ID.  A JSONException runtime exception will be thrown on an JSON parse errors.
+getRoleDetail :: MonadIO m => Request -> Authorization -> RoleId -> m (Response Role)
+getRoleDetail base auth (RoleId idStr) = httpJSON $ makeCommonDetailReq base auth "roles" idStr
+
+-- | Get details for 'Role' by ID.  A Left value will be returned on an JSON parse errors.
+getRoleDetailEither :: MonadIO m => Request -> Authorization -> RoleId -> m (Response (Either JSONException Role))
+getRoleDetailEither base auth (RoleId idStr) = httpJSONEither $ makeCommonDetailReq base auth "roles" idStr
 
 

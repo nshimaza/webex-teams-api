@@ -176,14 +176,14 @@ spec = do
                                  \  \"isModerator\" : true,\
                                  \  \"created\" : \"2015-10-18T14:26:16.057Z\"\
                                  \}"
-            teamMembership = TeamMembership { teamMembershipId = TeamMembershipId "Y2lzY29zcGFyazovL3VzL1RFQU1fTUVNQkVSU0hJUC8wZmNmYTJiOC1hZGNjLTQ1ZWEtYTc4Mi1lNDYwNTkyZjgxZWY6MTNlMThmNDAtNDJmYy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5"
-                                            , teamMembershipTeamId = TeamId "Y2lzY29zcGFyazovL3VzL1RFQU0vMTNlMThmNDAtNDJmYy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5"
-                                            , teamMembershipPersonId = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
-                                            , teamMembershipPersonEmail = Email "johnny.chang@foomail.com"
-                                            , teamMembershipPersonDisplayName = DisplayName "John Andersen"
-                                            , teamMembershipPersonOrgId = OrganizationId "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE"
-                                            , teamMembershipIsModerator = True
-                                            , teamMembershipCreated = Timestamp "2015-10-18T14:26:16.057Z"
+            teamMembership = TeamMembership { teamMembershipId                  = TeamMembershipId "Y2lzY29zcGFyazovL3VzL1RFQU1fTUVNQkVSU0hJUC8wZmNmYTJiOC1hZGNjLTQ1ZWEtYTc4Mi1lNDYwNTkyZjgxZWY6MTNlMThmNDAtNDJmYy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5"
+                                            , teamMembershipTeamId              = TeamId "Y2lzY29zcGFyazovL3VzL1RFQU0vMTNlMThmNDAtNDJmYy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5"
+                                            , teamMembershipPersonId            = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
+                                            , teamMembershipPersonEmail         = Email "johnny.chang@foomail.com"
+                                            , teamMembershipPersonDisplayName   = DisplayName "John Andersen"
+                                            , teamMembershipPersonOrgId         = OrganizationId "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE"
+                                            , teamMembershipIsModerator         = True
+                                            , teamMembershipCreated             = Timestamp "2015-10-18T14:26:16.057Z"
                                             }
             teamMembershipListJson = "{\"items\":[" <> teamMembershipJson <> "]}"
             teamMembershipList = TeamMembershipList [ teamMembership ]
@@ -201,8 +201,8 @@ spec = do
 
         it "encodes CreateTeamMembership to JSON" $ do
             let src = CreateTeamMembership
-                      { createTeamMembershipTeamId = TeamId "Y2lzY29zcGFyazovL3VzL1RFQU0vMTNlMThmNDAtNDJmYy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5"
-                      , createTeamMembershipPersonId = Just $ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
+                      { createTeamMembershipTeamId      = TeamId "Y2lzY29zcGFyazovL3VzL1RFQU0vMTNlMThmNDAtNDJmYy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5"
+                      , createTeamMembershipPersonId    = Just $ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
                       , createTeamMembershipPersonEmail = Just $ Email "johnny.chang@foomail.com"
                       , createTeamMembershipIsModerator = Just True
                       }
@@ -233,15 +233,15 @@ spec = do
                        \  \"creatorId\": \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY\",\
                        \  \"created\" : \"2016-04-21T19:01:55.966Z\"\
                        \}"
-            room = Room { roomId = RoomId  "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
-                        , roomTitle = RoomTitle "Project Unicorn - Sprint 0"
-                        , roomType = RoomTypeGroup
-                        , roomIsLocked = True
-                        , roomSipAddress = Just $ SipAddr "01234567890@meet.ciscospark.com"
-                        , roomLastActivity = Timestamp "2016-04-21T19:12:48.920Z"
-                        , roomTeamId = Just $ TeamId "Y2lzY29zcGFyazovL3VzL1JPT00vNjRlNDVhZTAtYzQ2Yi0xMWU1LTlkZjktMGQ0MWUzNDIxOTcz"
-                        , roomCreatorId = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
-                        , roomCreated = Timestamp "2016-04-21T19:01:55.966Z"
+            room = Room { roomId            = RoomId  "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
+                        , roomTitle         = RoomTitle "Project Unicorn - Sprint 0"
+                        , roomType          = RoomTypeGroup
+                        , roomIsLocked      = True
+                        , roomSipAddress    = Just $ SipAddr "01234567890@meet.ciscospark.com"
+                        , roomLastActivity  = Timestamp "2016-04-21T19:12:48.920Z"
+                        , roomTeamId        = Just $ TeamId "Y2lzY29zcGFyazovL3VzL1JPT00vNjRlNDVhZTAtYzQ2Yi0xMWU1LTlkZjktMGQ0MWUzNDIxOTcz"
+                        , roomCreatorId     = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
+                        , roomCreated       = Timestamp "2016-04-21T19:01:55.966Z"
                         }
             roomListJson = "{\"items\":[" <> roomJson <> "]}"
             roomList = RoomList [ room ]
@@ -286,15 +286,15 @@ spec = do
                              \  \"isMonitor\" : true,\
                              \  \"created\" : \"2015-10-18T14:26:16.203Z\"\
                              \}"
-            membership = Membership { membershipId = MembershipId "Y2lzY29zcGFyazovL3VzL01FTUJFUlNISVAvMGQwYzkxYjYtY2U2MC00NzI1LWI2ZDAtMzQ1NWQ1ZDExZWYzOmNkZTFkZDQwLTJmMGQtMTFlNS1iYTljLTdiNjU1NmQyMjA3Yg"
-                                    , membershipRoomId = RoomId "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
-                                    , membershipPersonId = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
-                                    , membershipPersonEmail = Email "john.andersen@example.com"
-                                    , membershipPersonDisplayName = DisplayName "John Andersen"
-                                    , membershipPersonOrgId = OrganizationId "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE"
-                                    , membershipIsModerator = True
-                                    , membershipIsMonitor = True
-                                    , membershipCreated = Timestamp "2015-10-18T14:26:16.203Z"
+            membership = Membership { membershipId                  = MembershipId "Y2lzY29zcGFyazovL3VzL01FTUJFUlNISVAvMGQwYzkxYjYtY2U2MC00NzI1LWI2ZDAtMzQ1NWQ1ZDExZWYzOmNkZTFkZDQwLTJmMGQtMTFlNS1iYTljLTdiNjU1NmQyMjA3Yg"
+                                    , membershipRoomId              = RoomId "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
+                                    , membershipPersonId            = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
+                                    , membershipPersonEmail         = Email "john.andersen@example.com"
+                                    , membershipPersonDisplayName   = DisplayName "John Andersen"
+                                    , membershipPersonOrgId         = OrganizationId "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE"
+                                    , membershipIsModerator         = True
+                                    , membershipIsMonitor           = True
+                                    , membershipCreated             = Timestamp "2015-10-18T14:26:16.203Z"
                                     }
             membershipListJson = "{\"items\":[" <> membershipJson <> "]}"
             membershipList = MembershipList [ membership ]
@@ -312,8 +312,8 @@ spec = do
 
         it "encodes CreateMembership to JSON" $ do
             let src = CreateMembership
-                      { createMembershipRoomId = RoomId "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
-                      , createMembershipPersonId = Just $ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
+                      { createMembershipRoomId      = RoomId "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
+                      , createMembershipPersonId    = Just $ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
                       , createMembershipPersonEmail = Just $ Email "john.andersen@example.com"
                       , createMembershipIsModerator = Just True
                       }
@@ -337,13 +337,73 @@ spec = do
             pending
 
     describe "Organization" $ do
-        it "Organization tests" $ do
-            pending
+        let organizationJson = "{\
+                               \  \"id\" : \"OTZhYmMyYWEtM2RjYy0xMWU1LWExNTItZmUzNDgxOWNkYzlh\",\
+                               \  \"displayName\" : \"Cisco, Inc.\",\
+                               \  \"created\" : \"2015-10-18T14:26:16+00:00\"\
+                               \}"
+            organization = Organization { organizationId            = OrganizationId "OTZhYmMyYWEtM2RjYy0xMWU1LWExNTItZmUzNDgxOWNkYzlh"
+                                        , organizationDisplayName   = OrganizationDisplayName "Cisco, Inc."
+                                        , organizationCreated       = Timestamp "2015-10-18T14:26:16+00:00"
+                                        }
+            organizationListJson = "{\"items\":[" <> organizationJson <> "]}"
+            organizationList = OrganizationList [ organization ]
+
+        it "can be unwrapped from OrganizationList" $ do
+            unwrap organizationList `shouldBe` [ organization ]
+
+        it "decodes Team Organization API response JSON" $ do
+            eitherDecode organizationJson `shouldBe` Right organization
+            (decode . encode) organization `shouldBe` Just organization
+
+        it "decodes Team Organization list" $ do
+            eitherDecode organizationListJson `shouldBe` Right organizationList
+            (decode . encode) organizationList `shouldBe` Just organizationList
 
     describe "License" $ do
-        it "License tests" $ do
-            pending
+        let licenseJson = "{\
+                          \  \"id\" : \"OTZhYmMyYWEtM2RjYy0xMWU1LWExNTItZmUzNDgxOWNkYzlh\",\
+                          \  \"name\" : \"Spark Calling\",\
+                          \  \"totalUnits\" : 42,\
+                          \  \"consumedUnits\" : 8\
+                          \}"
+            license = License { licenseId               = LicenseId "OTZhYmMyYWEtM2RjYy0xMWU1LWExNTItZmUzNDgxOWNkYzlh"
+                              , licenseName             = LicenseName "Spark Calling"
+                              , licenseTotalUnits       = LicenseUnit 42
+                              , licenseConsumedUnits    = LicenseUnit 8
+                              }
+            licenseListJson = "{\"items\":[" <> licenseJson <> "]}"
+            licenseList = LicenseList [ license ]
+
+        it "can be unwrapped from LicenseList" $ do
+            unwrap licenseList `shouldBe` [ license ]
+
+        it "decodes Team License API response JSON" $ do
+            eitherDecode licenseJson `shouldBe` Right license
+            (decode . encode) license `shouldBe` Just license
+
+        it "decodes Team License list" $ do
+            eitherDecode licenseListJson `shouldBe` Right licenseList
+            (decode . encode) licenseList `shouldBe` Just licenseList
 
     describe "Role" $ do
-        it "Role tests" $ do
-            pending
+        let roleJson = "{\
+                       \  \"id\" : \"OTZhYmMyYWEtM2RjYy0xMWU1LWExNTItZmUzNDgxOWNkYzlh\",\
+                       \  \"name\" : \"Full Administrator\"\
+                       \}"
+            role = Role { roleId    = RoleId "OTZhYmMyYWEtM2RjYy0xMWU1LWExNTItZmUzNDgxOWNkYzlh"
+                        , roleName  = RoleName "Full Administrator"
+                        }
+            roleListJson = "{\"items\":[" <> roleJson <> "]}"
+            roleList = RoleList [ role ]
+
+        it "can be unwrapped from RoleList" $ do
+            unwrap roleList `shouldBe` [ role ]
+
+        it "decodes Team Role API response JSON" $ do
+            eitherDecode roleJson `shouldBe` Right role
+            (decode . encode) role `shouldBe` Just role
+
+        it "decodes Team Role list" $ do
+            eitherDecode roleListJson `shouldBe` Right roleList
+            (decode . encode) roleList `shouldBe` Just roleList

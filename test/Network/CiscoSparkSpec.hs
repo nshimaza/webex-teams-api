@@ -684,15 +684,233 @@ spec = do
             pending
 
     describe "Organization" $ do
-        it "Organization tests" $ do
-            pending
+        let organizationJson = "{\
+                               \  \"id\" : \"OTZhYmMyYWEtM2RjYy0xMWU1LWExNTItZmUzNDgxOWNkYzlh\",\
+                               \  \"displayName\" : \"Cisco, Inc.\",\
+                               \  \"created\" : \"2015-10-18T14:26:16+00:00\"\
+                               \}"
+            organization = Organization { organizationId            = OrganizationId "OTZhYmMyYWEtM2RjYy0xMWU1LWExNTItZmUzNDgxOWNkYzlh"
+                                        , organizationDisplayName   = OrganizationDisplayName "Cisco, Inc."
+                                        , organizationCreated       = Timestamp "2015-10-18T14:26:16+00:00"
+                                        }
+            organizationGen i = Organization { organizationId            = OrganizationId . pack $ "organizationId" <> i
+                                             , organizationDisplayName   = OrganizationDisplayName . pack $ "displayName" <> i
+                                             , organizationCreated       = Timestamp . pack $ "timestamp" <> i
+                                             }
+            organizationList j = [ organizationGen $ j ++ show i | i <- [1..3] ]
+            organizationListList = [ organizationList [c] | c <- ['a'..'d'] ]
+
+        it "streamOrganizationList streams Organization" $ do
+            let testData = organizationList $ ['Z']
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                simpleApp (encode (OrganizationList testData)) req respond
+
+            res <- runConduit $ streamOrganizationList dummyAuth mockBaseRequest .| sinkList
+            res `shouldBe` testData
+
+            receivedReq <- takeMVar receivedReqMVar
+            rawPathInfo receivedReq `shouldBe` "/v1/organizations"
+            queryString receivedReq `shouldBe` []
+
+            stopMockServer svr
+
+        it "streamOrganizationList streams Organization with automatic pagination" $ do
+            svr <- startMockServer $ paginationApp $ map (\ol -> encode $ OrganizationList ol) organizationListList
+
+            res <- runConduit $ streamOrganizationList dummyAuth mockBaseRequest .| sinkList
+            res `shouldBe` concat organizationListList
+
+            stopMockServer svr
+
+        it "getOrganizationDetail returns a Organization" $ do
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                respond $ responseLBS status200 [] organizationJson
+
+            resOrganization <- getResponseBody <$> getOrganizationDetail mockBaseRequest dummyAuth (OrganizationId "testOrganizationId")
+            resOrganization `shouldBe` organization
+
+            receivedReq <- takeMVar receivedReqMVar
+            requestMethod receivedReq `shouldBe` "GET"
+            rawPathInfo receivedReq `shouldBe` "/v1/organizations/testOrganizationId"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+
+            stopMockServer svr
+
+        it "getOrganizationDetailEither returns a (Right Organization)" $ do
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                respond $ responseLBS status200 [] organizationJson
+            (Right resOrganization) <- getResponseBody <$> getOrganizationDetailEither mockBaseRequest dummyAuth (OrganizationId "testOrganizationId")
+            resOrganization `shouldBe` organization
+
+            stopMockServer svr
 
     describe "License" $ do
-        it "License tests" $ do
-            pending
+        let licenseJson = "{\
+                          \  \"id\" : \"OTZhYmMyYWEtM2RjYy0xMWU1LWExNTItZmUzNDgxOWNkYzlh\",\
+                          \  \"name\" : \"Spark Calling\",\
+                          \  \"totalUnits\" : 42,\
+                          \  \"consumedUnits\" : 8\
+                          \}"
+            license = License { licenseId               = LicenseId "OTZhYmMyYWEtM2RjYy0xMWU1LWExNTItZmUzNDgxOWNkYzlh"
+                              , licenseName             = LicenseName "Spark Calling"
+                              , licenseTotalUnits       = LicenseUnit 42
+                              , licenseConsumedUnits    = LicenseUnit 8
+                              }
+            licenseGen i = License { licenseId               = LicenseId . pack $ "licenseId" <> i
+                                   , licenseName             = LicenseName . pack $ "licenseName" <> i
+                                   , licenseTotalUnits       = LicenseUnit 42
+                                   , licenseConsumedUnits    = LicenseUnit 8
+                                   }
+            licenseList j = [ licenseGen $ j ++ show i | i <- [1..3] ]
+            licenseListList = [ licenseList [c] | c <- ['a'..'d'] ]
+
+        it "streamLicenseList streams License" $ do
+            let testData = licenseList $ ['Z']
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                simpleApp (encode (LicenseList testData)) req respond
+
+            res <- runConduit $ streamLicenseList dummyAuth mockBaseRequest defaultLicenseQuery .| sinkList
+            res `shouldBe` testData
+
+            receivedReq <- takeMVar receivedReqMVar
+            rawPathInfo receivedReq `shouldBe` "/v1/licenses"
+            queryString receivedReq `shouldBe` []
+
+            stopMockServer svr
+
+        it "streamLicenseList passes query strings build from LicenseQuery to server" $ do
+            let testData = licenseList $ ['Z']
+                licenseQuery = LicenseQuery (Just $ OrganizationId "orgIdQuery")
+
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                simpleApp (encode (LicenseList testData)) req respond
+
+            res <- runConduit $ streamLicenseList dummyAuth mockBaseRequest licenseQuery .| sinkList
+            res `shouldBe` testData
+
+            receivedReq <- takeMVar receivedReqMVar
+            rawPathInfo receivedReq `shouldBe` "/v1/licenses"
+            queryString receivedReq `shouldBe` [ ("orgId", Just "orgIdQuery") ]
+
+            stopMockServer svr
+
+        it "streamLicenseList streams License with automatic pagination" $ do
+            svr <- startMockServer $ paginationApp $ map (\ll -> encode $ LicenseList ll) licenseListList
+
+            res <- runConduit $ streamLicenseList dummyAuth mockBaseRequest defaultLicenseQuery .| sinkList
+            res `shouldBe` concat licenseListList
+
+            stopMockServer svr
+
+        it "getLicenseDetail returns a License" $ do
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                respond $ responseLBS status200 [] licenseJson
+
+            resLicense <- getResponseBody <$> getLicenseDetail mockBaseRequest dummyAuth (LicenseId "testLicenseId")
+            resLicense `shouldBe` license
+
+            receivedReq <- takeMVar receivedReqMVar
+            requestMethod receivedReq `shouldBe` "GET"
+            rawPathInfo receivedReq `shouldBe` "/v1/licenses/testLicenseId"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+
+            stopMockServer svr
+
+        it "getLicenseDetailEither returns a (Right License)" $ do
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                respond $ responseLBS status200 [] licenseJson
+            (Right resLicense) <- getResponseBody <$> getLicenseDetailEither mockBaseRequest dummyAuth (LicenseId "testLicenseId")
+            resLicense `shouldBe` license
+
+            stopMockServer svr
 
     describe "Role" $ do
-        it "Role tests" $ do
-            pending
+        let roleJson = "{\
+                       \  \"id\" : \"OTZhYmMyYWEtM2RjYy0xMWU1LWExNTItZmUzNDgxOWNkYzlh\",\
+                       \  \"name\" : \"Full Administrator\"\
+                       \}"
+            role = Role { roleId    = RoleId "OTZhYmMyYWEtM2RjYy0xMWU1LWExNTItZmUzNDgxOWNkYzlh"
+                        , roleName  = RoleName "Full Administrator"
+                        }
+            roleGen i = Role { roleId   = RoleId . pack $ "roleId" <> i
+                             , roleName = RoleName . pack $ "roleName" <> i
+                             }
+            roleList j = [ roleGen $ j ++ show i | i <- [1..3] ]
+            roleListList = [ roleList [c] | c <- ['a'..'d'] ]
 
+        it "streamRoleList streams Role" $ do
+            let testData = roleList $ ['Z']
+            receivedReqMVar <- newEmptyMVar
 
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                simpleApp (encode (RoleList testData)) req respond
+
+            res <- runConduit $ streamRoleList dummyAuth mockBaseRequest .| sinkList
+            res `shouldBe` testData
+
+            receivedReq <- takeMVar receivedReqMVar
+            rawPathInfo receivedReq `shouldBe` "/v1/roles"
+            queryString receivedReq `shouldBe` []
+
+            stopMockServer svr
+
+        it "streamRoleList streams Role with automatic pagination" $ do
+            svr <- startMockServer $ paginationApp $ map (\rl -> encode $ RoleList rl) roleListList
+
+            res <- runConduit $ streamRoleList dummyAuth mockBaseRequest .| sinkList
+            res `shouldBe` concat roleListList
+
+            stopMockServer svr
+
+        it "getRoleDetail returns a Role" $ do
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                respond $ responseLBS status200 [] roleJson
+
+            resRole <- getResponseBody <$> getRoleDetail mockBaseRequest dummyAuth (RoleId "testRoleId")
+            resRole `shouldBe` role
+
+            receivedReq <- takeMVar receivedReqMVar
+            requestMethod receivedReq `shouldBe` "GET"
+            rawPathInfo receivedReq `shouldBe` "/v1/roles/testRoleId"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+
+            stopMockServer svr
+
+        it "getRoleDetailEither returns a (Right Role)" $ do
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                respond $ responseLBS status200 [] roleJson
+            (Right resRole) <- getResponseBody <$> getRoleDetailEither mockBaseRequest dummyAuth (RoleId "testRoleId")
+            resRole `shouldBe` role
+
+            stopMockServer svr
