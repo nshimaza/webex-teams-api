@@ -173,14 +173,12 @@ streamList auth req = do
     streamListLoop auth res
 
 streamListLoop :: (MonadIO m, FromJSON a, SparkListItem i) => Authorization -> Response a -> Source m i
-streamListLoop auth res = case getNextUrl res of
-    Nothing     -> pure ()
-    Just url    -> case parseRequest $ "GET " <> (C8.unpack url) of
-        Nothing         -> pure ()
-        Just nextReq    -> do
-            nextRes <- httpJSON $ addAuthorizationHeader auth nextReq
-            yieldMany . unwrap $ getResponseBody nextRes
-            streamListLoop auth nextRes
+streamListLoop auth res = case getNextUrl res >>= (\url -> parseRequest $ "GET " <> (C8.unpack url)) of
+    Nothing         -> pure ()
+    Just nextReq    -> do
+        nextRes <- httpJSON $ addAuthorizationHeader auth nextReq
+        yieldMany . unwrap $ getResponseBody nextRes
+        streamListLoop auth nextRes
 
 -- | Query list of 'Person' and stream it into Conduit pipe.  It automatically performs pagination.
 streamPersonList :: MonadIO m => Authorization -> Request -> PersonQuery -> Source m Person
