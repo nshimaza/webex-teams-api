@@ -366,6 +366,67 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFie
 -- ^ 'UpdateRoom' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 
+-- | Identifying 'Membership'.
+newtype MembershipId    = MembershipId Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
+
+{-|
+    'Membership' is association between 'Room' and 'Person'.
+    It can be N:N relation.  A Person can belong to multiple Room.
+    Membership is decoded from response JSON of Get Membership Details REST call.
+    It is also element type of response of List Memberships call.
+-}
+data Membership = Membership
+    { membershipId                :: MembershipId   -- ^ Identifier of the Membership entry.
+    , membershipRoomId            :: RoomId         -- ^ Identifier of the 'Room' associated to the Person
+    , membershipPersonId          :: PersonId       -- ^ Identifier of the 'Person' associated to the Room
+    , membershipPersonEmail       :: Email          -- ^ Email of the Person
+    , membershipPersonDisplayName :: DisplayName    -- ^ Display name of the Person
+    , membershipPersonOrgId       :: OrganizationId -- ^ Identifier of 'Organization' which the Person belongs to.
+    , membershipIsModerator       :: Bool           -- ^ True if the Person is a moderator of the room.
+    , membershipIsMonitor         :: Bool           -- ^ True if the Person is monitoring the Room.
+    , membershipCreated           :: Timestamp      -- ^ Timestamp when the Membership was created.
+    } deriving (Eq, Show)
+
+$(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFields = True } ''Membership)
+-- ^ 'Membership' derives ToJSON and FromJSON via deriveJSON template haskell function.
+
+-- | 'MembershipList' is decoded from response JSON of List Memberships REST call.  It is list of 'Membership'.
+newtype MembershipList = MembershipList { membershipListItems :: [Membership] } deriving (Eq, Show)
+$(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 14, omitNothingFields = True } ''MembershipList)
+-- ^ 'MembershipList' derives ToJSON and FromJSON via deriveJSON template haskell function.
+
+instance SparkListItem Membership where
+    type ToList Membership = MembershipList
+    unwrap = membershipListItems
+
+-- | Optional query strings for room membership list API
+data MembershipQuery = MembershipQuery
+    { membershipQueryRoomId      :: Maybe RoomId    -- ^ List membership only in given room.
+    , membershipQueryPersonId    :: Maybe PersonId  -- ^ List membership related to given person of personId.
+    , membershipQueryPersonEmail :: Maybe Email     -- ^ List membership related to given person of email.
+    } deriving (Eq, Show)
+
+-- | Default value of query strings for room membership list API.
+defaultMembershipQuery :: MembershipQuery
+defaultMembershipQuery = MembershipQuery Nothing Nothing Nothing
+
+-- | 'CreateMembership' is encoded to request body JSON of Create a Membership REST call.
+data CreateMembership = CreateMembership
+    { createMembershipRoomId      :: RoomId         -- ^ Identifier of 'Room' which the Person will be added to.
+    , createMembershipPersonId    :: Maybe PersonId -- ^ Identifier of 'Person' who will be added to the Room.
+    , createMembershipPersonEmail :: Maybe Email    -- ^ Email of the Person to be added.
+    , createMembershipIsModerator :: Maybe Bool     -- ^ The Person becomes a moderator of the Room if True.
+    } deriving (Eq, Show)
+
+$(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 16, omitNothingFields = True } ''CreateMembership)
+-- ^ 'CreateMembership' derives ToJSON and FromJSON via deriveJSON template haskell function.
+
+-- | 'UpdateMembership' is encoded to request body JSON of Update a Membership REST call.
+newtype UpdateMembership = UpdateMembership { updateMembershipIsModerator :: Bool } deriving (Eq, Show)
+$(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 16, omitNothingFields = True } ''UpdateMembership)
+-- ^ 'UpdateMembership' derives ToJSON and FromJSON via deriveJSON template haskell function.
+
+
 -- | Identifying 'Message'.
 newtype MessageId   = MessageId Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
 -- | Body of message in plain text.
@@ -444,67 +505,6 @@ data CreateMessage = CreateMessage
 
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFields = True } ''CreateMessage)
 -- ^ 'CreateMessage' derives ToJSON and FromJSON via deriveJSON template haskell function.
-
-
--- | Identifying 'Membership'.
-newtype MembershipId    = MembershipId Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
-
-{-|
-    'Membership' is association between 'Room' and 'Person'.
-    It can be N:N relation.  A Person can belong to multiple Room.
-    Membership is decoded from response JSON of Get Membership Details REST call.
-    It is also element type of response of List Memberships call.
--}
-data Membership = Membership
-    { membershipId                :: MembershipId   -- ^ Identifier of the Membership entry.
-    , membershipRoomId            :: RoomId         -- ^ Identifier of the 'Room' associated to the Person
-    , membershipPersonId          :: PersonId       -- ^ Identifier of the 'Person' associated to the Room
-    , membershipPersonEmail       :: Email          -- ^ Email of the Person
-    , membershipPersonDisplayName :: DisplayName    -- ^ Display name of the Person
-    , membershipPersonOrdId       :: OrganizationId -- ^ Identifier of 'Organization' which the Person belongs to.
-    , membershipIsModerator       :: Bool           -- ^ True if the Person is a moderator of the room.
-    , membershipIsMonitor         :: Bool           -- ^ True if the Person is monitoring the Room.
-    , membershipCreated           :: Timestamp      -- ^ Timestamp when the Membership was created.
-    } deriving (Eq, Show)
-
-$(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFields = True } ''Membership)
--- ^ 'Membership' derives ToJSON and FromJSON via deriveJSON template haskell function.
-
--- | 'MembershipList' is decoded from response JSON of List Memberships REST call.  It is list of 'Membership'.
-newtype MembershipList = MembershipList { membershipListItems :: [Membership] } deriving (Eq, Show)
-$(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 14, omitNothingFields = True } ''MembershipList)
--- ^ 'MembershipList' derives ToJSON and FromJSON via deriveJSON template haskell function.
-
-instance SparkListItem Membership where
-    type ToList Membership = MembershipList
-    unwrap = membershipListItems
-
--- | Optional query strings for room membership list API
-data MembershipQuery = MembershipQuery
-    { membershipQueryRoomId      :: Maybe RoomId    -- ^ List membership only in given room.
-    , membershipQueryPersonId    :: Maybe PersonId  -- ^ List membership related to given person of personId.
-    , membershipQueryPersonEmail :: Maybe Email     -- ^ List membership related to given person of email.
-    } deriving (Eq, Show)
-
--- | Default value of query strings for room membership list API.
-defaultMembershipQuery :: MembershipQuery
-defaultMembershipQuery = MembershipQuery Nothing Nothing Nothing
-
--- | 'CreateMembership' is encoded to request body JSON of Create a Membership REST call.
-data CreateMembership = CreateMembership
-    { createMembershipRoomId      :: RoomId         -- ^ Identifier of 'Room' which the Person will be added to.
-    , createMembershipPersonId    :: Maybe PersonId -- ^ Identifier of 'Person' who will be added to the Room.
-    , createMembershipPersonEmail :: Maybe Email    -- ^ Email of the Person to be added.
-    , createMembershipIsModerator :: Maybe Bool     -- ^ The Person becomes a moderator of the Room if True.
-    } deriving (Eq, Show)
-
-$(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 16, omitNothingFields = True } ''CreateMembership)
--- ^ 'CreateMembership' derives ToJSON and FromJSON via deriveJSON template haskell function.
-
--- | 'UpdateMembership' is encoded to request body JSON of Update a Membership REST call.
-newtype UpdateMembership = UpdateMembership { updateMembershipIsModerator :: Bool } deriving (Eq, Show)
-$(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 16, omitNothingFields = True } ''UpdateMembership)
--- ^ 'UpdateMembership' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 
 -- | Display name of 'Organization'

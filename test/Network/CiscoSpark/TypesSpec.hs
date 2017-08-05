@@ -274,13 +274,66 @@ spec = do
             encode src `shouldBe` dst
             (decode . encode) src `shouldBe` Just src
 
+    describe "Membership" $ do
+        let membershipJson = "{\
+                             \  \"id\" : \"Y2lzY29zcGFyazovL3VzL01FTUJFUlNISVAvMGQwYzkxYjYtY2U2MC00NzI1LWI2ZDAtMzQ1NWQ1ZDExZWYzOmNkZTFkZDQwLTJmMGQtMTFlNS1iYTljLTdiNjU1NmQyMjA3Yg\",\
+                             \  \"roomId\" : \"Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0\",\
+                             \  \"personId\" : \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY\",\
+                             \  \"personEmail\" : \"john.andersen@example.com\",\
+                             \  \"personDisplayName\" : \"John Andersen\",\
+                             \  \"personOrgId\" : \"Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE\",\
+                             \  \"isModerator\" : true,\
+                             \  \"isMonitor\" : true,\
+                             \  \"created\" : \"2015-10-18T14:26:16.203Z\"\
+                             \}"
+            membership = Membership { membershipId = MembershipId "Y2lzY29zcGFyazovL3VzL01FTUJFUlNISVAvMGQwYzkxYjYtY2U2MC00NzI1LWI2ZDAtMzQ1NWQ1ZDExZWYzOmNkZTFkZDQwLTJmMGQtMTFlNS1iYTljLTdiNjU1NmQyMjA3Yg"
+                                    , membershipRoomId = RoomId "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
+                                    , membershipPersonId = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
+                                    , membershipPersonEmail = Email "john.andersen@example.com"
+                                    , membershipPersonDisplayName = DisplayName "John Andersen"
+                                    , membershipPersonOrgId = OrganizationId "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE"
+                                    , membershipIsModerator = True
+                                    , membershipIsMonitor = True
+                                    , membershipCreated = Timestamp "2015-10-18T14:26:16.203Z"
+                                    }
+            membershipListJson = "{\"items\":[" <> membershipJson <> "]}"
+            membershipList = MembershipList [ membership ]
+
+        it "can be unwrapped from MembershipList" $ do
+            unwrap membershipList `shouldBe` [ membership ]
+
+        it "decodes Team Membership API response JSON" $ do
+            eitherDecode membershipJson `shouldBe` Right membership
+            (decode . encode) membership `shouldBe` Just membership
+
+        it "decodes Team Membership list" $ do
+            eitherDecode membershipListJson `shouldBe` Right membershipList
+            (decode . encode) membershipList `shouldBe` Just membershipList
+
+        it "encodes CreateMembership to JSON" $ do
+            let src = CreateMembership
+                      { createMembershipRoomId = RoomId "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
+                      , createMembershipPersonId = Just $ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
+                      , createMembershipPersonEmail = Just $ Email "john.andersen@example.com"
+                      , createMembershipIsModerator = Just True
+                      }
+                dst = "{\
+                      \  \"roomId\" : \"Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0\",\
+                      \  \"personId\" : \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY\",\
+                      \  \"personEmail\" : \"john.andersen@example.com\",\
+                      \  \"isModerator\" : true\
+                      \}"
+            eitherDecode dst `shouldBe` Right src
+            (decode . encode) src `shouldBe` (decode dst :: Maybe CreateMembership)
+
+        it "encodes UpdateMembership to JSON" $ do
+            let src = UpdateMembership { updateMembershipIsModerator = False }
+                dst = "{\"isModerator\":false}"
+            encode src `shouldBe` dst
+            (decode . encode) src `shouldBe` Just src
 
     describe "Message" $ do
         it "Message tests" $ do
-            pending
-
-    describe "Membership" $ do
-        it "Membership tests" $ do
             pending
 
     describe "Organization" $ do
