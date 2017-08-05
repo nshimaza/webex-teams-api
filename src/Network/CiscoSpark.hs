@@ -92,6 +92,9 @@ module Network.CiscoSpark
     , getRoomDetail
     , getRoomDetailEither
     , defaultMembershipQuery
+    , streamMembershipList
+    , getMembershipDetail
+    , getMembershipDetailEither
     , defaultMessageQuery
     , streamTeamList
     , getTeamDetailEither
@@ -188,6 +191,15 @@ streamRoomList auth base query = do
         queryList = teamId <> roomType <> sortBy
     streamList auth $ setRequestQueryString queryList $ makeCommonListReq base "rooms"
 
+-- | Query list of 'Membership' and stream it into Conduit pipe.  It automatically performs pagination.
+streamMembershipList :: MonadIO m => Authorization -> Request -> MembershipQuery -> Source m Membership
+streamMembershipList auth base query = do
+    let roomId    = maybeToList $ (\(RoomId r) -> ("roomId", Just (encodeUtf8 r))) <$> membershipQueryRoomId query
+        personId  = maybeToList $ (\(PersonId p) -> ("personId", Just (encodeUtf8 p))) <$> membershipQueryPersonId query
+        email     = maybeToList $ (\(Email e) -> ("personEmail", Just (encodeUtf8 e))) <$> membershipQueryPersonEmail query
+        queryList = roomId <> personId <> email
+    streamList auth $ setRequestQueryString queryList $ makeCommonListReq base "memberships"
+
 -- | Query list of 'Team' and stream it into Conduit pipe.  It automatically performs pagination.
 streamTeamList :: MonadIO m => Authorization -> Request -> Source m Team
 streamTeamList auth base = streamList auth $ makeCommonListReq base "teams"
@@ -211,29 +223,45 @@ makeCommonDetailReq base auth path idStr
     $ addAuthorizationHeader auth
     $ base
 
+-- | Get details for 'Person' by ID.  A JSONException runtime exception will be thrown on an JSON parse errors.
 getPersonDetail :: MonadIO m => Request -> Authorization -> PersonId -> m (Response Person)
 getPersonDetail base auth (PersonId idStr) = httpJSON $ makeCommonDetailReq base auth "people" idStr
 
+-- | Get details for 'Person' by ID.  A Left value will be returned on an JSON parse errors.
 getPersonDetailEither :: MonadIO m => Request -> Authorization -> PersonId -> m (Response (Either JSONException Person))
 getPersonDetailEither base auth (PersonId idStr) = httpJSONEither $ makeCommonDetailReq base auth "people" idStr
 
+-- | Get details for 'Room' by ID.  A JSONException runtime exception will be thrown on an JSON parse errors.
 getRoomDetail :: MonadIO m => Request -> Authorization -> RoomId -> m (Response Room)
 getRoomDetail base auth (RoomId idStr) = httpJSON $ makeCommonDetailReq base auth "rooms" idStr
 
+-- | Get details for 'Room' by ID.  A Left value will be returned on an JSON parse errors.
 getRoomDetailEither :: MonadIO m => Request -> Authorization -> RoomId -> m (Response (Either JSONException Room))
 getRoomDetailEither base auth (RoomId idStr) = httpJSONEither $ makeCommonDetailReq base auth "rooms" idStr
 
+-- | Get details for 'Membership' by ID.  A JSONException runtime exception will be thrown on an JSON parse errors.
+getMembershipDetail :: MonadIO m => Request -> Authorization -> MembershipId -> m (Response Membership)
+getMembershipDetail base auth (MembershipId idStr) = httpJSON $ makeCommonDetailReq base auth "memberships" idStr
+
+-- | Get details for 'Membership' by ID.  A Left value will be returned on an JSON parse errors.
+getMembershipDetailEither :: MonadIO m => Request -> Authorization -> MembershipId -> m (Response (Either JSONException Membership))
+getMembershipDetailEither base auth (MembershipId idStr) = httpJSONEither $ makeCommonDetailReq base auth "memberships" idStr
 
 
+
+-- | Get details for 'Team' by ID.  A JSONException runtime exception will be thrown on an JSON parse errors.
 getTeamDetail :: MonadIO m => Request -> Authorization -> TeamId -> m (Response Team)
 getTeamDetail base auth (TeamId idStr) = httpJSON $ makeCommonDetailReq base auth "teams" idStr
 
+-- | Get details for 'Team' by ID.  A Left value will be returned on an JSON parse errors.
 getTeamDetailEither :: MonadIO m => Request -> Authorization -> TeamId -> m (Response (Either JSONException Team))
 getTeamDetailEither base auth (TeamId idStr) = httpJSONEither $ makeCommonDetailReq base auth "teams" idStr
 
+-- | Get details for 'TeamMembership' by ID.  A JSONException runtime exception will be thrown on an JSON parse errors.
 getTeamMembershipDetail :: MonadIO m => Request -> Authorization -> TeamMembershipId -> m (Response TeamMembership)
 getTeamMembershipDetail base auth (TeamMembershipId idStr) = httpJSON $ makeCommonDetailReq base auth "team/memberships" idStr
 
+-- | Get details for 'TeamMembership' by ID.  A Left value will be returned on an JSON parse errors.
 getTeamMembershipDetailEither :: MonadIO m => Request -> Authorization -> TeamMembershipId -> m (Response (Either JSONException TeamMembership))
 getTeamMembershipDetailEither base auth (TeamMembershipId idStr) = httpJSONEither $ makeCommonDetailReq base auth "team/memberships" idStr
 

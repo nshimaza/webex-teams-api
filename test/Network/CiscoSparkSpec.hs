@@ -467,15 +467,15 @@ spec = do
                        \  \"creatorId\": \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY\",\
                        \  \"created\" : \"2016-04-21T19:01:55.966Z\"\
                        \}"
-            room = Room { roomId = RoomId  "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
-                        , roomTitle = RoomTitle "Project Unicorn - Sprint 0"
-                        , roomType = RoomTypeGroup
-                        , roomIsLocked = True
-                        , roomSipAddress = Just $ SipAddr "01234567890@meet.ciscospark.com"
-                        , roomLastActivity = Timestamp "2016-04-21T19:12:48.920Z"
-                        , roomTeamId = Just $ TeamId "Y2lzY29zcGFyazovL3VzL1JPT00vNjRlNDVhZTAtYzQ2Yi0xMWU1LTlkZjktMGQ0MWUzNDIxOTcz"
-                        , roomCreatorId = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
-                        , roomCreated = Timestamp "2016-04-21T19:01:55.966Z"
+            room = Room { roomId            = RoomId  "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
+                        , roomTitle         = RoomTitle "Project Unicorn - Sprint 0"
+                        , roomType          = RoomTypeGroup
+                        , roomIsLocked      = True
+                        , roomSipAddress    = Just $ SipAddr "01234567890@meet.ciscospark.com"
+                        , roomLastActivity  = Timestamp "2016-04-21T19:12:48.920Z"
+                        , roomTeamId        = Just $ TeamId "Y2lzY29zcGFyazovL3VzL1JPT00vNjRlNDVhZTAtYzQ2Yi0xMWU1LTlkZjktMGQ0MWUzNDIxOTcz"
+                        , roomCreatorId     = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
+                        , roomCreated       = Timestamp "2016-04-21T19:01:55.966Z"
                         }
             roomGen i = Room { roomId           = RoomId . pack $ "roomId" <> i
                              , roomTitle        = RoomTitle . pack $ "roomTitle" <> i
@@ -567,12 +567,120 @@ spec = do
 
             stopMockServer svr
 
+    describe "Membership" $ do
+        let membershipJson = "{\
+                             \  \"id\" : \"Y2lzY29zcGFyazovL3VzL01FTUJFUlNISVAvMGQwYzkxYjYtY2U2MC00NzI1LWI2ZDAtMzQ1NWQ1ZDExZWYzOmNkZTFkZDQwLTJmMGQtMTFlNS1iYTljLTdiNjU1NmQyMjA3Yg\",\
+                             \  \"roomId\" : \"Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0\",\
+                             \  \"personId\" : \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY\",\
+                             \  \"personEmail\" : \"john.andersen@example.com\",\
+                             \  \"personDisplayName\" : \"John Andersen\",\
+                             \  \"personOrgId\" : \"Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE\",\
+                             \  \"isModerator\" : true,\
+                             \  \"isMonitor\" : true,\
+                             \  \"created\" : \"2015-10-18T14:26:16.203Z\"\
+                             \}"
+            membership = Membership { membershipId                  = MembershipId "Y2lzY29zcGFyazovL3VzL01FTUJFUlNISVAvMGQwYzkxYjYtY2U2MC00NzI1LWI2ZDAtMzQ1NWQ1ZDExZWYzOmNkZTFkZDQwLTJmMGQtMTFlNS1iYTljLTdiNjU1NmQyMjA3Yg"
+                                    , membershipRoomId              = RoomId "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
+                                    , membershipPersonId            = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
+                                    , membershipPersonEmail         = Email "john.andersen@example.com"
+                                    , membershipPersonDisplayName   = DisplayName "John Andersen"
+                                    , membershipPersonOrgId         = OrganizationId "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE"
+                                    , membershipIsModerator         = True
+                                    , membershipIsMonitor           = True
+                                    , membershipCreated             = Timestamp "2015-10-18T14:26:16.203Z"
+                                    }
+            membershipGen i = Membership { membershipId                 = MembershipId . pack $ "membershipId" <> i
+                                         , membershipRoomId             = RoomId . pack $ "roomId" <> i
+                                         , membershipPersonId           = PersonId . pack $ "personId" <> i
+                                         , membershipPersonEmail        = Email . pack $ "email" <> i <> "@example.com"
+                                         , membershipPersonDisplayName  = DisplayName . pack $ "displayName" <> i
+                                         , membershipPersonOrgId        = OrganizationId . pack $ "orgId" <> i
+                                         , membershipIsModerator        = True
+                                         , membershipIsMonitor          = True
+                                         , membershipCreated            = Timestamp . pack $ "timestamp" <> i
+                                         }
+            membershipList j = [ membershipGen $ j ++ show i | i <- [1..3] ]
+            membershipListList = [ membershipList [c] | c <- ['a'..'d'] ]
+
+        it "streamMembershipList streams Membership" $ do
+            let testData = membershipList $ ['Z']
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                simpleApp (encode (MembershipList testData)) req respond
+
+            res <- runConduit $ streamMembershipList dummyAuth mockBaseRequest defaultMembershipQuery .| sinkList
+            res `shouldBe` testData
+
+            receivedReq <- takeMVar receivedReqMVar
+            rawPathInfo receivedReq `shouldBe` "/v1/memberships"
+            queryString receivedReq `shouldBe` []
+
+            stopMockServer svr
+
+        it "streamMembershipList passes query strings build from MembershipQuery to server" $ do
+            let testData = membershipList $ ['Z']
+                membershipQuery = MembershipQuery (Just $ RoomId "dummyRoomId")
+                                                  (Just $ PersonId "personIdQuery")
+                                                  (Just $ Email "personEmailQuery")
+
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                simpleApp (encode (MembershipList testData)) req respond
+
+            res <- runConduit $ streamMembershipList dummyAuth mockBaseRequest membershipQuery .| sinkList
+            res `shouldBe` testData
+
+            receivedReq <- takeMVar receivedReqMVar
+            rawPathInfo receivedReq `shouldBe` "/v1/memberships"
+            (sort . queryString) receivedReq `shouldBe` sort [ ("personId", Just "personIdQuery")
+                                                             , ("personEmail", Just "personEmailQuery")
+                                                             , ("roomId", Just "dummyRoomId") ]
+
+            stopMockServer svr
+
+        it "streamMembershipList streams Membership with automatic pagination" $ do
+            svr <- startMockServer $ paginationApp $ map (\ml -> encode $ MembershipList ml) membershipListList
+
+            res <- runConduit $ streamMembershipList dummyAuth mockBaseRequest defaultMembershipQuery .| sinkList
+            res `shouldBe` concat membershipListList
+
+            stopMockServer svr
+
+        it "getMembershipDetail returns a Membership" $ do
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                respond $ responseLBS status200 [] membershipJson
+
+            resMembership <- getResponseBody <$> getMembershipDetail mockBaseRequest dummyAuth (MembershipId "testMembershipId")
+            resMembership `shouldBe` membership
+
+            receivedReq <- takeMVar receivedReqMVar
+            requestMethod receivedReq `shouldBe` "GET"
+            rawPathInfo receivedReq `shouldBe` "/v1/memberships/testMembershipId"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+
+            stopMockServer svr
+
+        it "getMembershipDetailEither returns a (Right Membership)" $ do
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                respond $ responseLBS status200 [] membershipJson
+            (Right resMembership) <- getResponseBody <$> getMembershipDetailEither mockBaseRequest dummyAuth (MembershipId "testMembershipId")
+            resMembership `shouldBe` membership
+
+            stopMockServer svr
+
     describe "Message" $ do
         it "Message tests" $ do
-            pending
-
-    describe "Membership" $ do
-        it "Membership tests" $ do
             pending
 
     describe "Organization" $ do
