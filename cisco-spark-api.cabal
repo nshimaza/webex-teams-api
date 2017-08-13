@@ -38,6 +38,7 @@ executable cisco-spark-api-exe
                      , conduit-combinators
                      , http-conduit
                      , optparse-applicative
+                     , text
                      , utf8-string
                      , cisco-spark-api
   default-language:    Haskell2010
