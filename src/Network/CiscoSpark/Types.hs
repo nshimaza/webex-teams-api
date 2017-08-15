@@ -147,11 +147,7 @@ data PersonQuery = PersonQuery
     { personQueryEmail       :: Maybe Email             -- ^ Find person who has given email address.
     , personQueryDisplayName :: Maybe DisplayName       -- ^ Find person who has given display name.
     , personQueryOrgId       :: Maybe OrganizationId    -- ^ Find person who belongs to given organization.
-    } deriving (Eq, Show)
-
--- | Default value of query strings for people list API.
-instance Default PersonQuery where
-    def = PersonQuery Nothing Nothing Nothing
+    } deriving (Default, Eq, Generic, Show)
 
 -- | 'CreatePerson' is encoded to request body JSON of Create a Person REST call.
 data CreatePerson = CreatePerson
@@ -260,11 +256,7 @@ instance SparkListItem TeamMembership where
 -- | Optional query strings for team membership list API
 newtype TeamMembershipQuery = TeamMembershipQuery
     { teamMembershipQueryTeamId :: Maybe TeamId -- ^ List membership only in given team.
-    } deriving (Eq, Show)
-
--- | Default value of query strings for team membership list API.
-instance Default TeamMembershipQuery where
-    def = TeamMembershipQuery Nothing
+    } deriving (Default, Eq, Generic, Show)
 
 -- | 'CreateTeamMembership' is encoded to request body JSON of Create a Team Membership REST call.
 data CreateTeamMembership = CreateTeamMembership
@@ -339,11 +331,7 @@ data RoomQuery = RoomQuery
     { roomQueryTeamId   :: Maybe TeamId             -- ^ List rooms only in given team.
     , roomQueryRoomType :: Maybe RoomType           -- ^ List given type rooms only.
     , roomQuerySortBy   :: Maybe RoomQuerySortBy    -- ^ Sort response by given option.
-    } deriving (Eq, Show)
-
--- | Default value of query strings for room list API.
-instance Default RoomQuery where
-    def = RoomQuery Nothing Nothing Nothing
+    } deriving (Default, Eq, Generic, Show)
 
 -- | Sum type to ByteString converter for 'RoomType'.
 roomTypeToQueryString :: RoomType -> ByteString
@@ -410,11 +398,7 @@ data MembershipQuery = MembershipQuery
     { membershipQueryRoomId      :: Maybe RoomId    -- ^ List membership only in given room.
     , membershipQueryPersonId    :: Maybe PersonId  -- ^ List membership related to given person of personId.
     , membershipQueryPersonEmail :: Maybe Email     -- ^ List membership related to given person of email.
-    } deriving (Eq, Show)
-
--- | Default value of query strings for room membership list API.
-instance Default MembershipQuery where
-    def = MembershipQuery Nothing Nothing Nothing
+    } deriving (Default, Eq, Generic, Show)
 
 -- | 'CreateMembership' is encoded to request body JSON of Create a Membership REST call.
 data CreateMembership = CreateMembership
@@ -575,11 +559,7 @@ instance SparkListItem License where
 -- | Optional query strings for license list API
 newtype LicenseQuery = LicenseQuery
     { licenseQueryOrgId :: Maybe OrganizationId -- ^ List licenses only applicable to given organization.
-    } deriving (Eq, Show)
-
--- | Default value of query strings for license list API.
-instance Default LicenseQuery where
-    def = LicenseQuery Nothing
+    } deriving (Default, Eq, Generic, Show)
 
 -- | Name of 'Role'
 newtype RoleName    = RoleName Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
