@@ -102,7 +102,7 @@ spec = do
     describe "Mock Applications" $ do
         it "simple mock app returns list of team" $ do
             receivedReqMVar <- newEmptyMVar
-            let req = setRequestPath ("/v1/teams")
+            let req = setRequestPath "/v1/teams"
                     $ setRequestMethod "GET"
                     $ mockBaseRequest
                 testData = TeamList $ teamList ['Z']
@@ -123,7 +123,7 @@ spec = do
 
         it "pagenation mock app returns list of team and Link header" $ do
             receivedReqMVar <- newEmptyMVar
-            let req = setRequestPath ("/v1/teams")
+            let req = setRequestPath "/v1/teams"
                     $ setRequestMethod "GET"
                     $ mockBaseRequest
                 testData = map (\tl -> encode $ TeamList tl) teamListList
@@ -141,7 +141,7 @@ spec = do
             let path = getNextUrl res1
             path `shouldBe` Just "http://localhost:3000/1"
 
-            req2 <- parseRequest $ "GET " <> (C8.unpack $ fromJust path)
+            req2 <- parseRequest $ "GET " <> C8.unpack (fromJust path)
             res2 <- httpJSON req2
             getResponseBody res2 `shouldBe` TeamList (teamListList !! 1)
 
@@ -209,7 +209,7 @@ spec = do
             personListList = [ personList [c] | c <- ['a'..'d'] ]
 
         it "streamPersonList streams Team" $ do
-            let testData = personList $ ['Z']
+            let testData = personList ['Z']
             receivedReqMVar <- newEmptyMVar
 
             svr <- startMockServer $ \req respond -> do
@@ -226,7 +226,7 @@ spec = do
             stopMockServer svr
 
         it "streamPersonList passes query strings build from PersonQuery to server" $ do
-            let testData = personList $ ['Z']
+            let testData = personList ['Z']
                 personQuery = PersonQuery (Just $ Email "person@query.com")
                                           (Just $ DisplayName "DisplayNameQuery")
                                           (Just $ OrganizationId "OrgIdQuery")
@@ -300,7 +300,7 @@ spec = do
                         }
 
         it "streamTeamList streams Team" $ do
-            let testData = teamList $ ['Z']
+            let testData = teamList ['Z']
             receivedReqMVar <- newEmptyMVar
 
             svr <- startMockServer $ \req respond -> do
@@ -384,7 +384,7 @@ spec = do
             teamMembershipListList = [ teamMembershipList [c] | c <- ['a'..'d'] ]
 
         it "streamTeamMembershipList streams TeamMembership" $ do
-            let testData = teamMembershipList $ ['Z']
+            let testData = teamMembershipList ['Z']
             receivedReqMVar <- newEmptyMVar
 
             svr <- startMockServer $ \req respond -> do
@@ -401,7 +401,7 @@ spec = do
             stopMockServer svr
 
         it "streamMembershipList passes query strings build from TeamMembershipQuery to server" $ do
-            let testData = teamMembershipList $ ['Z']
+            let testData = teamMembershipList ['Z']
                 teamMembershipQuery = TeamMembershipQuery . Just $ TeamId "DummyTeamId"
 
             receivedReqMVar <- newEmptyMVar
@@ -492,7 +492,7 @@ spec = do
             roomListList = [ roomList [c] | c <- ['a'..'d'] ]
 
         it "streamRoomList streams Room" $ do
-            let testData = roomList $ ['Z']
+            let testData = roomList ['Z']
             receivedReqMVar <- newEmptyMVar
 
             svr <- startMockServer $ \req respond -> do
@@ -509,7 +509,7 @@ spec = do
             stopMockServer svr
 
         it "streamRoomList passes query strings build from RoomQuery to server" $ do
-            let testData = roomList $ ['Z']
+            let testData = roomList ['Z']
                 roomQuery = RoomQuery (Just $ TeamId "dummyTeamId")
                                       (Just RoomTypeGroup)
                                       (Just RoomQuerySortByLastActivity)
@@ -604,7 +604,7 @@ spec = do
             membershipListList = [ membershipList [c] | c <- ['a'..'d'] ]
 
         it "streamMembershipList streams Membership" $ do
-            let testData = membershipList $ ['Z']
+            let testData = membershipList ['Z']
             receivedReqMVar <- newEmptyMVar
 
             svr <- startMockServer $ \req respond -> do
@@ -621,7 +621,7 @@ spec = do
             stopMockServer svr
 
         it "streamMembershipList passes query strings build from MembershipQuery to server" $ do
-            let testData = membershipList $ ['Z']
+            let testData = membershipList ['Z']
                 membershipQuery = MembershipQuery (Just $ RoomId "dummyRoomId")
                                                   (Just $ PersonId "personIdQuery")
                                                   (Just $ Email "personEmailQuery")
@@ -702,7 +702,7 @@ spec = do
             organizationListList = [ organizationList [c] | c <- ['a'..'d'] ]
 
         it "streamOrganizationList streams Organization" $ do
-            let testData = organizationList $ ['Z']
+            let testData = organizationList ['Z']
             receivedReqMVar <- newEmptyMVar
 
             svr <- startMockServer $ \req respond -> do
@@ -776,7 +776,7 @@ spec = do
             licenseListList = [ licenseList [c] | c <- ['a'..'d'] ]
 
         it "streamLicenseList streams License" $ do
-            let testData = licenseList $ ['Z']
+            let testData = licenseList ['Z']
             receivedReqMVar <- newEmptyMVar
 
             svr <- startMockServer $ \req respond -> do
@@ -793,7 +793,7 @@ spec = do
             stopMockServer svr
 
         it "streamLicenseList passes query strings build from LicenseQuery to server" $ do
-            let testData = licenseList $ ['Z']
+            let testData = licenseList ['Z']
                 licenseQuery = LicenseQuery (Just $ OrganizationId "orgIdQuery")
 
             receivedReqMVar <- newEmptyMVar
@@ -863,7 +863,7 @@ spec = do
             roleListList = [ roleList [c] | c <- ['a'..'d'] ]
 
         it "streamRoleList streams Role" $ do
-            let testData = roleList $ ['Z']
+            let testData = roleList ['Z']
             receivedReqMVar <- newEmptyMVar
 
             svr <- startMockServer $ \req respond -> do
