@@ -23,6 +23,7 @@ library
                      , attoparsec
                      , bytestring
                      , conduit-combinators
+                     , data-default
                      , http-conduit
                      , text
                      , bitset-word8
@@ -36,6 +37,7 @@ executable cisco-spark-api-exe
                      , aeson
                      , bytestring
                      , conduit-combinators
+                     , data-default
                      , http-conduit
                      , optparse-applicative
                      , text
@@ -55,6 +57,7 @@ test-suite cisco-spark-api-test
                      , attoparsec
                      , bytestring
                      , conduit-combinators
+                     , data-default
                      , http-conduit
                      , http-types
                      , text

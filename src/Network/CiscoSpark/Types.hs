@@ -19,6 +19,7 @@ import           Data.Aeson.TH               (constructorTagModifier,
                                               fieldLabelModifier,
                                               omitNothingFields)
 import           Data.ByteString             (ByteString)
+import           Data.Default                (Default (def))
 import           Data.Text                   (Text)
 import           Data.Text.Encoding          (encodeUtf8)
 
@@ -148,8 +149,8 @@ data PersonQuery = PersonQuery
     } deriving (Eq, Show)
 
 -- | Default value of query strings for people list API.
-defaultPersonQuery :: PersonQuery
-defaultPersonQuery = PersonQuery Nothing Nothing Nothing
+instance Default PersonQuery where
+    def = PersonQuery Nothing Nothing Nothing
 
 -- | 'CreatePerson' is encoded to request body JSON of Create a Person REST call.
 data CreatePerson = CreatePerson
@@ -259,8 +260,8 @@ newtype TeamMembershipQuery = TeamMembershipQuery
     } deriving (Eq, Show)
 
 -- | Default value of query strings for team membership list API.
-defaultTeamMembershipQuery :: TeamMembershipQuery
-defaultTeamMembershipQuery = TeamMembershipQuery Nothing
+instance Default TeamMembershipQuery where
+    def = TeamMembershipQuery Nothing
 
 -- | 'CreateTeamMembership' is encoded to request body JSON of Create a Team Membership REST call.
 data CreateTeamMembership = CreateTeamMembership
@@ -337,8 +338,8 @@ data RoomQuery = RoomQuery
     } deriving (Eq, Show)
 
 -- | Default value of query strings for room list API.
-defaultRoomQuery :: RoomQuery
-defaultRoomQuery = RoomQuery Nothing Nothing Nothing
+instance Default RoomQuery where
+    def = RoomQuery Nothing Nothing Nothing
 
 -- | Sum type to ByteString converter for 'RoomType'.
 roomTypeToQueryString :: RoomType -> ByteString
@@ -407,8 +408,8 @@ data MembershipQuery = MembershipQuery
     } deriving (Eq, Show)
 
 -- | Default value of query strings for room membership list API.
-defaultMembershipQuery :: MembershipQuery
-defaultMembershipQuery = MembershipQuery Nothing Nothing Nothing
+instance Default MembershipQuery where
+    def = MembershipQuery Nothing Nothing Nothing
 
 -- | 'CreateMembership' is encoded to request body JSON of Create a Membership REST call.
 data CreateMembership = CreateMembership
@@ -569,8 +570,8 @@ newtype LicenseQuery = LicenseQuery
     } deriving (Eq, Show)
 
 -- | Default value of query strings for license list API.
-defaultLicenseQuery :: LicenseQuery
-defaultLicenseQuery = LicenseQuery Nothing
+instance Default LicenseQuery where
+    def = LicenseQuery Nothing
 
 -- | Name of 'Role'
 newtype RoleName    = RoleName Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
@@ -596,4 +597,3 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 8, omitNothingFiel
 instance SparkListItem Role where
     type ToList Role = RoleList
     unwrap = roleListItems
-

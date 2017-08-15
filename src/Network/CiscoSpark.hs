@@ -83,15 +83,12 @@ module Network.CiscoSpark
 
     , Timestamp (..)
     -- * Functions
-    , defaultPersonQuery
     , streamPersonList
     , getPersonDetail
     , getPersonDetailEither
-    , defaultRoomQuery
     , streamRoomList
     , getRoomDetail
     , getRoomDetailEither
-    , defaultMembershipQuery
     , streamMembershipList
     , getMembershipDetail
     , getMembershipDetailEither
@@ -99,14 +96,12 @@ module Network.CiscoSpark
     , streamTeamList
     , getTeamDetailEither
     , getTeamDetail
-    , defaultTeamMembershipQuery
     , streamTeamMembershipList
     , getTeamMembershipDetail
     , getTeamMembershipDetailEither
     , streamOrganizationList
     , getOrganizationDetail
     , getOrganizationDetailEither
-    , defaultLicenseQuery
     , streamLicenseList
     , getLicenseDetail
     , getLicenseDetailEither
@@ -311,5 +306,3 @@ getRoleDetail base auth (RoleId idStr) = httpJSON $ makeCommonDetailReq base aut
 -- | Get details for 'Role' by ID.  A Left value will be returned on an JSON parse errors.
 getRoleDetailEither :: MonadIO m => Request -> Authorization -> RoleId -> m (Response (Either JSONException Role))
 getRoleDetailEither base auth (RoleId idStr) = httpJSONEither $ makeCommonDetailReq base auth "roles" idStr
-
-

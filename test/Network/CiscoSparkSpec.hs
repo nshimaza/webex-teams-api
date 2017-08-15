@@ -11,6 +11,7 @@ import           Data.Aeson                   (encode)
 import           Data.Attoparsec.ByteString   (parseOnly)
 import           Data.ByteString.Char8        as C8 (unpack)
 import           Data.ByteString.Lazy         as L (ByteString)
+import           Data.Default                 (def)
 import           Data.List                    (sort)
 import           Data.Maybe                   (fromJust)
 import           Data.Monoid                  ((<>))
@@ -215,7 +216,7 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp (encode (PersonList testData)) req respond
 
-            res <- runConduit $ streamPersonList dummyAuth mockBaseRequest defaultPersonQuery .| sinkList
+            res <- runConduit $ streamPersonList dummyAuth mockBaseRequest def .| sinkList
             res `shouldBe` testData
 
             receivedReq <- takeMVar receivedReqMVar
@@ -250,7 +251,7 @@ spec = do
         it "streamPersonList streams Team with automatic pagination" $ do
             svr <- startMockServer $ paginationApp $ map (\pl -> encode $ PersonList pl) personListList
 
-            res <- runConduit $ streamPersonList dummyAuth mockBaseRequest defaultPersonQuery .| sinkList
+            res <- runConduit $ streamPersonList dummyAuth mockBaseRequest def .| sinkList
             res `shouldBe` concat personListList
 
             stopMockServer svr
@@ -390,7 +391,7 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp (encode (TeamMembershipList testData)) req respond
 
-            res <- runConduit $ streamTeamMembershipList dummyAuth mockBaseRequest defaultTeamMembershipQuery .| sinkList
+            res <- runConduit $ streamTeamMembershipList dummyAuth mockBaseRequest def .| sinkList
             res `shouldBe` testData
 
             receivedReq <- takeMVar receivedReqMVar
@@ -421,7 +422,7 @@ spec = do
         it "streamTeamMembershipList streams TeamMembership with automatic pagination" $ do
             svr <- startMockServer $ paginationApp $ map (\pl -> encode $ TeamMembershipList pl) teamMembershipListList
 
-            res <- runConduit $ streamTeamMembershipList dummyAuth mockBaseRequest defaultTeamMembershipQuery .| sinkList
+            res <- runConduit $ streamTeamMembershipList dummyAuth mockBaseRequest def .| sinkList
             res `shouldBe` concat teamMembershipListList
 
             stopMockServer svr
@@ -498,7 +499,7 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp (encode (RoomList testData)) req respond
 
-            res <- runConduit $ streamRoomList dummyAuth mockBaseRequest defaultRoomQuery .| sinkList
+            res <- runConduit $ streamRoomList dummyAuth mockBaseRequest def .| sinkList
             res `shouldBe` testData
 
             receivedReq <- takeMVar receivedReqMVar
@@ -533,7 +534,7 @@ spec = do
         it "streamRoomList streams Room with automatic pagination" $ do
             svr <- startMockServer $ paginationApp $ map (\rl -> encode $ RoomList rl) roomListList
 
-            res <- runConduit $ streamRoomList dummyAuth mockBaseRequest defaultRoomQuery .| sinkList
+            res <- runConduit $ streamRoomList dummyAuth mockBaseRequest def .| sinkList
             res `shouldBe` concat roomListList
 
             stopMockServer svr
@@ -610,7 +611,7 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp (encode (MembershipList testData)) req respond
 
-            res <- runConduit $ streamMembershipList dummyAuth mockBaseRequest defaultMembershipQuery .| sinkList
+            res <- runConduit $ streamMembershipList dummyAuth mockBaseRequest def .| sinkList
             res `shouldBe` testData
 
             receivedReq <- takeMVar receivedReqMVar
@@ -645,7 +646,7 @@ spec = do
         it "streamMembershipList streams Membership with automatic pagination" $ do
             svr <- startMockServer $ paginationApp $ map (\ml -> encode $ MembershipList ml) membershipListList
 
-            res <- runConduit $ streamMembershipList dummyAuth mockBaseRequest defaultMembershipQuery .| sinkList
+            res <- runConduit $ streamMembershipList dummyAuth mockBaseRequest def .| sinkList
             res `shouldBe` concat membershipListList
 
             stopMockServer svr
@@ -782,7 +783,7 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp (encode (LicenseList testData)) req respond
 
-            res <- runConduit $ streamLicenseList dummyAuth mockBaseRequest defaultLicenseQuery .| sinkList
+            res <- runConduit $ streamLicenseList dummyAuth mockBaseRequest def .| sinkList
             res `shouldBe` testData
 
             receivedReq <- takeMVar receivedReqMVar
@@ -813,7 +814,7 @@ spec = do
         it "streamLicenseList streams License with automatic pagination" $ do
             svr <- startMockServer $ paginationApp $ map (\ll -> encode $ LicenseList ll) licenseListList
 
-            res <- runConduit $ streamLicenseList dummyAuth mockBaseRequest defaultLicenseQuery .| sinkList
+            res <- runConduit $ streamLicenseList dummyAuth mockBaseRequest def .| sinkList
             res `shouldBe` concat licenseListList
 
             stopMockServer svr
