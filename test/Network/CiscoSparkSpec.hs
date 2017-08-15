@@ -92,7 +92,7 @@ teamGen i = Team { teamId           = TeamId . pack $ "teamId" <> i
                  }
 
 teamList :: String -> [Team]
-teamList j = [ teamGen $ j ++ show i | i <- [1..3] ]
+teamList j = [ teamGen $ j <> show i | i <- [1..3] ]
 
 teamListList :: [[Team]]
 teamListList = [ teamList [c] | c <- ['a'..'d'] ]
@@ -205,7 +205,7 @@ spec = do
                                  , personLoginEnabled  = Just True
                                  , personType          = Nothing
                                  }
-            personList j = [ personGen $ j ++ show i | i <- [1..3] ]
+            personList j = [ personGen $ j <> show i | i <- [1..3] ]
             personListList = [ personList [c] | c <- ['a'..'d'] ]
 
         it "streamPersonList streams Team" $ do
@@ -380,7 +380,7 @@ spec = do
                                                  , teamMembershipIsModerator         = True
                                                  , teamMembershipCreated             = Timestamp . pack $ "Timestamp" <> i
                                                  }
-            teamMembershipList j = [ teamMembershipGen $ j ++ show i | i <- [1..3] ]
+            teamMembershipList j = [ teamMembershipGen $ j <> show i | i <- [1..3] ]
             teamMembershipListList = [ teamMembershipList [c] | c <- ['a'..'d'] ]
 
         it "streamTeamMembershipList streams TeamMembership" $ do
@@ -488,7 +488,7 @@ spec = do
                              , roomCreatorId    = PersonId . pack $ "personId" <> i
                              , roomCreated      = Timestamp .pack $ "roomCreated" <> i
                              }
-            roomList j = [ roomGen $ j ++ show i | i <- [1..3] ]
+            roomList j = [ roomGen $ j <> show i | i <- [1..3] ]
             roomListList = [ roomList [c] | c <- ['a'..'d'] ]
 
         it "streamRoomList streams Room" $ do
@@ -600,7 +600,7 @@ spec = do
                                          , membershipIsMonitor          = True
                                          , membershipCreated            = Timestamp . pack $ "timestamp" <> i
                                          }
-            membershipList j = [ membershipGen $ j ++ show i | i <- [1..3] ]
+            membershipList j = [ membershipGen $ j <> show i | i <- [1..3] ]
             membershipListList = [ membershipList [c] | c <- ['a'..'d'] ]
 
         it "streamMembershipList streams Membership" $ do
@@ -698,7 +698,7 @@ spec = do
                                              , organizationDisplayName   = OrganizationDisplayName . pack $ "displayName" <> i
                                              , organizationCreated       = Timestamp . pack $ "timestamp" <> i
                                              }
-            organizationList j = [ organizationGen $ j ++ show i | i <- [1..3] ]
+            organizationList j = [ organizationGen $ j <> show i | i <- [1..3] ]
             organizationListList = [ organizationList [c] | c <- ['a'..'d'] ]
 
         it "streamOrganizationList streams Organization" $ do
@@ -772,7 +772,7 @@ spec = do
                                    , licenseTotalUnits       = LicenseUnit 42
                                    , licenseConsumedUnits    = LicenseUnit 8
                                    }
-            licenseList j = [ licenseGen $ j ++ show i | i <- [1..3] ]
+            licenseList j = [ licenseGen $ j <> show i | i <- [1..3] ]
             licenseListList = [ licenseList [c] | c <- ['a'..'d'] ]
 
         it "streamLicenseList streams License" $ do
@@ -859,7 +859,7 @@ spec = do
             roleGen i = Role { roleId   = RoleId . pack $ "roleId" <> i
                              , roleName = RoleName . pack $ "roleName" <> i
                              }
-            roleList j = [ roleGen $ j ++ show i | i <- [1..3] ]
+            roleList j = [ roleGen $ j <> show i | i <- [1..3] ]
             roleListList = [ roleList [c] | c <- ['a'..'d'] ]
 
         it "streamRoleList streams Role" $ do
