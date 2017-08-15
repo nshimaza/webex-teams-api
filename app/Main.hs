@@ -4,6 +4,7 @@ module Main where
 
 import           Conduit
 import           Data.ByteString.Char8 as BC8 (pack)
+import           Data.Default          (def)
 import           Data.Semigroup        ((<>))
 import           Data.Text             as T (pack)
 import           Network.HTTP.Simple   (getResponseBody)
@@ -125,16 +126,16 @@ programOptions = info (commandSubParser <**> helper)
 
 run :: Command -> IO ()
 run (TeamListCommand auth count) =
-    runConduit $ streamTeamList auth ciscoSparkBaseRequest .| takeC count .| mapM_C print
+    runConduit $ streamTeamList auth def .| takeC count .| mapM_C print
 
 run (RoomListCommand auth count query) =
-    runConduit $ streamRoomList auth ciscoSparkBaseRequest query .| takeC count .| mapM_C print
+    runConduit $ streamRoomList auth def query .| takeC count .| mapM_C print
 
 run (TeamDetailCommand auth teamId) =
-    getTeamDetail ciscoSparkBaseRequest auth teamId >>= print . getResponseBody
+    getTeamDetail def auth teamId >>= print . getResponseBody
 
 run (RoomDetailCommand auth roomId) =
-    getRoomDetail ciscoSparkBaseRequest auth roomId >>= print . getResponseBody
+    getRoomDetail def auth roomId >>= print . getResponseBody
 
 main :: IO ()
 main = do

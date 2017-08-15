@@ -38,9 +38,10 @@ import           Data.Typeable                (typeOf)
 
 newtype MockServer = MockServer ThreadMap
 
-mockBaseRequest :: C.Request
+mockBaseRequest :: CiscoSparkRequest
 mockBaseRequest
-    = C.addRequestHeader "Content-Type" "application/json; charset=utf-8"
+    = CiscoSparkRequest
+    $ C.addRequestHeader "Content-Type" "application/json; charset=utf-8"
     $ C.setRequestPort 3000
     $ C.setRequestHost "localhost"
     $ C.setRequestSecure False
@@ -102,9 +103,10 @@ spec = do
     describe "Mock Applications" $ do
         it "simple mock app returns list of team" $ do
             receivedReqMVar <- newEmptyMVar
-            let req = setRequestPath "/v1/teams"
+            let (CiscoSparkRequest base) = mockBaseRequest
+                req = setRequestPath "/v1/teams"
                     $ setRequestMethod "GET"
-                    $ mockBaseRequest
+                    $ base
                 testData = TeamList $ teamList ['Z']
 
             svr <- startMockServer $ \req respond -> do
@@ -123,9 +125,10 @@ spec = do
 
         it "pagenation mock app returns list of team and Link header" $ do
             receivedReqMVar <- newEmptyMVar
-            let req = setRequestPath "/v1/teams"
+            let (CiscoSparkRequest base) = mockBaseRequest
+                req = setRequestPath "/v1/teams"
                     $ setRequestMethod "GET"
-                    $ mockBaseRequest
+                    $ base
                 testData = encode . TeamList <$> teamListList
 
             svr <- startMockServer $ \req respond -> do
