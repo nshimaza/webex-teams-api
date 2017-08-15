@@ -5,7 +5,7 @@ module Network.CiscoSpark
     (
     -- * Types
       Authorization (..)
-
+    -- ** People related types
     , Person (..)
     , PersonId (..)
     , Email (..)
@@ -14,9 +14,6 @@ module Network.CiscoSpark
     , FirstName (..)
     , LastName (..)
     , AvatarUrl (..)
-    , OrganizationId (..)
-    , RoleId (..)
-    , LicenseId (..)
     , Timezone (..)
     , PersonStatus (..)
     , PersonType (..)
@@ -24,7 +21,7 @@ module Network.CiscoSpark
     , PersonQuery (..)
     , CreatePerson (..)
     , UpdatePerson (..)
-
+    -- ** Room related types
     , Room (..)
     , RoomId (..)
     , RoomTitle (..)
@@ -35,14 +32,14 @@ module Network.CiscoSpark
     , RoomQuerySortBy (..)
     , CreateRoom (..)
     , UpdateRoom (..)
-
+    -- ** Membership related types
     , Membership (..)
     , MembershipId (..)
     , MembershipList (..)
     , MembershipQuery (..)
     , CreateMembership (..)
     , UpdateMembership (..)
-
+    -- ** Message related types
     , Message (..)
     , MessageId (..)
     , MessageText (..)
@@ -52,59 +49,71 @@ module Network.CiscoSpark
     , MessageList (..)
     , MessageQuery (..)
     , CreateMessage (..)
-
+    -- ** Team related types
     , TeamName (..)
     , TeamId (..)
     , Team (..)
     , TeamList (..)
     , CreateTeam (..)
     , UpdateTeam (..)
-
+    -- ** Team Membership related types
     , TeamMembership (..)
     , TeamMembershipId (..)
     , TeamMembershipList (..)
     , TeamMembershipQuery (..)
     , CreateTeamMembership (..)
     , UpdateTeamMembership (..)
-
+    -- ** Organization related types
     , Organization (..)
+    , OrganizationId (..)
     , OrganizationDisplayName (..)
     , OrganizationList (..)
-
+    -- ** License related types
     , License (..)
+    , LicenseId (..)
     , LicenseName (..)
     , LicenseUnit (..)
     , LicenseList (..)
     , LicenseQuery (..)
-
+    -- ** Role related types
     , Role (..)
+    , RoleId (..)
     , RoleName (..)
     , RoleList (..)
 
     , Timestamp (..)
     -- * Functions
+    -- ** People
     , streamPersonList
     , getPersonDetail
     , getPersonDetailEither
+    -- ** Rooms
     , streamRoomList
     , getRoomDetail
     , getRoomDetailEither
+    -- ** Memberships
     , streamMembershipList
     , getMembershipDetail
     , getMembershipDetailEither
+    -- ** Messages
     , defaultMessageQuery
+    -- ** Teams
     , streamTeamList
     , getTeamDetailEither
     , getTeamDetail
     , streamTeamMembershipList
+    -- ** Team Memberships
     , getTeamMembershipDetail
     , getTeamMembershipDetailEither
+    -- ** Organizations
     , streamOrganizationList
     , getOrganizationDetail
     , getOrganizationDetailEither
+    -- ** Licenses
     , streamLicenseList
     , getLicenseDetail
     , getLicenseDetailEither
+    -- ** Roles
     , streamRoleList
     , getRoleDetail
     , getRoleDetailEither

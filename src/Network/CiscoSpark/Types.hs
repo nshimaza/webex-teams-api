@@ -34,7 +34,7 @@ import           Network.CiscoSpark.Internal
     SparkListItem also associates the above type to wrapping list type (e.g. associates 'Person' to 'PersonList').
     Wrapping type (PersonList in this case) is necessary for parsing JSON from REST API but what we are
     interested in is bare list such like [Person].  Type family association defined in this class
-    is used for type translation between type for item and type for wrapper.
+    is used for type translation from type of items to type of wrapper.
 -}
 class FromJSON (ToList i) => SparkListItem i where
     -- | Associate item type to wrapping list type.
@@ -137,6 +137,7 @@ newtype PersonList = PersonList { personListItems :: [Person] } deriving (Eq, Sh
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFields = True } ''PersonList)
 -- ^ 'PersonList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | 'PersonList' wraps 'Person'
 instance SparkListItem Person where
     type ToList Person = PersonList
     unwrap = personListItems
@@ -207,6 +208,7 @@ newtype TeamList = TeamList { teamListItems :: [Team] } deriving (Eq, Show)
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 8, omitNothingFields = True } ''TeamList)
 -- ^ 'TeamList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | 'TeamList' wraps 'Team'
 instance SparkListItem Team where
     type ToList Team = TeamList
     unwrap = teamListItems
@@ -250,6 +252,7 @@ newtype TeamMembershipList = TeamMembershipList { teamMembershipListItems :: [Te
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 18, omitNothingFields = True } ''TeamMembershipList)
 -- ^ 'TeamMembershipList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | 'TeamMembershipList' wraps 'TeamMembership'
 instance SparkListItem TeamMembership where
     type ToList TeamMembership = TeamMembershipList
     unwrap = teamMembershipListItems
@@ -324,6 +327,7 @@ newtype RoomList = RoomList { roomListItems :: [Room] } deriving (Eq, Show)
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 8, omitNothingFields = True } ''RoomList)
 -- ^ 'RoomList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | 'RoomList' wraps 'Room'
 instance SparkListItem Room where
     type ToList Room = RoomList
     unwrap = roomListItems
@@ -396,6 +400,7 @@ newtype MembershipList = MembershipList { membershipListItems :: [Membership] } 
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 14, omitNothingFields = True } ''MembershipList)
 -- ^ 'MembershipList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | 'MembershipList' wraps 'Membership'
 instance SparkListItem Membership where
     type ToList Membership = MembershipList
     unwrap = membershipListItems
@@ -467,6 +472,7 @@ newtype MessageList = MessageList { messageListItems :: [Message] } deriving (Eq
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 11, omitNothingFields = True } ''MessageList)
 -- ^ 'MessageList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | 'MessageList' wraps 'Message'
 instance SparkListItem Message where
     type ToList Message = MessageList
     unwrap = messageListItems
@@ -531,6 +537,7 @@ newtype OrganizationList = OrganizationList { organizationListItems :: [Organiza
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 16, omitNothingFields = True } ''OrganizationList)
 -- ^ 'OrganizationList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | 'OrganizationList' wraps 'Organization'
 instance SparkListItem Organization where
     type ToList Organization = OrganizationList
     unwrap = organizationListItems
@@ -560,6 +567,7 @@ newtype LicenseList = LicenseList { licenseListItems :: [License] } deriving (Eq
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 11, omitNothingFields = True } ''LicenseList)
 -- ^ 'LicenseList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | 'LicenseList' wraps 'License'
 instance SparkListItem License where
     type ToList License = LicenseList
     unwrap = licenseListItems
@@ -594,6 +602,7 @@ newtype RoleList = RoleList { roleListItems :: [Role] } deriving (Eq, Show)
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 8, omitNothingFields = True } ''RoleList)
 -- ^ 'RoleList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | 'RoleList' wraps 'Role'
 instance SparkListItem Role where
     type ToList Role = RoleList
     unwrap = roleListItems
