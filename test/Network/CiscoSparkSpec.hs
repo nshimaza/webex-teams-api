@@ -126,7 +126,7 @@ spec = do
             let req = setRequestPath "/v1/teams"
                     $ setRequestMethod "GET"
                     $ mockBaseRequest
-                testData = map (encode . TeamList) teamListList
+                testData = encode . TeamList <$> teamListList
 
             svr <- startMockServer $ \req respond -> do
                 putMVar receivedReqMVar req
@@ -249,7 +249,7 @@ spec = do
             stopMockServer svr
 
         it "streamPersonList streams Team with automatic pagination" $ do
-            svr <- startMockServer $ paginationApp $ map (encode . PersonList) personListList
+            svr <- startMockServer . paginationApp $ encode . PersonList <$> personListList
 
             res <- runConduit $ streamPersonList dummyAuth mockBaseRequest def .| sinkList
             res `shouldBe` concat personListList
@@ -315,7 +315,7 @@ spec = do
             stopMockServer svr
 
         it "streamTeamList streams Team with automatic pagination" $ do
-            svr <- startMockServer $ paginationApp $ map (encode . TeamList) teamListList
+            svr <- startMockServer . paginationApp $ encode . TeamList <$> teamListList
 
             res <- runConduit $ streamTeamList dummyAuth mockBaseRequest .| sinkList
             res `shouldBe` concat teamListList
@@ -420,7 +420,7 @@ spec = do
             stopMockServer svr
 
         it "streamTeamMembershipList streams TeamMembership with automatic pagination" $ do
-            svr <- startMockServer $ paginationApp $ map (encode . TeamMembershipList) teamMembershipListList
+            svr <- startMockServer . paginationApp $ encode . TeamMembershipList <$> teamMembershipListList
 
             res <- runConduit $ streamTeamMembershipList dummyAuth mockBaseRequest def .| sinkList
             res `shouldBe` concat teamMembershipListList
@@ -532,7 +532,7 @@ spec = do
             stopMockServer svr
 
         it "streamRoomList streams Room with automatic pagination" $ do
-            svr <- startMockServer $ paginationApp $ map (encode . RoomList) roomListList
+            svr <- startMockServer . paginationApp $ encode . RoomList <$> roomListList
 
             res <- runConduit $ streamRoomList dummyAuth mockBaseRequest def .| sinkList
             res `shouldBe` concat roomListList
@@ -644,7 +644,7 @@ spec = do
             stopMockServer svr
 
         it "streamMembershipList streams Membership with automatic pagination" $ do
-            svr <- startMockServer $ paginationApp $ map (encode . MembershipList) membershipListList
+            svr <- startMockServer . paginationApp $ encode . MembershipList <$> membershipListList
 
             res <- runConduit $ streamMembershipList dummyAuth mockBaseRequest def .| sinkList
             res `shouldBe` concat membershipListList
@@ -719,7 +719,7 @@ spec = do
             stopMockServer svr
 
         it "streamOrganizationList streams Organization with automatic pagination" $ do
-            svr <- startMockServer $ paginationApp $ map (encode . OrganizationList) organizationListList
+            svr <- startMockServer . paginationApp $ encode . OrganizationList <$> organizationListList
 
             res <- runConduit $ streamOrganizationList dummyAuth mockBaseRequest .| sinkList
             res `shouldBe` concat organizationListList
@@ -812,7 +812,7 @@ spec = do
             stopMockServer svr
 
         it "streamLicenseList streams License with automatic pagination" $ do
-            svr <- startMockServer $ paginationApp $ map (encode . LicenseList) licenseListList
+            svr <- startMockServer . paginationApp $ encode . LicenseList <$> licenseListList
 
             res <- runConduit $ streamLicenseList dummyAuth mockBaseRequest def .| sinkList
             res `shouldBe` concat licenseListList
@@ -880,7 +880,7 @@ spec = do
             stopMockServer svr
 
         it "streamRoleList streams Role with automatic pagination" $ do
-            svr <- startMockServer $ paginationApp $ map (encode . RoleList) roleListList
+            svr <- startMockServer . paginationApp $ encode . RoleList <$> roleListList
 
             res <- runConduit $ streamRoleList dummyAuth mockBaseRequest .| sinkList
             res `shouldBe` concat roleListList
