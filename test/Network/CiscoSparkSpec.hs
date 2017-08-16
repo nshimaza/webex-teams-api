@@ -809,11 +809,6 @@ spec = do
 
             stopMockServer svr
 
-
-
-        it "Message tests" $ do
-            pending
-
     describe "Organization" $ do
         let organizationJson = "{\
                                \  \"id\" : \"OTZhYmMyYWEtM2RjYy0xMWU1LWExNTItZmUzNDgxOWNkYzlh\",\

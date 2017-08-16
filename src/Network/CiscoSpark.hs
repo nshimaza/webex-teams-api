@@ -129,7 +129,7 @@ import           Data.Aeson                  (FromJSON)
 import           Data.ByteString             (ByteString)
 import           Data.ByteString.Char8       as C8 (unpack)
 import           Data.Default                (Default (def))
-import           Data.Maybe                  (maybeToList)
+import           Data.Maybe                  (maybeToList, catMaybes)
 import           Data.Monoid                 ((<>))
 import           Data.Text                   (Text)
 import           Data.Text.Encoding          (encodeUtf8)
@@ -197,40 +197,41 @@ streamListLoop auth res = case getNextUrl res >>= (\url -> parseRequest $ "GET "
 
 -- | Query list of 'Person' and stream it into Conduit pipe.  It automatically performs pagination.
 streamPersonList :: MonadIO m => Authorization -> CiscoSparkRequest -> PersonQuery -> Source m Person
-streamPersonList auth base query = do
-    let email       = maybeToList $ (\(Email e) -> ("email", Just (encodeUtf8 e))) <$> personQueryEmail query
-        displayName = maybeToList $ (\(DisplayName n) -> ("displayName", Just (encodeUtf8 n))) <$> personQueryDisplayName query
-        orgId       = maybeToList $ (\(OrganizationId o) -> ("orgId", Just (encodeUtf8 o))) <$> personQueryOrgId query
-        queryList   = email <> displayName <> orgId
-    streamList auth $ setRequestQueryString queryList $ makeCommonListReq base "people"
+streamPersonList auth base query = streamList auth $ setRequestQueryString qs $ makeCommonListReq base "people"
+  where
+    qs = catMaybes [ (\(Email e) -> ("email", Just (encodeUtf8 e))) <$> personQueryEmail query
+                   , (\(DisplayName n) -> ("displayName", Just (encodeUtf8 n))) <$> personQueryDisplayName query
+                   , (\(OrganizationId o) -> ("orgId", Just (encodeUtf8 o))) <$> personQueryOrgId query
+                   ]
 
 -- | Query list of 'Room' and stream it into Conduit pipe.  It automatically performs pagination.
 streamRoomList :: MonadIO m => Authorization -> CiscoSparkRequest -> RoomQuery -> Source m Room
-streamRoomList auth base query = do
-    let teamId    = maybeToList $ (\(TeamId e) -> ("teamId", Just (encodeUtf8 e))) <$> roomQueryTeamId query
-        roomType  = maybeToList $ (\t -> ("type", Just $ roomTypeToQueryString t)) <$> roomQueryRoomType query
-        sortBy    = maybeToList $ (\o -> ("sortBy", Just $ roomQuerySortByToQueryString o)) <$> roomQuerySortBy query
-        queryList = teamId <> roomType <> sortBy
-    streamList auth $ setRequestQueryString queryList $ makeCommonListReq base "rooms"
+streamRoomList auth base query = streamList auth $ setRequestQueryString qs $ makeCommonListReq base "rooms"
+  where
+    qs = catMaybes [ (\(TeamId e) -> ("teamId", Just (encodeUtf8 e))) <$> roomQueryTeamId query
+                   , (\t -> ("type", Just $ roomTypeToQueryString t)) <$> roomQueryRoomType query
+                   , (\o -> ("sortBy", Just $ roomQuerySortByToQueryString o)) <$> roomQuerySortBy query
+                   ]
 
 -- | Query list of 'Membership' and stream it into Conduit pipe.  It automatically performs pagination.
 streamMembershipList :: MonadIO m => Authorization -> CiscoSparkRequest -> MembershipQuery -> Source m Membership
-streamMembershipList auth base query = do
-    let roomId    = maybeToList $ (\(RoomId r) -> ("roomId", Just (encodeUtf8 r))) <$> membershipQueryRoomId query
-        personId  = maybeToList $ (\(PersonId p) -> ("personId", Just (encodeUtf8 p))) <$> membershipQueryPersonId query
-        email     = maybeToList $ (\(Email e) -> ("personEmail", Just (encodeUtf8 e))) <$> membershipQueryPersonEmail query
-        queryList = roomId <> personId <> email
-    streamList auth $ setRequestQueryString queryList $ makeCommonListReq base "memberships"
+streamMembershipList auth base query = streamList auth $ setRequestQueryString qs $ makeCommonListReq base "memberships"
+  where
+    qs = catMaybes [ (\(RoomId r) -> ("roomId", Just (encodeUtf8 r))) <$> membershipQueryRoomId query
+                   , (\(PersonId p) -> ("personId", Just (encodeUtf8 p))) <$> membershipQueryPersonId query
+                   , (\(Email e) -> ("personEmail", Just (encodeUtf8 e))) <$> membershipQueryPersonEmail query
+                   ]
 
 -- | Query list of 'Message' and stream it into Conduit pipe.  It automatically performs pagination.
 streamMessageList :: MonadIO m => Authorization -> CiscoSparkRequest -> MessageQuery -> Source m Message
-streamMessageList auth base query = do
-    let roomId          = let (RoomId r) = messageQueryRoomId query in [ ("roomId", Just $ encodeUtf8 r) ]
-        mentionedPeople = maybeToList $ (\p -> ("mentionedPeople", Just $ mentionedPeopleToQueryString p)) <$> messageQueryMentionedPeople query
-        before          = maybeToList $ (\(Timestamp t) -> ("before", Just (encodeUtf8 t))) <$> messageQueryBefore query
-        beforeMessage   = maybeToList $ (\(MessageId m) -> ("beforeMessage", Just (encodeUtf8 m))) <$> messageQueryBeforeMessage query
-        queryList = roomId <> mentionedPeople <> before <> beforeMessage
-    streamList auth $ setRequestQueryString queryList $ makeCommonListReq base "messages"
+streamMessageList auth base query = streamList auth $ setRequestQueryString qs $ makeCommonListReq base "messages"
+  where
+    qs = ("roomId", Just $ encodeUtf8 rid) : catMaybes
+        [ (\p -> ("mentionedPeople", Just $ mentionedPeopleToQueryString p)) <$> messageQueryMentionedPeople query
+        , (\(Timestamp t) -> ("before", Just (encodeUtf8 t))) <$> messageQueryBefore query
+        , (\(MessageId m) -> ("beforeMessage", Just (encodeUtf8 m))) <$> messageQueryBeforeMessage query
+        ]
+    (RoomId rid) = messageQueryRoomId query
 
 -- | Query list of 'Team' and stream it into Conduit pipe.  It automatically performs pagination.
 streamTeamList :: MonadIO m => Authorization -> CiscoSparkRequest -> Source m Team
@@ -238,9 +239,9 @@ streamTeamList auth base = streamList auth $ makeCommonListReq base "teams"
 
 -- | Query list of 'TeamMembership' and stream it into Conduit pipe.  It automatically performs pagination.
 streamTeamMembershipList :: MonadIO m => Authorization -> CiscoSparkRequest -> TeamMembershipQuery -> Source m TeamMembership
-streamTeamMembershipList auth base query = do
-    let queryList = maybeToList $ (\(TeamId t) -> ("teamId", Just (encodeUtf8 t))) <$> teamMembershipQueryTeamId query
-    streamList auth $ setRequestQueryString queryList $ makeCommonListReq base "team/memberships"
+streamTeamMembershipList auth base query = streamList auth $ setRequestQueryString qs $ makeCommonListReq base "team/memberships"
+  where
+    qs = maybeToList $ (\(TeamId t) -> ("teamId", Just (encodeUtf8 t))) <$> teamMembershipQueryTeamId query
 
 -- | Query list of 'Organization' and stream it into Conduit pipe.  It automatically performs pagination.
 streamOrganizationList :: MonadIO m => Authorization -> CiscoSparkRequest -> Source m Organization
@@ -248,9 +249,9 @@ streamOrganizationList auth base = streamList auth $ makeCommonListReq base "org
 
 -- | Query list of 'License' and stream it into Conduit pipe.  It automatically performs pagination.
 streamLicenseList :: MonadIO m => Authorization -> CiscoSparkRequest -> LicenseQuery -> Source m License
-streamLicenseList auth base query = do
-    let queryList = maybeToList $ (\(OrganizationId o) -> ("orgId", Just (encodeUtf8 o))) <$> licenseQueryOrgId query
-    streamList auth $ setRequestQueryString queryList $ makeCommonListReq base "licenses"
+streamLicenseList auth base query = streamList auth $ setRequestQueryString qs $ makeCommonListReq base "licenses"
+  where
+    qs = maybeToList $ (\(OrganizationId o) -> ("orgId", Just (encodeUtf8 o))) <$> licenseQueryOrgId query
 
 -- | Query list of 'Role' and stream it into Conduit pipe.  It automatically performs pagination.
 streamRoleList :: MonadIO m => Authorization -> CiscoSparkRequest -> Source m Role
