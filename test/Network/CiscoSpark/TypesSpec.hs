@@ -333,8 +333,67 @@ spec = do
             (decode . encode) src `shouldBe` Just src
 
     describe "Message" $ do
-        it "Message tests" $ do
-            pending
+        let messageJson = "{\
+                          \  \"id\" : \"Y2lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk\",\
+                          \  \"roomId\" : \"Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0\",\
+                          \  \"roomType\" : \"group\",\
+                          \  \"toPersonId\" : \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX\",\
+                          \  \"toPersonEmail\" : \"julie@example.com\",\
+                          \  \"text\" : \"PROJECT UPDATE - A new project plan has been published on Box: http://box.com/s/lf5vj. The PM for this project is Mike C. and the Engineering Manager is Jane W.\",\
+                          \  \"html\" : \"<h1>HTML formatted message goes here</h1><p>when the message was posted in markdown format.</p>\",\
+                          \  \"files\" : [ \"http://www.example.com/images/media.png\" ],\
+                          \  \"personId\" : \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY\",\
+                          \  \"personEmail\" : \"matt@example.com\",\
+                          \  \"created\" : \"2015-10-18T14:26:16+00:00\",\
+                          \  \"mentionedPeople\" : [ \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM\", \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg\" ]\
+                          \}"
+            message = Message { messageId               = MessageId "Y2lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk"
+                              , messageRoomId           = RoomId "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
+                              , messageRoomType         = RoomTypeGroup
+                              , messageToPersonId       = Just $ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"
+                              , messageToPersonEmail    = Just $ Email "julie@example.com"
+                              , messageText             = MessageText "PROJECT UPDATE - A new project plan has been published on Box: http://box.com/s/lf5vj. The PM for this project is Mike C. and the Engineering Manager is Jane W."
+                              , messageHtml             = Just $ MessageHtml "<h1>HTML formatted message goes here</h1><p>when the message was posted in markdown format.</p>"
+                              , messageFiles            = Just $ [ FileUrl "http://www.example.com/images/media.png" ]
+                              , messagePersonId         = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
+                              , messagePersonEmail      = Email "matt@example.com"
+                              , messageCreated          = Timestamp "2015-10-18T14:26:16+00:00"
+                              , messageMentionedPeople  = Just $ [ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM"
+                                                                 , PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ]
+                              }
+            messageListJson = "{\"items\":[" <> messageJson <> "]}"
+            messageList = MessageList [ message ]
+
+        it "can be unwrapped from MessageList" $ do
+            unwrap messageList `shouldBe` [ message ]
+
+        it "decodes Team Message API response JSON" $ do
+            eitherDecode messageJson `shouldBe` Right message
+            (decode . encode) message `shouldBe` Just message
+
+        it "decodes Team Message list" $ do
+            eitherDecode messageListJson `shouldBe` Right messageList
+            (decode . encode) messageList `shouldBe` Just messageList
+
+        it "encodes CreateMessage to JSON" $ do
+            let src = CreateMessage
+                          { createMessageRoomId         = Just $ RoomId "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
+                          , createMessageToPersonId     = Just $ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"
+                          , createMessageToPersonEmail  = Just $ Email "julie@example.com"
+                          , createMessageText           = Just $ MessageText "PROJECT UPDATE - A new project plan has been published on Box: http://box.com/s/lf5vj. The PM for this project is Mike C. and the Engineering Manager is Jane W."
+                          , createMessageMarkdown       = Just $ MessageMarkdown "**PROJECT UPDATE** A new project plan has been published [on Box](http://box.com/s/lf5vj). The PM for this project is <@personEmail:mike@example.com> and the Engineering Manager is <@personEmail:jane@example.com>."
+                          , createMessageFiles          = Just $ [ FileUrl "http://www.example.com/images/media.png" ]
+                          }
+                dst = "{\
+                      \  \"roomId\" : \"Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0\",\
+                      \  \"toPersonId\" : \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX\",\
+                      \  \"toPersonEmail\" : \"julie@example.com\",\
+                      \  \"text\" : \"PROJECT UPDATE - A new project plan has been published on Box: http://box.com/s/lf5vj. The PM for this project is Mike C. and the Engineering Manager is Jane W.\",\
+                      \  \"markdown\" : \"**PROJECT UPDATE** A new project plan has been published [on Box](http://box.com/s/lf5vj). The PM for this project is <@personEmail:mike@example.com> and the Engineering Manager is <@personEmail:jane@example.com>.\",\
+                      \  \"files\" : [ \"http://www.example.com/images/media.png\" ]\
+                      \}"
+            eitherDecode dst `shouldBe` Right src
+            (decode . encode) src `shouldBe` (decode dst :: Maybe CreateMessage)
 
     describe "Organization" $ do
         let organizationJson = "{\

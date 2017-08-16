@@ -49,6 +49,7 @@ module Network.CiscoSpark
     , FileUrl (..)
     , MessageList (..)
     , MessageQuery (..)
+    , MentionedPeople (..)
     , CreateMessage (..)
     -- ** Team related types
     , TeamName (..)
@@ -98,6 +99,9 @@ module Network.CiscoSpark
     , getMembershipDetailEither
     -- ** Messages
     , defaultMessageQuery
+    , streamMessageList
+    , getMessageDetail
+    , getMessageDetailEither
     -- ** Teams
     , streamTeamList
     , getTeamDetailEither
@@ -218,7 +222,15 @@ streamMembershipList auth base query = do
         queryList = roomId <> personId <> email
     streamList auth $ setRequestQueryString queryList $ makeCommonListReq base "memberships"
 
-
+-- | Query list of 'Message' and stream it into Conduit pipe.  It automatically performs pagination.
+streamMessageList :: MonadIO m => Authorization -> CiscoSparkRequest -> MessageQuery -> Source m Message
+streamMessageList auth base query = do
+    let roomId          = let (RoomId r) = messageQueryRoomId query in [ ("roomId", Just $ encodeUtf8 r) ]
+        mentionedPeople = maybeToList $ (\p -> ("mentionedPeople", Just $ mentionedPeopleToQueryString p)) <$> messageQueryMentionedPeople query
+        before          = maybeToList $ (\(Timestamp t) -> ("before", Just (encodeUtf8 t))) <$> messageQueryBefore query
+        beforeMessage   = maybeToList $ (\(MessageId m) -> ("beforeMessage", Just (encodeUtf8 m))) <$> messageQueryBeforeMessage query
+        queryList = roomId <> mentionedPeople <> before <> beforeMessage
+    streamList auth $ setRequestQueryString queryList $ makeCommonListReq base "messages"
 
 -- | Query list of 'Team' and stream it into Conduit pipe.  It automatically performs pagination.
 streamTeamList :: MonadIO m => Authorization -> CiscoSparkRequest -> Source m Team
@@ -281,7 +293,13 @@ getMembershipDetail base auth (MembershipId idStr) = httpJSON $ makeCommonDetail
 getMembershipDetailEither :: MonadIO m => CiscoSparkRequest -> Authorization -> MembershipId -> m (Response (Either JSONException Membership))
 getMembershipDetailEither base auth (MembershipId idStr) = httpJSONEither $ makeCommonDetailReq base auth "memberships" idStr
 
+-- | Get details for 'Message' by ID.  A JSONException runtime exception will be thrown on an JSON parse errors.
+getMessageDetail :: MonadIO m => CiscoSparkRequest -> Authorization -> MessageId -> m (Response Message)
+getMessageDetail base auth (MessageId idStr) = httpJSON $ makeCommonDetailReq base auth "messages" idStr
 
+-- | Get details for 'Message' by ID.  A Left value will be returned on an JSON parse errors.
+getMessageDetailEither :: MonadIO m => CiscoSparkRequest -> Authorization -> MessageId -> m (Response (Either JSONException Message))
+getMessageDetailEither base auth (MessageId idStr) = httpJSONEither $ makeCommonDetailReq base auth "messages" idStr
 
 -- | Get details for 'Team' by ID.  A JSONException runtime exception will be thrown on an JSON parse errors.
 getTeamDetail :: MonadIO m => CiscoSparkRequest -> Authorization -> TeamId -> m (Response Team)

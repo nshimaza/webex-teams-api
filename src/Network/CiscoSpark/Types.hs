@@ -494,7 +494,7 @@ data CreateMessage = CreateMessage
     , createMessageFiles         :: Maybe [FileUrl]         -- ^ URLs of Attached files to the message.
     } deriving (Eq, Show)
 
-$(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFields = True } ''CreateMessage)
+$(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 13, omitNothingFields = True } ''CreateMessage)
 -- ^ 'CreateMessage' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 

@@ -684,6 +684,133 @@ spec = do
             stopMockServer svr
 
     describe "Message" $ do
+        let messageJson = "{\
+                          \  \"id\" : \"Y2lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk\",\
+                          \  \"roomId\" : \"Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0\",\
+                          \  \"roomType\" : \"group\",\
+                          \  \"toPersonId\" : \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX\",\
+                          \  \"toPersonEmail\" : \"julie@example.com\",\
+                          \  \"text\" : \"PROJECT UPDATE - A new project plan has been published on Box: http://box.com/s/lf5vj. The PM for this project is Mike C. and the Engineering Manager is Jane W.\",\
+                          \  \"html\" : \"<h1>HTML formatted message goes here</h1><p>when the message was posted in markdown format.</p>\",\
+                          \  \"files\" : [ \"http://www.example.com/images/media.png\" ],\
+                          \  \"personId\" : \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY\",\
+                          \  \"personEmail\" : \"matt@example.com\",\
+                          \  \"created\" : \"2015-10-18T14:26:16+00:00\",\
+                          \  \"mentionedPeople\" : [ \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM\", \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg\" ]\
+                          \}"
+            message = Message { messageId               = MessageId "Y2lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk"
+                              , messageRoomId           = RoomId "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
+                              , messageRoomType         = RoomTypeGroup
+                              , messageToPersonId       = Just $ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"
+                              , messageToPersonEmail    = Just $ Email "julie@example.com"
+                              , messageText             = MessageText "PROJECT UPDATE - A new project plan has been published on Box: http://box.com/s/lf5vj. The PM for this project is Mike C. and the Engineering Manager is Jane W."
+                              , messageHtml             = Just $ MessageHtml "<h1>HTML formatted message goes here</h1><p>when the message was posted in markdown format.</p>"
+                              , messageFiles            = Just $ [ FileUrl "http://www.example.com/images/media.png" ]
+                              , messagePersonId         = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
+                              , messagePersonEmail      = Email "matt@example.com"
+                              , messageCreated          = Timestamp "2015-10-18T14:26:16+00:00"
+                              , messageMentionedPeople  = Just $ [ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM"
+                                                                 , PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ]
+                              }
+            messageGen i = Message { messageId               = MessageId . pack $ "messageId" <> i
+                                   , messageRoomId           = RoomId . pack $ "roomId" <> i
+                                   , messageRoomType         = RoomTypeGroup
+                                   , messageToPersonId       = Just . PersonId . pack $ "toPersonId" <> i
+                                   , messageToPersonEmail    = Just . Email . pack $ "julie" <> i <> "@example.com"
+                                   , messageText             = MessageText . pack $ "messageText" <> i
+                                   , messageHtml             = Just . MessageHtml . pack $ "messageHtml" <> i
+                                   , messageFiles            = Just $ [ FileUrl . pack $ "http://www.example.com/images/media" <> i <> ".png" ]
+                                   , messagePersonId         = PersonId . pack $ "personId" <> i
+                                   , messagePersonEmail      = Email . pack $ "matt" <> i <> "@example.com"
+                                   , messageCreated          = Timestamp . pack $ "created" <> i
+                                   , messageMentionedPeople  = Just $ [ PersonId . pack $ "memtionedPeople1-" <> i
+                                                                      , PersonId . pack $ "memtionedPeople2-" <> i ]
+                                   }
+            messageList j = [ messageGen $ j <> show i | i <- [1..3] ]
+            messageListList = [ messageList [c] | c <- ['a'..'d'] ]
+            defQuery = defaultMessageQuery $ RoomId "dummyRoomId"
+
+        it "streamMessageList streams Message" $ do
+            let testData = messageList ['Z']
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                simpleApp (encode (MessageList testData)) req respond
+
+            res <- runConduit $ streamMessageList dummyAuth mockBaseRequest defQuery .| sinkList
+            res `shouldBe` testData
+
+            receivedReq <- takeMVar receivedReqMVar
+            rawPathInfo receivedReq `shouldBe` "/v1/messages"
+            queryString receivedReq `shouldBe` [ ("roomId", Just "dummyRoomId") ]
+
+            stopMockServer svr
+
+        it "streamMessageList passes query strings build from MessageQuery to server" $ do
+            let testData = messageList ['Z']
+                messageQuery = MessageQuery (RoomId "dummyRoomId")
+                                            (Just $ MentionedPeopleMe)
+                                            (Just $ Timestamp "beforeQuery")
+                                            (Just $ MessageId "beforeMessageQuery")
+
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                simpleApp (encode (MessageList testData)) req respond
+
+            res <- runConduit $ streamMessageList dummyAuth mockBaseRequest messageQuery .| sinkList
+            res `shouldBe` testData
+
+            receivedReq <- takeMVar receivedReqMVar
+            rawPathInfo receivedReq `shouldBe` "/v1/messages"
+            (sort . queryString) receivedReq `shouldBe` sort [ ("roomId", Just "dummyRoomId")
+                                                             , ("mentionedPeople", Just "me")
+                                                             , ("beforeMessage", Just "beforeMessageQuery")
+                                                             , ("before", Just "beforeQuery") ]
+
+            stopMockServer svr
+
+        it "streamMessageList streams Message with automatic pagination" $ do
+            svr <- startMockServer . paginationApp $ encode . MessageList <$> messageListList
+
+            res <- runConduit $ streamMessageList dummyAuth mockBaseRequest defQuery .| sinkList
+            res `shouldBe` concat messageListList
+
+            stopMockServer svr
+
+        it "getMessageDetail returns a Message" $ do
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                respond $ responseLBS status200 [] messageJson
+
+            resMessage <- getResponseBody <$> getMessageDetail mockBaseRequest dummyAuth (MessageId "testMessageId")
+            resMessage `shouldBe` message
+
+            receivedReq <- takeMVar receivedReqMVar
+            requestMethod receivedReq `shouldBe` "GET"
+            rawPathInfo receivedReq `shouldBe` "/v1/messages/testMessageId"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+
+            stopMockServer svr
+
+        it "getMessageDetailEither returns a (Right Message)" $ do
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                respond $ responseLBS status200 [] messageJson
+            (Right resMessage) <- getResponseBody <$> getMessageDetailEither mockBaseRequest dummyAuth (MessageId "testMessageId")
+            resMessage `shouldBe` message
+
+            stopMockServer svr
+
+
+
         it "Message tests" $ do
             pending
 
