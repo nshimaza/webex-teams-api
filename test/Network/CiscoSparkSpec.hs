@@ -7,7 +7,7 @@ import           Conduit
 import           Control.Concurrent.MVar      (MVar, newEmptyMVar, putMVar,
                                                takeMVar)
 import           Control.Monad                (void)
-import           Data.Aeson                   (encode)
+import           Data.Aeson                   (decode, encode)
 import           Data.Attoparsec.ByteString   (parseOnly)
 import           Data.ByteString.Char8        as C8 (unpack)
 import           Data.ByteString.Lazy         as L (ByteString)
@@ -301,6 +301,7 @@ spec = do
                         , teamCreatorId = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
                         , teamCreated   = Timestamp "2015-10-18T14:26:16+00:00"
                         }
+            newTeam = CreateTeam $ TeamName "Build Squad"
 
         it "streamTeamList streams Team" $ do
             let testData = teamList ['Z']
@@ -351,6 +352,28 @@ spec = do
                 respond $ responseLBS status200 [] teamJson
             (Right resTeam) <- getResponseBody <$> getTeamDetailEither mockBaseRequest dummyAuth (TeamId "testTeamId")
             resTeam `shouldBe` team
+
+            stopMockServer svr
+
+        it "createTeam sends JSON encoded CreateTeam as its body of POST request" $ do
+            receivedReqMVar <- newEmptyMVar
+            receivedBodyMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                strictRequestBody req >>= putMVar receivedBodyMVar
+                respond $ responseLBS status200 [] teamJson
+
+            resTeam <- getResponseBody <$> createTeam mockBaseRequest dummyAuth newTeam
+            resTeam `shouldBe` team
+
+            receivedReq <- takeMVar receivedReqMVar
+            receivedBody <- takeMVar receivedBodyMVar
+            requestMethod receivedReq `shouldBe` "POST"
+            rawPathInfo receivedReq `shouldBe` "/v1/teams"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+            decode receivedBody `shouldBe` Just newTeam
 
             stopMockServer svr
 

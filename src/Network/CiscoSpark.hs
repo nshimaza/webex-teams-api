@@ -106,8 +106,9 @@ module Network.CiscoSpark
     , streamTeamList
     , getTeamDetailEither
     , getTeamDetail
-    , streamTeamMembershipList
+    , createTeam
     -- ** Team Memberships
+    , streamTeamMembershipList
     , getTeamMembershipDetail
     , getTeamMembershipDetailEither
     -- ** Organizations
@@ -125,7 +126,7 @@ module Network.CiscoSpark
     ) where
 
 import           Conduit
-import           Data.Aeson                  (FromJSON)
+import           Data.Aeson                  (FromJSON, ToJSON)
 import           Data.ByteString             (ByteString)
 import           Data.ByteString.Char8       as C8 (unpack)
 import           Data.Default                (Default (def))
@@ -341,3 +342,16 @@ getRoleDetail base auth (RoleId idStr) = httpJSON $ makeCommonDetailReq base aut
 -- | Get details for 'Role' by ID.  A Left value will be returned on an JSON parse errors.
 getRoleDetailEither :: MonadIO m => CiscoSparkRequest -> Authorization -> RoleId -> m (Response (Either JSONException Role))
 getRoleDetailEither base auth (RoleId idStr) = httpJSONEither $ makeCommonDetailReq base auth "roles" idStr
+
+
+makeCommonCreateReq :: ToJSON a => CiscoSparkRequest -> Authorization -> ByteString -> a -> Request
+makeCommonCreateReq (CiscoSparkRequest base) auth path body
+    = setRequestBodyJSON body
+    $ setRequestPath ("/v1/" <> path)
+    $ setRequestMethod "POST"
+    $ addAuthorizationHeader auth
+    $ base
+
+-- | Create a team with given team name.  A JSONException runtime exception will be thrown on an JSON parse errors.
+createTeam :: MonadIO m => CiscoSparkRequest -> Authorization -> CreateTeam -> m (Response Team)
+createTeam base auth param = httpJSON $ makeCommonCreateReq base auth "teams" param
