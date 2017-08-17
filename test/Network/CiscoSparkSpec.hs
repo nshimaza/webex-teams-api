@@ -586,6 +586,7 @@ spec = do
                              }
             roomList j = [ roomGen $ j <> show i | i <- [1..3] ]
             roomListList = [ roomList [c] | c <- ['a'..'d'] ]
+            newRoom = CreateRoom (RoomTitle "New Room") (Just $ TeamId "belongingTeam")
 
         it "streamRoomList streams Room" $ do
             let testData = roomList ['Z']
@@ -661,6 +662,50 @@ spec = do
                 simpleApp roomJson req respond
             (Right resRoom) <- getResponseBody <$> getRoomDetailEither mockBaseRequest dummyAuth (RoomId "testRoomId")
             resRoom `shouldBe` room
+
+            stopMockServer svr
+
+        it "createRoom sends JSON encoded CreateRoom as its body of POST request" $ do
+            receivedReqMVar <- newEmptyMVar
+            receivedBodyMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                strictRequestBody req >>= putMVar receivedBodyMVar
+                simpleApp roomJson req respond
+
+            resRoom <- getResponseBody <$> createRoom mockBaseRequest dummyAuth newRoom
+            resRoom `shouldBe` room
+
+            receivedReq <- takeMVar receivedReqMVar
+            receivedBody <- takeMVar receivedBodyMVar
+            requestMethod receivedReq `shouldBe` "POST"
+            rawPathInfo receivedReq `shouldBe` "/v1/rooms"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+            decode receivedBody `shouldBe` Just newRoom
+
+            stopMockServer svr
+
+        it "createRoomEither sends JSON encoded CreateRoom as its body of POST request" $ do
+            receivedReqMVar <- newEmptyMVar
+            receivedBodyMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                strictRequestBody req >>= putMVar receivedBodyMVar
+                simpleApp roomJson req respond
+
+            (Right resRoom) <- getResponseBody <$> createRoomEither mockBaseRequest dummyAuth newRoom
+            resRoom `shouldBe` room
+
+            receivedReq <- takeMVar receivedReqMVar
+            receivedBody <- takeMVar receivedBodyMVar
+            requestMethod receivedReq `shouldBe` "POST"
+            rawPathInfo receivedReq `shouldBe` "/v1/rooms"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+            decode receivedBody `shouldBe` Just newRoom
 
             stopMockServer svr
 

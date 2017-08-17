@@ -93,6 +93,8 @@ module Network.CiscoSpark
     , streamRoomList
     , getRoomDetail
     , getRoomDetailEither
+    , createRoom
+    , createRoomEither
     -- ** Memberships
     , streamMembershipList
     , getMembershipDetail
