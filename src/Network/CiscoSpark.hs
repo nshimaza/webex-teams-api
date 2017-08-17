@@ -167,9 +167,37 @@ ciscoSparkBaseRequest
 instance Default CiscoSparkRequest where
     def = CiscoSparkRequest ciscoSparkBaseRequest
 
+peoplePath :: ByteString
+peoplePath = "people"
+
+roomsPath :: ByteString
+roomsPath = "rooms"
+
+membershipsPath :: ByteString
+membershipsPath = "memberships"
+
+messagesPath :: ByteString
+messagesPath = "messages"
+
+teamsPath :: ByteString
+teamsPath = "teams"
+
+teamMembershipsPath :: ByteString
+teamMembershipsPath = "team/memberships"
+
+organizationsPath :: ByteString
+organizationsPath = "organizations"
+
+licensesPath :: ByteString
+licensesPath = "licenses"
+
+rolesPath :: ByteString
+rolesPath = "roles"
+
 -- | Add given Authorization into request header.
 addAuthorizationHeader :: Authorization -> Request -> Request
 addAuthorizationHeader (Authorization auth) = addRequestHeader "Authorization" ("Bearer " <> auth)
+
 
 -- | Building common part of 'Request' for List APIs.
 makeCommonListReq
@@ -201,7 +229,7 @@ streamListLoop auth res = case getNextUrl res >>= (\url -> parseRequest $ "GET "
 
 -- | Query list of 'Person' and stream it into Conduit pipe.  It automatically performs pagination.
 streamPersonList :: MonadIO m => Authorization -> CiscoSparkRequest -> PersonQuery -> Source m Person
-streamPersonList auth base query = streamList auth $ setRequestQueryString qs $ makeCommonListReq base "people"
+streamPersonList auth base query = streamList auth $ setRequestQueryString qs $ makeCommonListReq base peoplePath
   where
     qs = catMaybes [ (\(Email e) -> ("email", Just $ encodeUtf8 e)) <$> personQueryEmail query
                    , (\(DisplayName n) -> ("displayName", Just (encodeUtf8 n))) <$> personQueryDisplayName query
@@ -210,7 +238,7 @@ streamPersonList auth base query = streamList auth $ setRequestQueryString qs $ 
 
 -- | Query list of 'Room' and stream it into Conduit pipe.  It automatically performs pagination.
 streamRoomList :: MonadIO m => Authorization -> CiscoSparkRequest -> RoomQuery -> Source m Room
-streamRoomList auth base query = streamList auth $ setRequestQueryString qs $ makeCommonListReq base "rooms"
+streamRoomList auth base query = streamList auth $ setRequestQueryString qs $ makeCommonListReq base roomsPath
   where
     qs = catMaybes [ (\(TeamId e) -> ("teamId", Just $ encodeUtf8 e)) <$> roomQueryTeamId query
                    , (\t -> ("type", Just $ roomTypeToQueryString t)) <$> roomQueryRoomType query
@@ -219,7 +247,7 @@ streamRoomList auth base query = streamList auth $ setRequestQueryString qs $ ma
 
 -- | Query list of 'Membership' and stream it into Conduit pipe.  It automatically performs pagination.
 streamMembershipList :: MonadIO m => Authorization -> CiscoSparkRequest -> MembershipQuery -> Source m Membership
-streamMembershipList auth base query = streamList auth $ setRequestQueryString qs $ makeCommonListReq base "memberships"
+streamMembershipList auth base query = streamList auth $ setRequestQueryString qs $ makeCommonListReq base membershipsPath
   where
     qs = catMaybes [ (\(RoomId r) -> ("roomId", Just $ encodeUtf8 r)) <$> membershipQueryRoomId query
                    , (\(PersonId p) -> ("personId", Just $ encodeUtf8 p)) <$> membershipQueryPersonId query
@@ -228,7 +256,7 @@ streamMembershipList auth base query = streamList auth $ setRequestQueryString q
 
 -- | Query list of 'Message' and stream it into Conduit pipe.  It automatically performs pagination.
 streamMessageList :: MonadIO m => Authorization -> CiscoSparkRequest -> MessageQuery -> Source m Message
-streamMessageList auth base query = streamList auth $ setRequestQueryString qs $ makeCommonListReq base "messages"
+streamMessageList auth base query = streamList auth $ setRequestQueryString qs $ makeCommonListReq base messagesPath
   where
     qs = ("roomId", Just $ encodeUtf8 rid) : catMaybes
         [ (\p -> ("mentionedPeople", Just $ mentionedPeopleToQueryString p)) <$> messageQueryMentionedPeople query
@@ -239,27 +267,27 @@ streamMessageList auth base query = streamList auth $ setRequestQueryString qs $
 
 -- | Query list of 'Team' and stream it into Conduit pipe.  It automatically performs pagination.
 streamTeamList :: MonadIO m => Authorization -> CiscoSparkRequest -> Source m Team
-streamTeamList auth base = streamList auth $ makeCommonListReq base "teams"
+streamTeamList auth base = streamList auth $ makeCommonListReq base teamsPath
 
 -- | Query list of 'TeamMembership' and stream it into Conduit pipe.  It automatically performs pagination.
 streamTeamMembershipList :: MonadIO m => Authorization -> CiscoSparkRequest -> TeamMembershipQuery -> Source m TeamMembership
-streamTeamMembershipList auth base query = streamList auth $ setRequestQueryString qs $ makeCommonListReq base "team/memberships"
+streamTeamMembershipList auth base query = streamList auth $ setRequestQueryString qs $ makeCommonListReq base teamMembershipsPath
   where
     qs = maybeToList $ (\(TeamId t) -> ("teamId", Just $ encodeUtf8 t)) <$> teamMembershipQueryTeamId query
 
 -- | Query list of 'Organization' and stream it into Conduit pipe.  It automatically performs pagination.
 streamOrganizationList :: MonadIO m => Authorization -> CiscoSparkRequest -> Source m Organization
-streamOrganizationList auth base = streamList auth $ makeCommonListReq base "organizations"
+streamOrganizationList auth base = streamList auth $ makeCommonListReq base organizationsPath
 
 -- | Query list of 'License' and stream it into Conduit pipe.  It automatically performs pagination.
 streamLicenseList :: MonadIO m => Authorization -> CiscoSparkRequest -> LicenseQuery -> Source m License
-streamLicenseList auth base query = streamList auth $ setRequestQueryString qs $ makeCommonListReq base "licenses"
+streamLicenseList auth base query = streamList auth $ setRequestQueryString qs $ makeCommonListReq base licensesPath
   where
     qs = maybeToList $ (\(OrganizationId o) -> ("orgId", Just $ encodeUtf8 o)) <$> licenseQueryOrgId query
 
 -- | Query list of 'Role' and stream it into Conduit pipe.  It automatically performs pagination.
 streamRoleList :: MonadIO m => Authorization -> CiscoSparkRequest -> Source m Role
-streamRoleList auth base = streamList auth $ makeCommonListReq base "roles"
+streamRoleList auth base = streamList auth $ makeCommonListReq base rolesPath
 
 
 makeCommonDetailReq
@@ -276,75 +304,75 @@ makeCommonDetailReq (CiscoSparkRequest base) auth path idStr
 
 -- | Get details for 'Person' by ID.  A JSONException runtime exception will be thrown on an JSON parse errors.
 getPersonDetail :: MonadIO m => CiscoSparkRequest -> Authorization -> PersonId -> m (Response Person)
-getPersonDetail base auth (PersonId idStr) = httpJSON $ makeCommonDetailReq base auth "people" idStr
+getPersonDetail base auth (PersonId idStr) = httpJSON $ makeCommonDetailReq base auth peoplePath idStr
 
 -- | Get details for 'Person' by ID.  A Left value will be returned on an JSON parse errors.
 getPersonDetailEither :: MonadIO m => CiscoSparkRequest -> Authorization -> PersonId -> m (Response (Either JSONException Person))
-getPersonDetailEither base auth (PersonId idStr) = httpJSONEither $ makeCommonDetailReq base auth "people" idStr
+getPersonDetailEither base auth (PersonId idStr) = httpJSONEither $ makeCommonDetailReq base auth peoplePath idStr
 
 -- | Get details for 'Room' by ID.  A JSONException runtime exception will be thrown on an JSON parse errors.
 getRoomDetail :: MonadIO m => CiscoSparkRequest -> Authorization -> RoomId -> m (Response Room)
-getRoomDetail base auth (RoomId idStr) = httpJSON $ makeCommonDetailReq base auth "rooms" idStr
+getRoomDetail base auth (RoomId idStr) = httpJSON $ makeCommonDetailReq base auth roomsPath idStr
 
 -- | Get details for 'Room' by ID.  A Left value will be returned on an JSON parse errors.
 getRoomDetailEither :: MonadIO m => CiscoSparkRequest -> Authorization -> RoomId -> m (Response (Either JSONException Room))
-getRoomDetailEither base auth (RoomId idStr) = httpJSONEither $ makeCommonDetailReq base auth "rooms" idStr
+getRoomDetailEither base auth (RoomId idStr) = httpJSONEither $ makeCommonDetailReq base auth roomsPath idStr
 
 -- | Get details for 'Membership' by ID.  A JSONException runtime exception will be thrown on an JSON parse errors.
 getMembershipDetail :: MonadIO m => CiscoSparkRequest -> Authorization -> MembershipId -> m (Response Membership)
-getMembershipDetail base auth (MembershipId idStr) = httpJSON $ makeCommonDetailReq base auth "memberships" idStr
+getMembershipDetail base auth (MembershipId idStr) = httpJSON $ makeCommonDetailReq base auth membershipsPath idStr
 
 -- | Get details for 'Membership' by ID.  A Left value will be returned on an JSON parse errors.
 getMembershipDetailEither :: MonadIO m => CiscoSparkRequest -> Authorization -> MembershipId -> m (Response (Either JSONException Membership))
-getMembershipDetailEither base auth (MembershipId idStr) = httpJSONEither $ makeCommonDetailReq base auth "memberships" idStr
+getMembershipDetailEither base auth (MembershipId idStr) = httpJSONEither $ makeCommonDetailReq base auth membershipsPath idStr
 
 -- | Get details for 'Message' by ID.  A JSONException runtime exception will be thrown on an JSON parse errors.
 getMessageDetail :: MonadIO m => CiscoSparkRequest -> Authorization -> MessageId -> m (Response Message)
-getMessageDetail base auth (MessageId idStr) = httpJSON $ makeCommonDetailReq base auth "messages" idStr
+getMessageDetail base auth (MessageId idStr) = httpJSON $ makeCommonDetailReq base auth messagesPath idStr
 
 -- | Get details for 'Message' by ID.  A Left value will be returned on an JSON parse errors.
 getMessageDetailEither :: MonadIO m => CiscoSparkRequest -> Authorization -> MessageId -> m (Response (Either JSONException Message))
-getMessageDetailEither base auth (MessageId idStr) = httpJSONEither $ makeCommonDetailReq base auth "messages" idStr
+getMessageDetailEither base auth (MessageId idStr) = httpJSONEither $ makeCommonDetailReq base auth messagesPath idStr
 
 -- | Get details for 'Team' by ID.  A JSONException runtime exception will be thrown on an JSON parse errors.
 getTeamDetail :: MonadIO m => CiscoSparkRequest -> Authorization -> TeamId -> m (Response Team)
-getTeamDetail base auth (TeamId idStr) = httpJSON $ makeCommonDetailReq base auth "teams" idStr
+getTeamDetail base auth (TeamId idStr) = httpJSON $ makeCommonDetailReq base auth teamsPath idStr
 
 -- | Get details for 'Team' by ID.  A Left value will be returned on an JSON parse errors.
 getTeamDetailEither :: MonadIO m => CiscoSparkRequest -> Authorization -> TeamId -> m (Response (Either JSONException Team))
-getTeamDetailEither base auth (TeamId idStr) = httpJSONEither $ makeCommonDetailReq base auth "teams" idStr
+getTeamDetailEither base auth (TeamId idStr) = httpJSONEither $ makeCommonDetailReq base auth teamsPath idStr
 
 -- | Get details for 'TeamMembership' by ID.  A JSONException runtime exception will be thrown on an JSON parse errors.
 getTeamMembershipDetail :: MonadIO m => CiscoSparkRequest -> Authorization -> TeamMembershipId -> m (Response TeamMembership)
-getTeamMembershipDetail base auth (TeamMembershipId idStr) = httpJSON $ makeCommonDetailReq base auth "team/memberships" idStr
+getTeamMembershipDetail base auth (TeamMembershipId idStr) = httpJSON $ makeCommonDetailReq base auth teamMembershipsPath idStr
 
 -- | Get details for 'TeamMembership' by ID.  A Left value will be returned on an JSON parse errors.
 getTeamMembershipDetailEither :: MonadIO m => CiscoSparkRequest -> Authorization -> TeamMembershipId -> m (Response (Either JSONException TeamMembership))
-getTeamMembershipDetailEither base auth (TeamMembershipId idStr) = httpJSONEither $ makeCommonDetailReq base auth "team/memberships" idStr
+getTeamMembershipDetailEither base auth (TeamMembershipId idStr) = httpJSONEither $ makeCommonDetailReq base auth teamMembershipsPath idStr
 
 -- | Get details for 'Organization' by ID.  A JSONException runtime exception will be thrown on an JSON parse errors.
 getOrganizationDetail :: MonadIO m => CiscoSparkRequest -> Authorization -> OrganizationId -> m (Response Organization)
-getOrganizationDetail base auth (OrganizationId idStr) = httpJSON $ makeCommonDetailReq base auth "organizations" idStr
+getOrganizationDetail base auth (OrganizationId idStr) = httpJSON $ makeCommonDetailReq base auth organizationsPath idStr
 
 -- | Get details for 'Organization' by ID.  A Left value will be returned on an JSON parse errors.
 getOrganizationDetailEither :: MonadIO m => CiscoSparkRequest -> Authorization -> OrganizationId -> m (Response (Either JSONException Organization))
-getOrganizationDetailEither base auth (OrganizationId idStr) = httpJSONEither $ makeCommonDetailReq base auth "organizations" idStr
+getOrganizationDetailEither base auth (OrganizationId idStr) = httpJSONEither $ makeCommonDetailReq base auth organizationsPath idStr
 
 -- | Get details for 'License' by ID.  A JSONException runtime exception will be thrown on an JSON parse errors.
 getLicenseDetail :: MonadIO m => CiscoSparkRequest -> Authorization -> LicenseId -> m (Response License)
-getLicenseDetail base auth (LicenseId idStr) = httpJSON $ makeCommonDetailReq base auth "licenses" idStr
+getLicenseDetail base auth (LicenseId idStr) = httpJSON $ makeCommonDetailReq base auth licensesPath idStr
 
 -- | Get details for 'License' by ID.  A Left value will be returned on an JSON parse errors.
 getLicenseDetailEither :: MonadIO m => CiscoSparkRequest -> Authorization -> LicenseId -> m (Response (Either JSONException License))
-getLicenseDetailEither base auth (LicenseId idStr) = httpJSONEither $ makeCommonDetailReq base auth "licenses" idStr
+getLicenseDetailEither base auth (LicenseId idStr) = httpJSONEither $ makeCommonDetailReq base auth licensesPath idStr
 
 -- | Get details for 'Role' by ID.  A JSONException runtime exception will be thrown on an JSON parse errors.
 getRoleDetail :: MonadIO m => CiscoSparkRequest -> Authorization -> RoleId -> m (Response Role)
-getRoleDetail base auth (RoleId idStr) = httpJSON $ makeCommonDetailReq base auth "roles" idStr
+getRoleDetail base auth (RoleId idStr) = httpJSON $ makeCommonDetailReq base auth rolesPath idStr
 
 -- | Get details for 'Role' by ID.  A Left value will be returned on an JSON parse errors.
 getRoleDetailEither :: MonadIO m => CiscoSparkRequest -> Authorization -> RoleId -> m (Response (Either JSONException Role))
-getRoleDetailEither base auth (RoleId idStr) = httpJSONEither $ makeCommonDetailReq base auth "roles" idStr
+getRoleDetailEither base auth (RoleId idStr) = httpJSONEither $ makeCommonDetailReq base auth rolesPath idStr
 
 
 makeCommonCreateReq :: ToJSON a => CiscoSparkRequest -> Authorization -> ByteString -> a -> Request
@@ -355,18 +383,26 @@ makeCommonCreateReq (CiscoSparkRequest base) auth path body
     $ addAuthorizationHeader auth
     $ base
 
+-- | Create a room with given room name.  A JSONException runtime exception will be thrown on an JSON parse errors.
+createRoom :: MonadIO m => CiscoSparkRequest -> Authorization -> CreateRoom -> m (Response Room)
+createRoom base auth param = httpJSON $ makeCommonCreateReq base auth roomsPath param
+
+-- | Create a room with given room name.  A Left value will be returned on an JSON parse errors.
+createRoomEither :: MonadIO m => CiscoSparkRequest -> Authorization -> CreateRoom -> m (Response (Either JSONException Room))
+createRoomEither base auth param = httpJSONEither $ makeCommonCreateReq base auth roomsPath param
+
 -- | Create a team with given team name.  A JSONException runtime exception will be thrown on an JSON parse errors.
 createTeam :: MonadIO m => CiscoSparkRequest -> Authorization -> CreateTeam -> m (Response Team)
-createTeam base auth param = httpJSON $ makeCommonCreateReq base auth "teams" param
+createTeam base auth param = httpJSON $ makeCommonCreateReq base auth teamsPath param
 
 -- | Create a team with given team name.  A Left value will be returned on an JSON parse errors.
 createTeamEither :: MonadIO m => CiscoSparkRequest -> Authorization -> CreateTeam -> m (Response (Either JSONException Team))
-createTeamEither base auth param = httpJSONEither $ makeCommonCreateReq base auth "teams" param
+createTeamEither base auth param = httpJSONEither $ makeCommonCreateReq base auth teamsPath param
 
 -- | Add a person to a team.  A JSONException runtime exception will be thrown on an JSON parse errors.
 createTeamMembership :: MonadIO m => CiscoSparkRequest -> Authorization -> CreateTeamMembership -> m (Response TeamMembership)
-createTeamMembership base auth param = httpJSON $ makeCommonCreateReq base auth "team/memberships" param
+createTeamMembership base auth param = httpJSON $ makeCommonCreateReq base auth teamMembershipsPath param
 
 -- | Add a person to a team.  A Left value will be returned on an JSON parse errors.
 createTeamMembershipEither :: MonadIO m => CiscoSparkRequest -> Authorization -> CreateTeamMembership -> m (Response (Either JSONException TeamMembership))
-createTeamMembershipEither base auth param = httpJSONEither $ makeCommonCreateReq base auth "team/memberships" param
+createTeamMembershipEither base auth param = httpJSONEither $ makeCommonCreateReq base auth teamMembershipsPath param
