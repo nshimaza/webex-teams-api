@@ -377,6 +377,28 @@ spec = do
 
             stopMockServer svr
 
+        it "createTeamEither sends JSON encoded CreateTeam as its body of POST request" $ do
+            receivedReqMVar <- newEmptyMVar
+            receivedBodyMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                strictRequestBody req >>= putMVar receivedBodyMVar
+                simpleApp teamJson req respond
+
+            (Right resTeam) <- getResponseBody <$> createTeamEither mockBaseRequest dummyAuth newTeam
+            resTeam `shouldBe` team
+
+            receivedReq <- takeMVar receivedReqMVar
+            receivedBody <- takeMVar receivedBodyMVar
+            requestMethod receivedReq `shouldBe` "POST"
+            rawPathInfo receivedReq `shouldBe` "/v1/teams"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+            decode receivedBody `shouldBe` Just newTeam
+
+            stopMockServer svr
+
     describe "TeamMemberShip" $ do
         let teamMembershipJson = "{\
                                  \  \"id\" : \"Y2lzY29zcGFyazovL3VzL1RFQU1fTUVNQkVSU0hJUC8wZmNmYTJiOC1hZGNjLTQ1ZWEtYTc4Mi1lNDYwNTkyZjgxZWY6MTNlMThmNDAtNDJmYy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5\",\
@@ -408,6 +430,10 @@ spec = do
                                                  }
             teamMembershipList j = [ teamMembershipGen $ j <> show i | i <- [1..3] ]
             teamMembershipListList = [ teamMembershipList [c] | c <- ['a'..'d'] ]
+            newTeamMembership = CreateTeamMembership (TeamId "targetTeam")
+                                                     (Just $ PersonId "addedPerson")
+                                                     (Just $ Email "added@example.com")
+                                                     (Just True)
 
         it "streamTeamMembershipList streams TeamMembership" $ do
             let testData = teamMembershipList ['Z']
@@ -479,6 +505,50 @@ spec = do
                 simpleApp teamMembershipJson req respond
             (Right resTeamMembership) <- getResponseBody <$> getTeamMembershipDetailEither mockBaseRequest dummyAuth (TeamMembershipId "testTeamMembershipId")
             resTeamMembership `shouldBe` teamMembership
+
+            stopMockServer svr
+
+        it "createTeamMembership sends JSON encoded CreateTeamMembership as its body of POST request" $ do
+            receivedReqMVar <- newEmptyMVar
+            receivedBodyMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                strictRequestBody req >>= putMVar receivedBodyMVar
+                simpleApp teamMembershipJson req respond
+
+            resTeamMembership <- getResponseBody <$> createTeamMembership mockBaseRequest dummyAuth newTeamMembership
+            resTeamMembership `shouldBe` teamMembership
+
+            receivedReq <- takeMVar receivedReqMVar
+            receivedBody <- takeMVar receivedBodyMVar
+            requestMethod receivedReq `shouldBe` "POST"
+            rawPathInfo receivedReq `shouldBe` "/v1/team/memberships"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+            decode receivedBody `shouldBe` Just newTeamMembership
+
+            stopMockServer svr
+
+        it "createTeamMembershipEither sends JSON encoded CreateTeamMembership as its body of POST request" $ do
+            receivedReqMVar <- newEmptyMVar
+            receivedBodyMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                strictRequestBody req >>= putMVar receivedBodyMVar
+                simpleApp teamMembershipJson req respond
+
+            (Right resTeamMembership) <- getResponseBody <$> createTeamMembershipEither mockBaseRequest dummyAuth newTeamMembership
+            resTeamMembership `shouldBe` teamMembership
+
+            receivedReq <- takeMVar receivedReqMVar
+            receivedBody <- takeMVar receivedBodyMVar
+            requestMethod receivedReq `shouldBe` "POST"
+            rawPathInfo receivedReq `shouldBe` "/v1/team/memberships"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+            decode receivedBody `shouldBe` Just newTeamMembership
 
             stopMockServer svr
 

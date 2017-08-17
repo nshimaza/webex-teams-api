@@ -107,10 +107,13 @@ module Network.CiscoSpark
     , getTeamDetailEither
     , getTeamDetail
     , createTeam
+    , createTeamEither
     -- ** Team Memberships
     , streamTeamMembershipList
     , getTeamMembershipDetail
     , getTeamMembershipDetailEither
+    , createTeamMembership
+    , createTeamMembershipEither
     -- ** Organizations
     , streamOrganizationList
     , getOrganizationDetail
@@ -355,3 +358,15 @@ makeCommonCreateReq (CiscoSparkRequest base) auth path body
 -- | Create a team with given team name.  A JSONException runtime exception will be thrown on an JSON parse errors.
 createTeam :: MonadIO m => CiscoSparkRequest -> Authorization -> CreateTeam -> m (Response Team)
 createTeam base auth param = httpJSON $ makeCommonCreateReq base auth "teams" param
+
+-- | Create a team with given team name.  A Left value will be returned on an JSON parse errors.
+createTeamEither :: MonadIO m => CiscoSparkRequest -> Authorization -> CreateTeam -> m (Response (Either JSONException Team))
+createTeamEither base auth param = httpJSONEither $ makeCommonCreateReq base auth "teams" param
+
+-- | Add a person to a team.  A JSONException runtime exception will be thrown on an JSON parse errors.
+createTeamMembership :: MonadIO m => CiscoSparkRequest -> Authorization -> CreateTeamMembership -> m (Response TeamMembership)
+createTeamMembership base auth param = httpJSON $ makeCommonCreateReq base auth "team/memberships" param
+
+-- | Add a person to a team.  A Left value will be returned on an JSON parse errors.
+createTeamMembershipEither :: MonadIO m => CiscoSparkRequest -> Authorization -> CreateTeamMembership -> m (Response (Either JSONException TeamMembership))
+createTeamMembershipEither base auth param = httpJSONEither $ makeCommonCreateReq base auth "team/memberships" param
