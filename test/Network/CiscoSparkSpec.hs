@@ -210,6 +210,17 @@ spec = do
                                  }
             personList j = [ personGen $ j <> show i | i <- [1..3] ]
             personListList = [ personList [c] | c <- ['a'..'d'] ]
+            newPerson = CreatePerson { createPersonEmails       = Just $ [Email "johnny.chang@foomail.com", Email "jchang@barmail.com"]
+                                     , createPersonDisplayName  = Just $ DisplayName "John Andersen"
+                                     , createPersonFirstName    = Just (FirstName "John")
+                                     , createPersonLastName     = Just (LastName "Andersen")
+                                     , createPersonAvatar       = Just (AvatarUrl "https://1efa7a94ed21783e352-c62266528714497a17239ececf39e9e2.ssl.cf1.rackcdn.com/V1~54c844c89e678e5a7b16a306bc2897b9~wx29yGtlTpilEFlYzqPKag==~1600")
+                                     , createPersonOrgId        = Just $ OrganizationId "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE"
+                                     , createPersonRoles        = Just [ RoleId "Y2lzY29zcGFyazovL3VzL1JPT00vOGNkYzQwYzQtZjA5ZS0zY2JhLThjMjYtZGQwZTcwYWRlY2Iy"
+                                                                       , RoleId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"]
+                                     , createPersonLicenses     = Just [ LicenseId "Y2lzY29zcGFyazovL3VzL1JPT00vOGNkYzQwYzQtZjA5ZS0zY2JhLThjMjYtZGQwZTcwYWRlY2Iy"
+                                                                       , LicenseId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"]
+                                     }
 
         it "streamPersonList streams Team" $ do
             let testData = personList ['Z']
@@ -289,6 +300,50 @@ spec = do
 
             stopMockServer svr
 
+        it "createEntity for a person sends JSON encoded CreatePerson as its body of POST request" $ do
+            receivedReqMVar <- newEmptyMVar
+            receivedBodyMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                strictRequestBody req >>= putMVar receivedBodyMVar
+                simpleApp personJson1 req respond
+
+            resPerson <- getResponseBody <$> createEntity mockBaseRequest dummyAuth newPerson
+            resPerson `shouldBe` person1
+
+            receivedReq <- takeMVar receivedReqMVar
+            receivedBody <- takeMVar receivedBodyMVar
+            requestMethod receivedReq `shouldBe` "POST"
+            rawPathInfo receivedReq `shouldBe` "/v1/people"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+            decode receivedBody `shouldBe` Just newPerson
+
+            stopMockServer svr
+
+        it "createEntityEither for a person sends JSON encoded CreatePerson as its body of POST request" $ do
+            receivedReqMVar <- newEmptyMVar
+            receivedBodyMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                strictRequestBody req >>= putMVar receivedBodyMVar
+                simpleApp personJson1 req respond
+
+            (Right resPerson) <- getResponseBody <$> createEntityEither mockBaseRequest dummyAuth newPerson
+            resPerson `shouldBe` person1
+
+            receivedReq <- takeMVar receivedReqMVar
+            receivedBody <- takeMVar receivedBodyMVar
+            requestMethod receivedReq `shouldBe` "POST"
+            rawPathInfo receivedReq `shouldBe` "/v1/people"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+            decode receivedBody `shouldBe` Just newPerson
+
+            stopMockServer svr
+
     describe "Team" $ do
         let teamJson = "{\
                        \  \"id\" : \"Y2lzY29zcGFyazovL3VzL1RFQU0vMTNlMThmNDAtNDJmYy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5\",\
@@ -355,7 +410,7 @@ spec = do
 
             stopMockServer svr
 
-        it "createTeam sends JSON encoded CreateTeam as its body of POST request" $ do
+        it "createEntity for a team sends JSON encoded CreateTeam as its body of POST request" $ do
             receivedReqMVar <- newEmptyMVar
             receivedBodyMVar <- newEmptyMVar
 
@@ -377,7 +432,7 @@ spec = do
 
             stopMockServer svr
 
-        it "createTeamEither sends JSON encoded CreateTeam as its body of POST request" $ do
+        it "createEntityEither for a team sends JSON encoded CreateTeam as its body of POST request" $ do
             receivedReqMVar <- newEmptyMVar
             receivedBodyMVar <- newEmptyMVar
 
@@ -430,10 +485,11 @@ spec = do
                                                  }
             teamMembershipList j = [ teamMembershipGen $ j <> show i | i <- [1..3] ]
             teamMembershipListList = [ teamMembershipList [c] | c <- ['a'..'d'] ]
-            newTeamMembership = CreateTeamMembership (TeamId "targetTeam")
-                                                     (Just $ PersonId "addedPerson")
-                                                     (Just $ Email "added@example.com")
-                                                     (Just True)
+            newTeamMembership = CreateTeamMembership { createTeamMembershipTeamId       = TeamId "targetTeam"
+                                                     , createTeamMembershipPersonId     = Just $ PersonId "addedPerson"
+                                                     , createTeamMembershipPersonEmail  = Just $ Email "added@example.com"
+                                                     , createTeamMembershipIsModerator  = Just True
+                                                     }
 
         it "streamTeamMembershipList streams TeamMembership" $ do
             let testData = teamMembershipList ['Z']
@@ -508,7 +564,7 @@ spec = do
 
             stopMockServer svr
 
-        it "createTeamMembership sends JSON encoded CreateTeamMembership as its body of POST request" $ do
+        it "createEntity for a team membership sends JSON encoded CreateTeamMembership as its body of POST request" $ do
             receivedReqMVar <- newEmptyMVar
             receivedBodyMVar <- newEmptyMVar
 
@@ -530,7 +586,7 @@ spec = do
 
             stopMockServer svr
 
-        it "createTeamMembershipEither sends JSON encoded CreateTeamMembership as its body of POST request" $ do
+        it "createEntityEither for a team membership sends JSON encoded CreateTeamMembership as its body of POST request" $ do
             receivedReqMVar <- newEmptyMVar
             receivedBodyMVar <- newEmptyMVar
 
@@ -665,7 +721,7 @@ spec = do
 
             stopMockServer svr
 
-        it "createRoom sends JSON encoded CreateRoom as its body of POST request" $ do
+        it "createEntity for a room sends JSON encoded CreateRoom as its body of POST request" $ do
             receivedReqMVar <- newEmptyMVar
             receivedBodyMVar <- newEmptyMVar
 
@@ -687,7 +743,7 @@ spec = do
 
             stopMockServer svr
 
-        it "createRoomEither sends JSON encoded CreateRoom as its body of POST request" $ do
+        it "createEntithEither for a room sends JSON encoded CreateRoom as its body of POST request" $ do
             receivedReqMVar <- newEmptyMVar
             receivedBodyMVar <- newEmptyMVar
 
@@ -743,6 +799,11 @@ spec = do
                                          }
             membershipList j = [ membershipGen $ j <> show i | i <- [1..3] ]
             membershipListList = [ membershipList [c] | c <- ['a'..'d'] ]
+            newMembership = CreateMembership { createMembershipRoomId       = RoomId "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
+                                             , createMembershipPersonId     = Just $ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
+                                             , createMembershipPersonEmail  = Just $ Email "john.andersen@example.com"
+                                             , createMembershipIsModerator  = Just $ True
+                                             }
 
         it "streamMembershipList streams Membership" $ do
             let testData = membershipList ['Z']
@@ -821,6 +882,50 @@ spec = do
 
             stopMockServer svr
 
+        it "createEntity for a membership sends JSON encoded CreateMembership as its body of POST request" $ do
+            receivedReqMVar <- newEmptyMVar
+            receivedBodyMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                strictRequestBody req >>= putMVar receivedBodyMVar
+                simpleApp membershipJson req respond
+
+            resMembership <- getResponseBody <$> createEntity mockBaseRequest dummyAuth newMembership
+            resMembership `shouldBe` membership
+
+            receivedReq <- takeMVar receivedReqMVar
+            receivedBody <- takeMVar receivedBodyMVar
+            requestMethod receivedReq `shouldBe` "POST"
+            rawPathInfo receivedReq `shouldBe` "/v1/memberships"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+            decode receivedBody `shouldBe` Just newMembership
+
+            stopMockServer svr
+
+        it "createEntithEither for a membership sends JSON encoded CreateMembership as its body of POST request" $ do
+            receivedReqMVar <- newEmptyMVar
+            receivedBodyMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                strictRequestBody req >>= putMVar receivedBodyMVar
+                simpleApp membershipJson req respond
+
+            (Right resMembership) <- getResponseBody <$> createEntityEither mockBaseRequest dummyAuth newMembership
+            resMembership `shouldBe` membership
+
+            receivedReq <- takeMVar receivedReqMVar
+            receivedBody <- takeMVar receivedBodyMVar
+            requestMethod receivedReq `shouldBe` "POST"
+            rawPathInfo receivedReq `shouldBe` "/v1/memberships"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+            decode receivedBody `shouldBe` Just newMembership
+
+            stopMockServer svr
+
     describe "Message" $ do
         let messageJson = "{\
                           \  \"id\" : \"Y2lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk\",\
@@ -867,6 +972,13 @@ spec = do
             messageList j = [ messageGen $ j <> show i | i <- [1..3] ]
             messageListList = [ messageList [c] | c <- ['a'..'d'] ]
             defQuery = defaultMessageQuery $ RoomId "dummyRoomId"
+            newMessage = CreateMessage { createMessageRoomId        = Just $ RoomId "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
+                                       , createMessageToPersonId    = Just $ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"
+                                       , createMessageToPersonEmail = Just $ Email "julie@example.com"
+                                       , createMessageText          = Just $ MessageText "PROJECT UPDATE - A new project plan has been published on Box: http://box.com/s/lf5vj. The PM for this project is Mike C. and the Engineering Manager is Jane W."
+                                       , createMessageMarkdown      = Just $ MessageMarkdown "**PROJECT UPDATE** A new project plan has been published [on Box](http://box.com/s/lf5vj). The PM for this project is <@personEmail:mike@example.com> and the Engineering Manager is <@personEmail:jane@example.com>."
+                                       , createMessageFiles         = Just $ [ FileUrl "http://www.example.com/images/media.png" ]
+                                       }
 
         it "streamMessageList streams Message" $ do
             let testData = messageList ['Z']
@@ -944,6 +1056,50 @@ spec = do
                 simpleApp messageJson req respond
             (Right resMessage) <- getResponseBody <$> getDetailEither mockBaseRequest dummyAuth (MessageId "testMessageId")
             resMessage `shouldBe` message
+
+            stopMockServer svr
+
+        it "createEntity for a message sends JSON encoded CreateMessage as its body of POST request" $ do
+            receivedReqMVar <- newEmptyMVar
+            receivedBodyMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                strictRequestBody req >>= putMVar receivedBodyMVar
+                simpleApp messageJson req respond
+
+            resMessage <- getResponseBody <$> createEntity mockBaseRequest dummyAuth newMessage
+            resMessage `shouldBe` message
+
+            receivedReq <- takeMVar receivedReqMVar
+            receivedBody <- takeMVar receivedBodyMVar
+            requestMethod receivedReq `shouldBe` "POST"
+            rawPathInfo receivedReq `shouldBe` "/v1/messages"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+            decode receivedBody `shouldBe` Just newMessage
+
+            stopMockServer svr
+
+        it "createEntithEither for a message sends JSON encoded CreateMessage as its body of POST request" $ do
+            receivedReqMVar <- newEmptyMVar
+            receivedBodyMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                strictRequestBody req >>= putMVar receivedBodyMVar
+                simpleApp messageJson req respond
+
+            (Right resMessage) <- getResponseBody <$> createEntityEither mockBaseRequest dummyAuth newMessage
+            resMessage `shouldBe` message
+
+            receivedReq <- takeMVar receivedReqMVar
+            receivedBody <- takeMVar receivedBodyMVar
+            requestMethod receivedReq `shouldBe` "POST"
+            rawPathInfo receivedReq `shouldBe` "/v1/messages"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+            decode receivedBody `shouldBe` Just newMessage
 
             stopMockServer svr
 

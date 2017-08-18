@@ -217,6 +217,11 @@ data CreatePerson = CreatePerson
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 12, omitNothingFields = True } ''CreatePerson)
 -- ^ 'CreatePerson' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | User can create a person.
+instance SparkCreate CreatePerson where
+    type ToCreateResponse CreatePerson = Person
+    createPath _ = peoplePath
+
 -- | 'UpdatePerson' is encoded to request body JSON of Update a Person REST call.
 data UpdatePerson = UpdatePerson
     { updatePersonDisplayName :: Maybe DisplayName      -- ^ Display name of the Person.
@@ -503,6 +508,11 @@ data CreateMembership = CreateMembership
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 16, omitNothingFields = True } ''CreateMembership)
 -- ^ 'CreateMembership' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | User can a person to a space.
+instance SparkCreate CreateMembership where
+    type ToCreateResponse CreateMembership = Membership
+    createPath _ = membershipsPath
+
 -- | 'UpdateMembership' is encoded to request body JSON of Update a Membership REST call.
 newtype UpdateMembership = UpdateMembership { updateMembershipIsModerator :: Bool } deriving (Eq, Show)
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 16, omitNothingFields = True } ''UpdateMembership)
@@ -594,6 +604,11 @@ data CreateMessage = CreateMessage
 
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 13, omitNothingFields = True } ''CreateMessage)
 -- ^ 'CreateMessage' derives ToJSON and FromJSON via deriveJSON template haskell function.
+
+-- | User can post a message.
+instance SparkCreate CreateMessage where
+    type ToCreateResponse CreateMessage = Message
+    createPath _ = messagesPath
 
 
 -- | Display name of 'Organization'

@@ -267,26 +267,18 @@ makeCommonDetailReq (CiscoSparkRequest base) auth path idStr
     A JSONException runtime exception will be thrown on an JSON parse errors.
 -}
 getDetail :: (MonadIO m, SparkDetail key)
-    => CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API
+    => CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API.
     -> Authorization        -- ^ Authorization string against Spark API.
     -> key                  -- ^ One of PersonId, RoomId, MembershipId, MessageId, TeamId, TeamMembershipId,
                             --   OrganizationId, LicenseId and RoleId.
     -> m (Response (ToDetailResponse key))
 getDetail base auth entityId = httpJSON $ makeCommonDetailReq base auth (detailPath entityId) (toIdStr entityId)
 
-{-|
-    Get details of a Spark entity.
-
-    Obtaining detail of an entity identified by key.  The key can be a value in one of
-    following types: 'PersonId', 'RoomId', 'MembershipId', 'MessageId', 'TeamId', 'TeamMembershipId',
-    'OrganizationId', 'LicenseId', 'RoleId'.  API is automatically selected by type of the key.
-    A JSONException runtime exception will be thrown on an JSON parse errors.
--}
+-- | Get details of a Spark entity.  A Left value will be returned on an JSON parse errors.
 getDetailEither :: (MonadIO m, SparkDetail key)
-    => CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API
-    -> Authorization        -- ^ Authorization string against Spark API.
-    -> key                  -- ^ One of PersonId, RoomId, MembershipId, MessageId, TeamId, TeamMembershipId,
-                            --   OrganizationId, LicenseId and RoleId.
+    => CiscoSparkRequest
+    -> Authorization
+    -> key
     -> m (Response (Either JSONException (ToDetailResponse key)))
 getDetailEither base auth entityId = httpJSONEither $ makeCommonDetailReq base auth (detailPath entityId) (toIdStr entityId)
 
@@ -299,11 +291,26 @@ makeCommonCreateReq (CiscoSparkRequest base) auth path body
     $ addAuthorizationHeader auth
     $ base
 
--- | Create an Spark entity with given parameters.  A JSONException runtime exception will be thrown on an JSON parse errors.
-createEntity :: (MonadIO m, SparkCreate a, ToJSON a) => CiscoSparkRequest -> Authorization -> a -> m (Response (ToCreateResponse a))
+{-|
+    Create a Spark entity with given parameters.
+
+    Creating a new entity of Spark such as space, team, membership or message.
+    REST API path is automatically selected by type of createParams.
+    A JSONException runtime exception will be thrown on an JSON parse errors.
+-}
+createEntity :: (MonadIO m, SparkCreate createParams, ToJSON createParams)
+    => CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API
+    -> Authorization        -- ^ Authorization string against Spark API.
+    -> createParams         -- ^ One of 'CreatePerson', 'CreateRoom', 'CreateMembership', 'CreateMessage',
+                            --   'CreateTeam' and 'CreateTeamMembership'.
+    -> m (Response (ToCreateResponse createParams))
 createEntity base auth param = httpJSON $ makeCommonCreateReq base auth (createPath param) param
 
--- | Create an Spark entity with given parameters.  A Left value will be returned on an JSON parse errors.
-createEntityEither :: (MonadIO m, SparkCreate a, ToJSON a) => CiscoSparkRequest -> Authorization -> a -> m (Response (Either JSONException (ToCreateResponse a)))
+-- | Create a Spark entity with given parameters.  A Left value will be returned on an JSON parse errors.
+createEntityEither :: (MonadIO m, SparkCreate createParams, ToJSON createParams)
+    => CiscoSparkRequest
+    -> Authorization
+    -> createParams
+    -> m (Response (Either JSONException (ToCreateResponse createParams)))
 createEntityEither base auth param = httpJSONEither $ makeCommonCreateReq base auth (createPath param) param
 
