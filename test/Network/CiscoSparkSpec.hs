@@ -259,14 +259,14 @@ spec = do
 
             stopMockServer svr
 
-        it "getPersonDetail returns a Person" $ do
+        it "getDetail for a person returns a Person" $ do
             receivedReqMVar <- newEmptyMVar
 
             svr <- startMockServer $ \req respond -> do
                 putMVar receivedReqMVar req
                 simpleApp personJson1 req respond
 
-            resPerson <- getResponseBody <$> getPersonDetail mockBaseRequest dummyAuth (PersonId "testPersonId")
+            resPerson <- getResponseBody <$> getDetail mockBaseRequest dummyAuth (PersonId "testPersonId")
             resPerson `shouldBe` person1
 
             receivedReq <- takeMVar receivedReqMVar
@@ -277,14 +277,14 @@ spec = do
 
             stopMockServer svr
 
-        it "getPersonDetailEither returns a (Right Person)" $ do
+        it "getDetailEither for a person returns a (Right Person)" $ do
             receivedReqMVar <- newEmptyMVar
 
             svr <- startMockServer $ \req respond -> do
                 putMVar receivedReqMVar req
                 simpleApp personJson1 req respond
 
-            (Right resPerson) <- getResponseBody <$> getPersonDetailEither mockBaseRequest dummyAuth (PersonId "testPersonId")
+            (Right resPerson) <- getResponseBody <$> getDetailEither mockBaseRequest dummyAuth (PersonId "testPersonId")
             resPerson `shouldBe` person1
 
             stopMockServer svr
@@ -326,14 +326,14 @@ spec = do
 
             stopMockServer svr
 
-        it "getTeamDetail returns a Team" $ do
+        it "getDetail for a team returns a Team" $ do
             receivedReqMVar <- newEmptyMVar
 
             svr <- startMockServer $ \req respond -> do
                 putMVar receivedReqMVar req
                 simpleApp teamJson req respond
 
-            resTeam <- getResponseBody <$> getTeamDetail mockBaseRequest dummyAuth (TeamId "testTeamId")
+            resTeam <- getResponseBody <$> getDetail mockBaseRequest dummyAuth (TeamId "testTeamId")
             resTeam `shouldBe` team
 
             receivedReq <- takeMVar receivedReqMVar
@@ -344,13 +344,13 @@ spec = do
 
             stopMockServer svr
 
-        it "getTeamDetailEither returns a (Right Team)" $ do
+        it "getDetailEither for a team returns a (Right Team)" $ do
             receivedReqMVar <- newEmptyMVar
 
             svr <- startMockServer $ \req respond -> do
                 putMVar receivedReqMVar req
                 simpleApp teamJson req respond
-            (Right resTeam) <- getResponseBody <$> getTeamDetailEither mockBaseRequest dummyAuth (TeamId "testTeamId")
+            (Right resTeam) <- getResponseBody <$> getDetailEither mockBaseRequest dummyAuth (TeamId "testTeamId")
             resTeam `shouldBe` team
 
             stopMockServer svr
@@ -479,14 +479,14 @@ spec = do
 
             stopMockServer svr
 
-        it "getTeamMembershipDetail returns a TeamMembership" $ do
+        it "getDetail for a team membership returns a TeamMembership" $ do
             receivedReqMVar <- newEmptyMVar
 
             svr <- startMockServer $ \req respond -> do
                 putMVar receivedReqMVar req
                 simpleApp teamMembershipJson req respond
 
-            resTeamMembership <- getResponseBody <$> getTeamMembershipDetail mockBaseRequest dummyAuth (TeamMembershipId "testTeamMembershipId")
+            resTeamMembership <- getResponseBody <$> getDetail mockBaseRequest dummyAuth (TeamMembershipId "testTeamMembershipId")
             resTeamMembership `shouldBe` teamMembership
 
             receivedReq <- takeMVar receivedReqMVar
@@ -497,13 +497,13 @@ spec = do
 
             stopMockServer svr
 
-        it "getTeamMembershipDetailEither returns a (Right TeamMembership)" $ do
+        it "getDetailEither for a team membership  returns a (Right TeamMembership)" $ do
             receivedReqMVar <- newEmptyMVar
 
             svr <- startMockServer $ \req respond -> do
                 putMVar receivedReqMVar req
                 simpleApp teamMembershipJson req respond
-            (Right resTeamMembership) <- getResponseBody <$> getTeamMembershipDetailEither mockBaseRequest dummyAuth (TeamMembershipId "testTeamMembershipId")
+            (Right resTeamMembership) <- getResponseBody <$> getDetailEither mockBaseRequest dummyAuth (TeamMembershipId "testTeamMembershipId")
             resTeamMembership `shouldBe` teamMembership
 
             stopMockServer svr
@@ -636,14 +636,14 @@ spec = do
 
             stopMockServer svr
 
-        it "getRoomDetail returns a Room" $ do
+        it "getDetail for a room returns a Room" $ do
             receivedReqMVar <- newEmptyMVar
 
             svr <- startMockServer $ \req respond -> do
                 putMVar receivedReqMVar req
                 simpleApp roomJson req respond
 
-            resRoom <- getResponseBody <$> getRoomDetail mockBaseRequest dummyAuth (RoomId "testRoomId")
+            resRoom <- getResponseBody <$> getDetail mockBaseRequest dummyAuth (RoomId "testRoomId")
             resRoom `shouldBe` room
 
             receivedReq <- takeMVar receivedReqMVar
@@ -654,13 +654,13 @@ spec = do
 
             stopMockServer svr
 
-        it "getRoomDetailEither returns a (Right Room)" $ do
+        it "getDetailEither for a room returns a (Right Room)" $ do
             receivedReqMVar <- newEmptyMVar
 
             svr <- startMockServer $ \req respond -> do
                 putMVar receivedReqMVar req
                 simpleApp roomJson req respond
-            (Right resRoom) <- getResponseBody <$> getRoomDetailEither mockBaseRequest dummyAuth (RoomId "testRoomId")
+            (Right resRoom) <- getResponseBody <$> getDetailEither mockBaseRequest dummyAuth (RoomId "testRoomId")
             resRoom `shouldBe` room
 
             stopMockServer svr
@@ -792,14 +792,14 @@ spec = do
 
             stopMockServer svr
 
-        it "getMembershipDetail returns a Membership" $ do
+        it "getDetail for a menbership returns a Membership" $ do
             receivedReqMVar <- newEmptyMVar
 
             svr <- startMockServer $ \req respond -> do
                 putMVar receivedReqMVar req
                 simpleApp membershipJson req respond
 
-            resMembership <- getResponseBody <$> getMembershipDetail mockBaseRequest dummyAuth (MembershipId "testMembershipId")
+            resMembership <- getResponseBody <$> getDetail mockBaseRequest dummyAuth (MembershipId "testMembershipId")
             resMembership `shouldBe` membership
 
             receivedReq <- takeMVar receivedReqMVar
@@ -810,13 +810,13 @@ spec = do
 
             stopMockServer svr
 
-        it "getMembershipDetailEither returns a (Right Membership)" $ do
+        it "getDetailEither for a membership returns a (Right Membership)" $ do
             receivedReqMVar <- newEmptyMVar
 
             svr <- startMockServer $ \req respond -> do
                 putMVar receivedReqMVar req
                 simpleApp membershipJson req respond
-            (Right resMembership) <- getResponseBody <$> getMembershipDetailEither mockBaseRequest dummyAuth (MembershipId "testMembershipId")
+            (Right resMembership) <- getResponseBody <$> getDetailEither mockBaseRequest dummyAuth (MembershipId "testMembershipId")
             resMembership `shouldBe` membership
 
             stopMockServer svr
@@ -918,14 +918,14 @@ spec = do
 
             stopMockServer svr
 
-        it "getMessageDetail returns a Message" $ do
+        it "getDetail for a message returns a Message" $ do
             receivedReqMVar <- newEmptyMVar
 
             svr <- startMockServer $ \req respond -> do
                 putMVar receivedReqMVar req
                 simpleApp messageJson req respond
 
-            resMessage <- getResponseBody <$> getMessageDetail mockBaseRequest dummyAuth (MessageId "testMessageId")
+            resMessage <- getResponseBody <$> getDetail mockBaseRequest dummyAuth (MessageId "testMessageId")
             resMessage `shouldBe` message
 
             receivedReq <- takeMVar receivedReqMVar
@@ -936,13 +936,13 @@ spec = do
 
             stopMockServer svr
 
-        it "getMessageDetailEither returns a (Right Message)" $ do
+        it "getDetailEither for a message returns a (Right Message)" $ do
             receivedReqMVar <- newEmptyMVar
 
             svr <- startMockServer $ \req respond -> do
                 putMVar receivedReqMVar req
                 simpleApp messageJson req respond
-            (Right resMessage) <- getResponseBody <$> getMessageDetailEither mockBaseRequest dummyAuth (MessageId "testMessageId")
+            (Right resMessage) <- getResponseBody <$> getDetailEither mockBaseRequest dummyAuth (MessageId "testMessageId")
             resMessage `shouldBe` message
 
             stopMockServer svr
@@ -989,14 +989,14 @@ spec = do
 
             stopMockServer svr
 
-        it "getOrganizationDetail returns a Organization" $ do
+        it "getDetail for an organization returns a Organization" $ do
             receivedReqMVar <- newEmptyMVar
 
             svr <- startMockServer $ \req respond -> do
                 putMVar receivedReqMVar req
                 simpleApp organizationJson req respond
 
-            resOrganization <- getResponseBody <$> getOrganizationDetail mockBaseRequest dummyAuth (OrganizationId "testOrganizationId")
+            resOrganization <- getResponseBody <$> getDetail mockBaseRequest dummyAuth (OrganizationId "testOrganizationId")
             resOrganization `shouldBe` organization
 
             receivedReq <- takeMVar receivedReqMVar
@@ -1007,13 +1007,13 @@ spec = do
 
             stopMockServer svr
 
-        it "getOrganizationDetailEither returns a (Right Organization)" $ do
+        it "getDetailEither for an organization returns a (Right Organization)" $ do
             receivedReqMVar <- newEmptyMVar
 
             svr <- startMockServer $ \req respond -> do
                 putMVar receivedReqMVar req
                 simpleApp organizationJson req respond
-            (Right resOrganization) <- getResponseBody <$> getOrganizationDetailEither mockBaseRequest dummyAuth (OrganizationId "testOrganizationId")
+            (Right resOrganization) <- getResponseBody <$> getDetailEither mockBaseRequest dummyAuth (OrganizationId "testOrganizationId")
             resOrganization `shouldBe` organization
 
             stopMockServer svr
@@ -1082,14 +1082,14 @@ spec = do
 
             stopMockServer svr
 
-        it "getLicenseDetail returns a License" $ do
+        it "getDetail for a license returns a License" $ do
             receivedReqMVar <- newEmptyMVar
 
             svr <- startMockServer $ \req respond -> do
                 putMVar receivedReqMVar req
                 simpleApp licenseJson req respond
 
-            resLicense <- getResponseBody <$> getLicenseDetail mockBaseRequest dummyAuth (LicenseId "testLicenseId")
+            resLicense <- getResponseBody <$> getDetail mockBaseRequest dummyAuth (LicenseId "testLicenseId")
             resLicense `shouldBe` license
 
             receivedReq <- takeMVar receivedReqMVar
@@ -1100,13 +1100,13 @@ spec = do
 
             stopMockServer svr
 
-        it "getLicenseDetailEither returns a (Right License)" $ do
+        it "getDetailEither for a license returns a (Right License)" $ do
             receivedReqMVar <- newEmptyMVar
 
             svr <- startMockServer $ \req respond -> do
                 putMVar receivedReqMVar req
                 simpleApp licenseJson req respond
-            (Right resLicense) <- getResponseBody <$> getLicenseDetailEither mockBaseRequest dummyAuth (LicenseId "testLicenseId")
+            (Right resLicense) <- getResponseBody <$> getDetailEither mockBaseRequest dummyAuth (LicenseId "testLicenseId")
             resLicense `shouldBe` license
 
             stopMockServer svr
@@ -1150,14 +1150,14 @@ spec = do
 
             stopMockServer svr
 
-        it "getRoleDetail returns a Role" $ do
+        it "getDetail for a role returns a Role" $ do
             receivedReqMVar <- newEmptyMVar
 
             svr <- startMockServer $ \req respond -> do
                 putMVar receivedReqMVar req
                 simpleApp roleJson req respond
 
-            resRole <- getResponseBody <$> getRoleDetail mockBaseRequest dummyAuth (RoleId "testRoleId")
+            resRole <- getResponseBody <$> getDetail mockBaseRequest dummyAuth (RoleId "testRoleId")
             resRole `shouldBe` role
 
             receivedReq <- takeMVar receivedReqMVar
@@ -1168,13 +1168,13 @@ spec = do
 
             stopMockServer svr
 
-        it "getRoleDetailEither returns a (Right Role)" $ do
+        it "getDetailEither for a role returns a (Right Role)" $ do
             receivedReqMVar <- newEmptyMVar
 
             svr <- startMockServer $ \req respond -> do
                 putMVar receivedReqMVar req
                 simpleApp roleJson req respond
-            (Right resRole) <- getResponseBody <$> getRoleDetailEither mockBaseRequest dummyAuth (RoleId "testRoleId")
+            (Right resRole) <- getResponseBody <$> getDetailEither mockBaseRequest dummyAuth (RoleId "testRoleId")
             resRole `shouldBe` role
 
             stopMockServer svr

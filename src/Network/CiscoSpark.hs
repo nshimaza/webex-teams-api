@@ -85,45 +85,29 @@ module Network.CiscoSpark
 
     , Timestamp (..)
     -- * Functions
+    , getDetail
+    , getDetailEither
     , createEntity
     , createEntityEither
     -- ** People
     , streamPersonList
-    , getPersonDetail
-    , getPersonDetailEither
     -- ** Rooms
     , streamRoomList
-    , getRoomDetail
-    , getRoomDetailEither
     -- ** Memberships
     , streamMembershipList
-    , getMembershipDetail
-    , getMembershipDetailEither
     -- ** Messages
     , defaultMessageQuery
     , streamMessageList
-    , getMessageDetail
-    , getMessageDetailEither
     -- ** Teams
     , streamTeamList
-    , getTeamDetailEither
-    , getTeamDetail
     -- ** Team Memberships
     , streamTeamMembershipList
-    , getTeamMembershipDetail
-    , getTeamMembershipDetailEither
     -- ** Organizations
     , streamOrganizationList
-    , getOrganizationDetail
-    , getOrganizationDetailEither
     -- ** Licenses
     , streamLicenseList
-    , getLicenseDetail
-    , getLicenseDetailEither
     -- ** Roles
     , streamRoleList
-    , getRoleDetail
-    , getRoleDetailEither
     ) where
 
 import           Conduit
@@ -274,77 +258,37 @@ makeCommonDetailReq (CiscoSparkRequest base) auth path idStr
     $ addAuthorizationHeader auth
     $ base
 
--- | Get details for 'Person' by ID.  A JSONException runtime exception will be thrown on an JSON parse errors.
-getPersonDetail :: MonadIO m => CiscoSparkRequest -> Authorization -> PersonId -> m (Response Person)
-getPersonDetail base auth (PersonId idStr) = httpJSON $ makeCommonDetailReq base auth peoplePath idStr
+{-|
+    Get details of a Spark entity.
 
--- | Get details for 'Person' by ID.  A Left value will be returned on an JSON parse errors.
-getPersonDetailEither :: MonadIO m => CiscoSparkRequest -> Authorization -> PersonId -> m (Response (Either JSONException Person))
-getPersonDetailEither base auth (PersonId idStr) = httpJSONEither $ makeCommonDetailReq base auth peoplePath idStr
+    Obtaining detail of an entity identified by key.  The key can be a value in one of
+    following types: 'PersonId', 'RoomId', 'MembershipId', 'MessageId', 'TeamId', 'TeamMembershipId',
+    'OrganizationId', 'LicenseId', 'RoleId'.  API is automatically selected by type of the key.
+    A JSONException runtime exception will be thrown on an JSON parse errors.
+-}
+getDetail :: (MonadIO m, SparkDetail key)
+    => CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API
+    -> Authorization        -- ^ Authorization string against Spark API.
+    -> key                  -- ^ One of PersonId, RoomId, MembershipId, MessageId, TeamId, TeamMembershipId,
+                            --   OrganizationId, LicenseId and RoleId.
+    -> m (Response (ToDetailResponse key))
+getDetail base auth entityId = httpJSON $ makeCommonDetailReq base auth (detailPath entityId) (toIdStr entityId)
 
--- | Get details for 'Room' by ID.  A JSONException runtime exception will be thrown on an JSON parse errors.
-getRoomDetail :: MonadIO m => CiscoSparkRequest -> Authorization -> RoomId -> m (Response Room)
-getRoomDetail base auth (RoomId idStr) = httpJSON $ makeCommonDetailReq base auth roomsPath idStr
+{-|
+    Get details of a Spark entity.
 
--- | Get details for 'Room' by ID.  A Left value will be returned on an JSON parse errors.
-getRoomDetailEither :: MonadIO m => CiscoSparkRequest -> Authorization -> RoomId -> m (Response (Either JSONException Room))
-getRoomDetailEither base auth (RoomId idStr) = httpJSONEither $ makeCommonDetailReq base auth roomsPath idStr
-
--- | Get details for 'Membership' by ID.  A JSONException runtime exception will be thrown on an JSON parse errors.
-getMembershipDetail :: MonadIO m => CiscoSparkRequest -> Authorization -> MembershipId -> m (Response Membership)
-getMembershipDetail base auth (MembershipId idStr) = httpJSON $ makeCommonDetailReq base auth membershipsPath idStr
-
--- | Get details for 'Membership' by ID.  A Left value will be returned on an JSON parse errors.
-getMembershipDetailEither :: MonadIO m => CiscoSparkRequest -> Authorization -> MembershipId -> m (Response (Either JSONException Membership))
-getMembershipDetailEither base auth (MembershipId idStr) = httpJSONEither $ makeCommonDetailReq base auth membershipsPath idStr
-
--- | Get details for 'Message' by ID.  A JSONException runtime exception will be thrown on an JSON parse errors.
-getMessageDetail :: MonadIO m => CiscoSparkRequest -> Authorization -> MessageId -> m (Response Message)
-getMessageDetail base auth (MessageId idStr) = httpJSON $ makeCommonDetailReq base auth messagesPath idStr
-
--- | Get details for 'Message' by ID.  A Left value will be returned on an JSON parse errors.
-getMessageDetailEither :: MonadIO m => CiscoSparkRequest -> Authorization -> MessageId -> m (Response (Either JSONException Message))
-getMessageDetailEither base auth (MessageId idStr) = httpJSONEither $ makeCommonDetailReq base auth messagesPath idStr
-
--- | Get details for 'Team' by ID.  A JSONException runtime exception will be thrown on an JSON parse errors.
-getTeamDetail :: MonadIO m => CiscoSparkRequest -> Authorization -> TeamId -> m (Response Team)
-getTeamDetail base auth (TeamId idStr) = httpJSON $ makeCommonDetailReq base auth teamsPath idStr
-
--- | Get details for 'Team' by ID.  A Left value will be returned on an JSON parse errors.
-getTeamDetailEither :: MonadIO m => CiscoSparkRequest -> Authorization -> TeamId -> m (Response (Either JSONException Team))
-getTeamDetailEither base auth (TeamId idStr) = httpJSONEither $ makeCommonDetailReq base auth teamsPath idStr
-
--- | Get details for 'TeamMembership' by ID.  A JSONException runtime exception will be thrown on an JSON parse errors.
-getTeamMembershipDetail :: MonadIO m => CiscoSparkRequest -> Authorization -> TeamMembershipId -> m (Response TeamMembership)
-getTeamMembershipDetail base auth (TeamMembershipId idStr) = httpJSON $ makeCommonDetailReq base auth teamMembershipsPath idStr
-
--- | Get details for 'TeamMembership' by ID.  A Left value will be returned on an JSON parse errors.
-getTeamMembershipDetailEither :: MonadIO m => CiscoSparkRequest -> Authorization -> TeamMembershipId -> m (Response (Either JSONException TeamMembership))
-getTeamMembershipDetailEither base auth (TeamMembershipId idStr) = httpJSONEither $ makeCommonDetailReq base auth teamMembershipsPath idStr
-
--- | Get details for 'Organization' by ID.  A JSONException runtime exception will be thrown on an JSON parse errors.
-getOrganizationDetail :: MonadIO m => CiscoSparkRequest -> Authorization -> OrganizationId -> m (Response Organization)
-getOrganizationDetail base auth (OrganizationId idStr) = httpJSON $ makeCommonDetailReq base auth organizationsPath idStr
-
--- | Get details for 'Organization' by ID.  A Left value will be returned on an JSON parse errors.
-getOrganizationDetailEither :: MonadIO m => CiscoSparkRequest -> Authorization -> OrganizationId -> m (Response (Either JSONException Organization))
-getOrganizationDetailEither base auth (OrganizationId idStr) = httpJSONEither $ makeCommonDetailReq base auth organizationsPath idStr
-
--- | Get details for 'License' by ID.  A JSONException runtime exception will be thrown on an JSON parse errors.
-getLicenseDetail :: MonadIO m => CiscoSparkRequest -> Authorization -> LicenseId -> m (Response License)
-getLicenseDetail base auth (LicenseId idStr) = httpJSON $ makeCommonDetailReq base auth licensesPath idStr
-
--- | Get details for 'License' by ID.  A Left value will be returned on an JSON parse errors.
-getLicenseDetailEither :: MonadIO m => CiscoSparkRequest -> Authorization -> LicenseId -> m (Response (Either JSONException License))
-getLicenseDetailEither base auth (LicenseId idStr) = httpJSONEither $ makeCommonDetailReq base auth licensesPath idStr
-
--- | Get details for 'Role' by ID.  A JSONException runtime exception will be thrown on an JSON parse errors.
-getRoleDetail :: MonadIO m => CiscoSparkRequest -> Authorization -> RoleId -> m (Response Role)
-getRoleDetail base auth (RoleId idStr) = httpJSON $ makeCommonDetailReq base auth rolesPath idStr
-
--- | Get details for 'Role' by ID.  A Left value will be returned on an JSON parse errors.
-getRoleDetailEither :: MonadIO m => CiscoSparkRequest -> Authorization -> RoleId -> m (Response (Either JSONException Role))
-getRoleDetailEither base auth (RoleId idStr) = httpJSONEither $ makeCommonDetailReq base auth rolesPath idStr
+    Obtaining detail of an entity identified by key.  The key can be a value in one of
+    following types: 'PersonId', 'RoomId', 'MembershipId', 'MessageId', 'TeamId', 'TeamMembershipId',
+    'OrganizationId', 'LicenseId', 'RoleId'.  API is automatically selected by type of the key.
+    A JSONException runtime exception will be thrown on an JSON parse errors.
+-}
+getDetailEither :: (MonadIO m, SparkDetail key)
+    => CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API
+    -> Authorization        -- ^ Authorization string against Spark API.
+    -> key                  -- ^ One of PersonId, RoomId, MembershipId, MessageId, TeamId, TeamMembershipId,
+                            --   OrganizationId, LicenseId and RoleId.
+    -> m (Response (Either JSONException (ToDetailResponse key)))
+getDetailEither base auth entityId = httpJSONEither $ makeCommonDetailReq base auth (detailPath entityId) (toIdStr entityId)
 
 
 makeCommonCreateReq :: ToJSON a => CiscoSparkRequest -> Authorization -> ByteString -> a -> Request

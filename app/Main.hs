@@ -132,10 +132,10 @@ run (RoomListCommand auth count query) =
     runConduit $ streamRoomList auth def query .| takeC count .| mapM_C print
 
 run (TeamDetailCommand auth teamId) =
-    getTeamDetail def auth teamId >>= print . getResponseBody
+    getDetail def auth teamId >>= print . getResponseBody
 
 run (RoomDetailCommand auth roomId) =
-    getRoomDetail def auth roomId >>= print . getResponseBody
+    getDetail def auth roomId >>= print . getResponseBody
 
 main :: IO ()
 main = do
