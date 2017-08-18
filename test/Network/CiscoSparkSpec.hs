@@ -285,7 +285,7 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp personJson1 req respond
 
-            resPerson <- getResponseBody <$> getDetail mockBaseRequest dummyAuth (PersonId "testPersonId")
+            resPerson <- getResponseBody <$> getDetail dummyAuth mockBaseRequest (PersonId "testPersonId")
             resPerson `shouldBe` person1
 
             receivedReq <- takeMVar receivedReqMVar
@@ -303,7 +303,7 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp personJson1 req respond
 
-            (Right resPerson) <- getResponseBody <$> getDetailEither mockBaseRequest dummyAuth (PersonId "testPersonId")
+            (Right resPerson) <- getResponseBody <$> getDetailEither dummyAuth mockBaseRequest (PersonId "testPersonId")
             resPerson `shouldBe` person1
 
             stopMockServer svr
@@ -317,7 +317,7 @@ spec = do
                 strictRequestBody req >>= putMVar receivedBodyMVar
                 simpleApp personJson1 req respond
 
-            resPerson <- getResponseBody <$> createEntity mockBaseRequest dummyAuth newPerson
+            resPerson <- getResponseBody <$> createEntity dummyAuth mockBaseRequest newPerson
             resPerson `shouldBe` person1
 
             receivedReq <- takeMVar receivedReqMVar
@@ -339,7 +339,7 @@ spec = do
                 strictRequestBody req >>= putMVar receivedBodyMVar
                 simpleApp personJson1 req respond
 
-            (Right resPerson) <- getResponseBody <$> createEntityEither mockBaseRequest dummyAuth newPerson
+            (Right resPerson) <- getResponseBody <$> createEntityEither dummyAuth mockBaseRequest newPerson
             resPerson `shouldBe` person1
 
             receivedReq <- takeMVar receivedReqMVar
@@ -361,7 +361,7 @@ spec = do
                 strictRequestBody req >>= putMVar receivedBodyMVar
                 simpleApp personJson1 req respond
 
-            resPerson <- getResponseBody <$> updateEntity mockBaseRequest dummyAuth updatePerson
+            resPerson <- getResponseBody <$> updateEntity dummyAuth mockBaseRequest updatePerson
             resPerson `shouldBe` person1
 
             receivedReq <- takeMVar receivedReqMVar
@@ -383,7 +383,7 @@ spec = do
                 strictRequestBody req >>= putMVar receivedBodyMVar
                 simpleApp personJson1 req respond
 
-            (Right resPerson) <- getResponseBody <$> updateEntityEither mockBaseRequest dummyAuth updatePerson
+            (Right resPerson) <- getResponseBody <$> updateEntityEither dummyAuth mockBaseRequest updatePerson
             resPerson `shouldBe` person1
 
             receivedReq <- takeMVar receivedReqMVar
@@ -441,7 +441,7 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp teamJson req respond
 
-            resTeam <- getResponseBody <$> getDetail mockBaseRequest dummyAuth (TeamId "testTeamId")
+            resTeam <- getResponseBody <$> getDetail dummyAuth mockBaseRequest (TeamId "testTeamId")
             resTeam `shouldBe` team
 
             receivedReq <- takeMVar receivedReqMVar
@@ -458,7 +458,7 @@ spec = do
             svr <- startMockServer $ \req respond -> do
                 putMVar receivedReqMVar req
                 simpleApp teamJson req respond
-            (Right resTeam) <- getResponseBody <$> getDetailEither mockBaseRequest dummyAuth (TeamId "testTeamId")
+            (Right resTeam) <- getResponseBody <$> getDetailEither dummyAuth mockBaseRequest (TeamId "testTeamId")
             resTeam `shouldBe` team
 
             stopMockServer svr
@@ -472,7 +472,7 @@ spec = do
                 strictRequestBody req >>= putMVar receivedBodyMVar
                 simpleApp teamJson req respond
 
-            resTeam <- getResponseBody <$> createEntity mockBaseRequest dummyAuth newTeam
+            resTeam <- getResponseBody <$> createEntity dummyAuth mockBaseRequest newTeam
             resTeam `shouldBe` team
 
             receivedReq <- takeMVar receivedReqMVar
@@ -494,7 +494,7 @@ spec = do
                 strictRequestBody req >>= putMVar receivedBodyMVar
                 simpleApp teamJson req respond
 
-            (Right resTeam) <- getResponseBody <$> createEntityEither mockBaseRequest dummyAuth newTeam
+            (Right resTeam) <- getResponseBody <$> createEntityEither dummyAuth mockBaseRequest newTeam
             resTeam `shouldBe` team
 
             receivedReq <- takeMVar receivedReqMVar
@@ -516,7 +516,7 @@ spec = do
                 strictRequestBody req >>= putMVar receivedBodyMVar
                 simpleApp teamJson req respond
 
-            resTeam <- getResponseBody <$> updateEntity mockBaseRequest dummyAuth updateTeam
+            resTeam <- getResponseBody <$> updateEntity dummyAuth mockBaseRequest updateTeam
             resTeam `shouldBe` team
 
             receivedReq <- takeMVar receivedReqMVar
@@ -538,7 +538,7 @@ spec = do
                 strictRequestBody req >>= putMVar receivedBodyMVar
                 simpleApp teamJson req respond
 
-            (Right resTeam) <- getResponseBody <$> updateEntityEither mockBaseRequest dummyAuth updateTeam
+            (Right resTeam) <- getResponseBody <$> updateEntityEither dummyAuth mockBaseRequest updateTeam
             resTeam `shouldBe` team
 
             receivedReq <- takeMVar receivedReqMVar
@@ -640,7 +640,7 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp teamMembershipJson req respond
 
-            resTeamMembership <- getResponseBody <$> getDetail mockBaseRequest dummyAuth (TeamMembershipId "testTeamMembershipId")
+            resTeamMembership <- getResponseBody <$> getDetail dummyAuth mockBaseRequest (TeamMembershipId "testTeamMembershipId")
             resTeamMembership `shouldBe` teamMembership
 
             receivedReq <- takeMVar receivedReqMVar
@@ -657,7 +657,7 @@ spec = do
             svr <- startMockServer $ \req respond -> do
                 putMVar receivedReqMVar req
                 simpleApp teamMembershipJson req respond
-            (Right resTeamMembership) <- getResponseBody <$> getDetailEither mockBaseRequest dummyAuth (TeamMembershipId "testTeamMembershipId")
+            (Right resTeamMembership) <- getResponseBody <$> getDetailEither dummyAuth mockBaseRequest (TeamMembershipId "testTeamMembershipId")
             resTeamMembership `shouldBe` teamMembership
 
             stopMockServer svr
@@ -671,7 +671,7 @@ spec = do
                 strictRequestBody req >>= putMVar receivedBodyMVar
                 simpleApp teamMembershipJson req respond
 
-            resTeamMembership <- getResponseBody <$> createEntity mockBaseRequest dummyAuth newTeamMembership
+            resTeamMembership <- getResponseBody <$> createEntity dummyAuth mockBaseRequest newTeamMembership
             resTeamMembership `shouldBe` teamMembership
 
             receivedReq <- takeMVar receivedReqMVar
@@ -693,7 +693,7 @@ spec = do
                 strictRequestBody req >>= putMVar receivedBodyMVar
                 simpleApp teamMembershipJson req respond
 
-            (Right resTeamMembership) <- getResponseBody <$> createEntityEither mockBaseRequest dummyAuth newTeamMembership
+            (Right resTeamMembership) <- getResponseBody <$> createEntityEither dummyAuth mockBaseRequest newTeamMembership
             resTeamMembership `shouldBe` teamMembership
 
             receivedReq <- takeMVar receivedReqMVar
@@ -715,7 +715,7 @@ spec = do
                 strictRequestBody req >>= putMVar receivedBodyMVar
                 simpleApp teamMembershipJson req respond
 
-            resTeamMembership <- getResponseBody <$> updateEntity mockBaseRequest dummyAuth updateTeamMembership
+            resTeamMembership <- getResponseBody <$> updateEntity dummyAuth mockBaseRequest updateTeamMembership
             resTeamMembership `shouldBe` teamMembership
 
             receivedReq <- takeMVar receivedReqMVar
@@ -737,7 +737,7 @@ spec = do
                 strictRequestBody req >>= putMVar receivedBodyMVar
                 simpleApp teamMembershipJson req respond
 
-            (Right resTeamMembership) <- getResponseBody <$> updateEntityEither mockBaseRequest dummyAuth updateTeamMembership
+            (Right resTeamMembership) <- getResponseBody <$> updateEntityEither dummyAuth mockBaseRequest updateTeamMembership
             resTeamMembership `shouldBe` teamMembership
 
             receivedReq <- takeMVar receivedReqMVar
@@ -842,7 +842,7 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp roomJson req respond
 
-            resRoom <- getResponseBody <$> getDetail mockBaseRequest dummyAuth (RoomId "testRoomId")
+            resRoom <- getResponseBody <$> getDetail dummyAuth mockBaseRequest (RoomId "testRoomId")
             resRoom `shouldBe` room
 
             receivedReq <- takeMVar receivedReqMVar
@@ -859,7 +859,7 @@ spec = do
             svr <- startMockServer $ \req respond -> do
                 putMVar receivedReqMVar req
                 simpleApp roomJson req respond
-            (Right resRoom) <- getResponseBody <$> getDetailEither mockBaseRequest dummyAuth (RoomId "testRoomId")
+            (Right resRoom) <- getResponseBody <$> getDetailEither dummyAuth mockBaseRequest (RoomId "testRoomId")
             resRoom `shouldBe` room
 
             stopMockServer svr
@@ -873,7 +873,7 @@ spec = do
                 strictRequestBody req >>= putMVar receivedBodyMVar
                 simpleApp roomJson req respond
 
-            resRoom <- getResponseBody <$> createEntity mockBaseRequest dummyAuth newRoom
+            resRoom <- getResponseBody <$> createEntity dummyAuth mockBaseRequest newRoom
             resRoom `shouldBe` room
 
             receivedReq <- takeMVar receivedReqMVar
@@ -895,7 +895,7 @@ spec = do
                 strictRequestBody req >>= putMVar receivedBodyMVar
                 simpleApp roomJson req respond
 
-            (Right resRoom) <- getResponseBody <$> createEntityEither mockBaseRequest dummyAuth newRoom
+            (Right resRoom) <- getResponseBody <$> createEntityEither dummyAuth mockBaseRequest newRoom
             resRoom `shouldBe` room
 
             receivedReq <- takeMVar receivedReqMVar
@@ -917,7 +917,7 @@ spec = do
                 strictRequestBody req >>= putMVar receivedBodyMVar
                 simpleApp roomJson req respond
 
-            resRoom <- getResponseBody <$> updateEntity mockBaseRequest dummyAuth updateRoom
+            resRoom <- getResponseBody <$> updateEntity dummyAuth mockBaseRequest updateRoom
             resRoom `shouldBe` room
 
             receivedReq <- takeMVar receivedReqMVar
@@ -939,7 +939,7 @@ spec = do
                 strictRequestBody req >>= putMVar receivedBodyMVar
                 simpleApp roomJson req respond
 
-            (Right resRoom) <- getResponseBody <$> updateEntityEither mockBaseRequest dummyAuth updateRoom
+            (Right resRoom) <- getResponseBody <$> updateEntityEither dummyAuth mockBaseRequest updateRoom
             resRoom `shouldBe` room
 
             receivedReq <- takeMVar receivedReqMVar
@@ -1048,7 +1048,7 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp membershipJson req respond
 
-            resMembership <- getResponseBody <$> getDetail mockBaseRequest dummyAuth (MembershipId "testMembershipId")
+            resMembership <- getResponseBody <$> getDetail dummyAuth mockBaseRequest (MembershipId "testMembershipId")
             resMembership `shouldBe` membership
 
             receivedReq <- takeMVar receivedReqMVar
@@ -1065,7 +1065,7 @@ spec = do
             svr <- startMockServer $ \req respond -> do
                 putMVar receivedReqMVar req
                 simpleApp membershipJson req respond
-            (Right resMembership) <- getResponseBody <$> getDetailEither mockBaseRequest dummyAuth (MembershipId "testMembershipId")
+            (Right resMembership) <- getResponseBody <$> getDetailEither dummyAuth mockBaseRequest (MembershipId "testMembershipId")
             resMembership `shouldBe` membership
 
             stopMockServer svr
@@ -1079,7 +1079,7 @@ spec = do
                 strictRequestBody req >>= putMVar receivedBodyMVar
                 simpleApp membershipJson req respond
 
-            resMembership <- getResponseBody <$> createEntity mockBaseRequest dummyAuth newMembership
+            resMembership <- getResponseBody <$> createEntity dummyAuth mockBaseRequest newMembership
             resMembership `shouldBe` membership
 
             receivedReq <- takeMVar receivedReqMVar
@@ -1101,7 +1101,7 @@ spec = do
                 strictRequestBody req >>= putMVar receivedBodyMVar
                 simpleApp membershipJson req respond
 
-            (Right resMembership) <- getResponseBody <$> createEntityEither mockBaseRequest dummyAuth newMembership
+            (Right resMembership) <- getResponseBody <$> createEntityEither dummyAuth mockBaseRequest newMembership
             resMembership `shouldBe` membership
 
             receivedReq <- takeMVar receivedReqMVar
@@ -1123,7 +1123,7 @@ spec = do
                 strictRequestBody req >>= putMVar receivedBodyMVar
                 simpleApp membershipJson req respond
 
-            resMembership <- getResponseBody <$> updateEntity mockBaseRequest dummyAuth updateMembership
+            resMembership <- getResponseBody <$> updateEntity dummyAuth mockBaseRequest updateMembership
             resMembership `shouldBe` membership
 
             receivedReq <- takeMVar receivedReqMVar
@@ -1145,7 +1145,7 @@ spec = do
                 strictRequestBody req >>= putMVar receivedBodyMVar
                 simpleApp membershipJson req respond
 
-            (Right resMembership) <- getResponseBody <$> updateEntityEither mockBaseRequest dummyAuth updateMembership
+            (Right resMembership) <- getResponseBody <$> updateEntityEither dummyAuth mockBaseRequest updateMembership
             resMembership `shouldBe` membership
 
             receivedReq <- takeMVar receivedReqMVar
@@ -1269,7 +1269,7 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp messageJson req respond
 
-            resMessage <- getResponseBody <$> getDetail mockBaseRequest dummyAuth (MessageId "testMessageId")
+            resMessage <- getResponseBody <$> getDetail dummyAuth mockBaseRequest (MessageId "testMessageId")
             resMessage `shouldBe` message
 
             receivedReq <- takeMVar receivedReqMVar
@@ -1286,7 +1286,7 @@ spec = do
             svr <- startMockServer $ \req respond -> do
                 putMVar receivedReqMVar req
                 simpleApp messageJson req respond
-            (Right resMessage) <- getResponseBody <$> getDetailEither mockBaseRequest dummyAuth (MessageId "testMessageId")
+            (Right resMessage) <- getResponseBody <$> getDetailEither dummyAuth mockBaseRequest (MessageId "testMessageId")
             resMessage `shouldBe` message
 
             stopMockServer svr
@@ -1300,7 +1300,7 @@ spec = do
                 strictRequestBody req >>= putMVar receivedBodyMVar
                 simpleApp messageJson req respond
 
-            resMessage <- getResponseBody <$> createEntity mockBaseRequest dummyAuth newMessage
+            resMessage <- getResponseBody <$> createEntity dummyAuth mockBaseRequest newMessage
             resMessage `shouldBe` message
 
             receivedReq <- takeMVar receivedReqMVar
@@ -1322,7 +1322,7 @@ spec = do
                 strictRequestBody req >>= putMVar receivedBodyMVar
                 simpleApp messageJson req respond
 
-            (Right resMessage) <- getResponseBody <$> createEntityEither mockBaseRequest dummyAuth newMessage
+            (Right resMessage) <- getResponseBody <$> createEntityEither dummyAuth mockBaseRequest newMessage
             resMessage `shouldBe` message
 
             receivedReq <- takeMVar receivedReqMVar
@@ -1384,7 +1384,7 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp organizationJson req respond
 
-            resOrganization <- getResponseBody <$> getDetail mockBaseRequest dummyAuth (OrganizationId "testOrganizationId")
+            resOrganization <- getResponseBody <$> getDetail dummyAuth mockBaseRequest (OrganizationId "testOrganizationId")
             resOrganization `shouldBe` organization
 
             receivedReq <- takeMVar receivedReqMVar
@@ -1401,7 +1401,7 @@ spec = do
             svr <- startMockServer $ \req respond -> do
                 putMVar receivedReqMVar req
                 simpleApp organizationJson req respond
-            (Right resOrganization) <- getResponseBody <$> getDetailEither mockBaseRequest dummyAuth (OrganizationId "testOrganizationId")
+            (Right resOrganization) <- getResponseBody <$> getDetailEither dummyAuth mockBaseRequest (OrganizationId "testOrganizationId")
             resOrganization `shouldBe` organization
 
             stopMockServer svr
@@ -1477,7 +1477,7 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp licenseJson req respond
 
-            resLicense <- getResponseBody <$> getDetail mockBaseRequest dummyAuth (LicenseId "testLicenseId")
+            resLicense <- getResponseBody <$> getDetail dummyAuth mockBaseRequest (LicenseId "testLicenseId")
             resLicense `shouldBe` license
 
             receivedReq <- takeMVar receivedReqMVar
@@ -1494,7 +1494,7 @@ spec = do
             svr <- startMockServer $ \req respond -> do
                 putMVar receivedReqMVar req
                 simpleApp licenseJson req respond
-            (Right resLicense) <- getResponseBody <$> getDetailEither mockBaseRequest dummyAuth (LicenseId "testLicenseId")
+            (Right resLicense) <- getResponseBody <$> getDetailEither dummyAuth mockBaseRequest (LicenseId "testLicenseId")
             resLicense `shouldBe` license
 
             stopMockServer svr
@@ -1545,7 +1545,7 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp roleJson req respond
 
-            resRole <- getResponseBody <$> getDetail mockBaseRequest dummyAuth (RoleId "testRoleId")
+            resRole <- getResponseBody <$> getDetail dummyAuth mockBaseRequest (RoleId "testRoleId")
             resRole `shouldBe` role
 
             receivedReq <- takeMVar receivedReqMVar
@@ -1562,7 +1562,7 @@ spec = do
             svr <- startMockServer $ \req respond -> do
                 putMVar receivedReqMVar req
                 simpleApp roleJson req respond
-            (Right resRole) <- getResponseBody <$> getDetailEither mockBaseRequest dummyAuth (RoleId "testRoleId")
+            (Right resRole) <- getResponseBody <$> getDetailEither dummyAuth mockBaseRequest (RoleId "testRoleId")
             resRole `shouldBe` role
 
             stopMockServer svr

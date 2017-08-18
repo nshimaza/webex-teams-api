@@ -215,20 +215,20 @@ makeCommonDetailReq (CiscoSparkRequest base) auth path idStr
     A JSONException runtime exception will be thrown on an JSON parse errors.
 -}
 getDetail :: (MonadIO m, SparkDetail key)
-    => CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API.
-    -> Authorization        -- ^ Authorization string against Spark API.
+    => Authorization        -- ^ Authorization string against Spark API.
+    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API.
     -> key                  -- ^ One of PersonId, RoomId, MembershipId, MessageId, TeamId, TeamMembershipId,
                             --   OrganizationId, LicenseId and RoleId.
     -> m (Response (ToResponse key))
-getDetail base auth entityId = httpJSON $ makeCommonDetailReq base auth (apiPath entityId) (toIdStr entityId)
+getDetail auth base entityId = httpJSON $ makeCommonDetailReq base auth (apiPath entityId) (toIdStr entityId)
 
 -- | Get details of a Spark entity.  A Left value will be returned on an JSON parse errors.
 getDetailEither :: (MonadIO m, SparkDetail key)
-    => CiscoSparkRequest
-    -> Authorization
+    => Authorization
+    -> CiscoSparkRequest
     -> key
     -> m (Response (Either JSONException (ToResponse key)))
-getDetailEither base auth entityId = httpJSONEither $ makeCommonDetailReq base auth (apiPath entityId) (toIdStr entityId)
+getDetailEither auth base entityId = httpJSONEither $ makeCommonDetailReq base auth (apiPath entityId) (toIdStr entityId)
 
 
 makeCommonCreateReq :: ToJSON a => CiscoSparkRequest -> Authorization -> ByteString -> a -> Request
@@ -247,20 +247,20 @@ makeCommonCreateReq (CiscoSparkRequest base) auth path body
     A JSONException runtime exception will be thrown on an JSON parse errors.
 -}
 createEntity :: (MonadIO m, SparkCreate createParams)
-    => CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API
-    -> Authorization        -- ^ Authorization string against Spark API.
+    => Authorization        -- ^ Authorization string against Spark API.
+    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API
     -> createParams         -- ^ One of 'CreatePerson', 'CreateRoom', 'CreateMembership', 'CreateMessage',
                             --   'CreateTeam' and 'CreateTeamMembership'.
     -> m (Response (ToResponse createParams))
-createEntity base auth param = httpJSON $ makeCommonCreateReq base auth (apiPath param) param
+createEntity auth base param = httpJSON $ makeCommonCreateReq base auth (apiPath param) param
 
 -- | Create a Spark entity with given parameters.  A Left value will be returned on an JSON parse errors.
 createEntityEither :: (MonadIO m, SparkCreate createParams)
-    => CiscoSparkRequest
-    -> Authorization
+    => Authorization
+    -> CiscoSparkRequest
     -> createParams
     -> m (Response (Either JSONException (ToResponse createParams)))
-createEntityEither base auth param = httpJSONEither $ makeCommonCreateReq base auth (apiPath param) param
+createEntityEither auth base param = httpJSONEither $ makeCommonCreateReq base auth (apiPath param) param
 
 
 makeCommonUpdateReq :: ToJSON a => CiscoSparkRequest -> Authorization -> ByteString -> a -> Request
@@ -279,17 +279,17 @@ makeCommonUpdateReq (CiscoSparkRequest base) auth path body
     A JSONException runtime exception will be thrown on an JSON parse errors.
 -}
 updateEntity :: (MonadIO m, SparkUpdate updateParams)
-    => CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API
-    -> Authorization        -- ^ Authorization string against Spark API.
+    => Authorization        -- ^ Authorization string against Spark API.
+    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API
     -> updateParams         -- ^ One of 'UpdatePerson', 'UpdateRoom', 'UpdateMembership',
                             --   'UpdateTeam' and 'UpdateTeamMembership'.
     -> m (Response (ToResponse updateParams))
-updateEntity base auth param = httpJSON $ makeCommonUpdateReq base auth (apiPath param) param
+updateEntity auth base param = httpJSON $ makeCommonUpdateReq base auth (apiPath param) param
 
 -- | Update a Spark entity with given parameters.  A Left value will be returned on an JSON parse errors.
 updateEntityEither :: (MonadIO m, SparkUpdate updateParams)
-    => CiscoSparkRequest
-    -> Authorization
+    => Authorization
+    -> CiscoSparkRequest
     -> updateParams
     -> m (Response (Either JSONException (ToResponse updateParams)))
-updateEntityEither base auth param = httpJSONEither $ makeCommonUpdateReq base auth (apiPath param) param
+updateEntityEither auth base param = httpJSONEither $ makeCommonUpdateReq base auth (apiPath param) param

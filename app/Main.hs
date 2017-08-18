@@ -132,10 +132,10 @@ run (RoomListCommand auth count filter) =
     runConduit $ streamEntityWithFilter auth def filter .| takeC count .| mapM_C print
 
 run (TeamDetailCommand auth teamId) =
-    getDetail def auth teamId >>= print . getResponseBody
+    getDetail auth def teamId >>= print . getResponseBody
 
 run (RoomDetailCommand auth roomId) =
-    getDetail def auth roomId >>= print . getResponseBody
+    getDetail auth def roomId >>= print . getResponseBody
 
 main :: IO ()
 main = do
