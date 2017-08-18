@@ -14,7 +14,7 @@ import           Network.CiscoSpark
 
 data Command
     = TeamListCommand Authorization Int
-    | RoomListCommand Authorization Int RoomQuery
+    | RoomListCommand Authorization Int RoomFilter
     | TeamDetailCommand Authorization TeamId
     | RoomDetailCommand Authorization RoomId
     deriving (Show)
@@ -79,29 +79,29 @@ roomTypeParser
     =   flag Nothing (Just RoomTypeDirect)
             (  long  "direct"
             <> short 'd'
-            <> help  "Query only one-to-one space")
+            <> help  "Filter only one-to-one space")
     <|> flag Nothing (Just RoomTypeGroup)
             (  long  "group"
             <> short 'g'
-            <> help  "Query only group space")
+            <> help  "Filter only group space")
 
-roomSortByParser :: Parser (Maybe RoomQuerySortBy)
+roomSortByParser :: Parser (Maybe RoomFilterSortBy)
 roomSortByParser
-    =   flag Nothing (Just RoomQuerySortById)
+    =   flag Nothing (Just RoomFilterSortById)
             (  long "sort-by-id"
             <> help "Sort by room ID")
-    <|> flag Nothing (Just RoomQuerySortByLastActivity)
+    <|> flag Nothing (Just RoomFilterSortByLastActivity)
             (  long "sort-by-last-activity"
             <> help "Sort by most recent activity")
-    <|> flag Nothing (Just RoomQuerySortByCreated)
+    <|> flag Nothing (Just RoomFilterSortByCreated)
             (  long "sort-by-created"
             <> help "Sort by most recentlly created")
 
-roomQueryParser :: Parser RoomQuery
-roomQueryParser = RoomQuery <$> maybeTeamIdParser <*> roomTypeParser <*> roomSortByParser
+roomFilterParser :: Parser RoomFilter
+roomFilterParser = RoomFilter <$> maybeTeamIdParser <*> roomTypeParser <*> roomSortByParser
 
 roomListOptParser :: Parser Command
-roomListOptParser = RoomListCommand <$> authParser <*> countParser <*> roomQueryParser
+roomListOptParser = RoomListCommand <$> authParser <*> countParser <*> roomFilterParser
 
 roomDetailOptParser :: Parser Command
 roomDetailOptParser = RoomDetailCommand <$> authParser <*> roomIdParser
@@ -111,9 +111,9 @@ roomDetailOptParser = RoomDetailCommand <$> authParser <*> roomIdParser
 -}
 commandSubParser :: Parser Command
 commandSubParser = hsubparser
-    (  command "team-list" (info teamListOptParser (progDesc "Query belonging teams"))
+    (  command "team-list" (info teamListOptParser (progDesc "List belonging teams"))
     <> command "team-detail" (info teamDetailOptParser (progDesc "Get detail for a team by ID"))
-    <> command "room-list" (info roomListOptParser (progDesc "Query belonging spaces"))
+    <> command "room-list" (info roomListOptParser (progDesc "List belonging spaces"))
     <> command "room-detail" (info roomDetailOptParser (progDesc "Get detail for a team by ID"))
     )
 
@@ -128,8 +128,8 @@ run :: Command -> IO ()
 run (TeamListCommand auth count) =
     runConduit $ streamTeamList auth def .| takeC count .| mapM_C print
 
-run (RoomListCommand auth count query) =
-    runConduit $ streamRoomList auth def query .| takeC count .| mapM_C print
+run (RoomListCommand auth count filter) =
+    runConduit $ streamEntityWithFilter auth def filter .| takeC count .| mapM_C print
 
 run (TeamDetailCommand auth teamId) =
     getDetail def auth teamId >>= print . getResponseBody

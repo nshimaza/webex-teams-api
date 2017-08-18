@@ -238,7 +238,7 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp (encode (PersonList testData)) req respond
 
-            res <- runConduit $ streamPersonList dummyAuth mockBaseRequest def .| sinkList
+            res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: PersonFilter) .| sinkList
             res `shouldBe` testData
 
             receivedReq <- takeMVar receivedReqMVar
@@ -247,11 +247,11 @@ spec = do
 
             stopMockServer svr
 
-        it "streamPersonList passes query strings build from PersonQuery to server" $ do
+        it "streamPersonList passes query strings build from PersonFilter to server" $ do
             let testData = personList ['Z']
-                personQuery = PersonQuery (Just $ Email "person@query.com")
-                                          (Just $ DisplayName "DisplayNameQuery")
-                                          (Just $ OrganizationId "OrgIdQuery")
+                personFilter = PersonFilter (Just $ Email "person@filter.com")
+                                            (Just $ DisplayName "DisplayNameFilter")
+                                            (Just $ OrganizationId "OrgIdFilter")
 
             receivedReqMVar <- newEmptyMVar
 
@@ -259,21 +259,21 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp (encode (PersonList testData)) req respond
 
-            res <- runConduit $ streamPersonList dummyAuth mockBaseRequest personQuery .| sinkList
+            res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest personFilter .| sinkList
             res `shouldBe` testData
 
             receivedReq <- takeMVar receivedReqMVar
             rawPathInfo receivedReq `shouldBe` "/v1/people"
-            (sort . queryString) receivedReq `shouldBe` sort [ ("orgId", Just "OrgIdQuery")
-                                                             , ("displayName", Just "DisplayNameQuery")
-                                                             , ("email", Just "person@query.com") ]
+            (sort . queryString) receivedReq `shouldBe` sort [ ("orgId", Just "OrgIdFilter")
+                                                             , ("displayName", Just "DisplayNameFilter")
+                                                             , ("email", Just "person@filter.com") ]
 
             stopMockServer svr
 
         it "streamPersonList streams Team with automatic pagination" $ do
             svr <- startMockServer . paginationApp $ encode . PersonList <$> personListList
 
-            res <- runConduit $ streamPersonList dummyAuth mockBaseRequest def .| sinkList
+            res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: PersonFilter) .| sinkList
             res `shouldBe` concat personListList
 
             stopMockServer svr
@@ -597,7 +597,7 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp (encode (TeamMembershipList testData)) req respond
 
-            res <- runConduit $ streamTeamMembershipList dummyAuth mockBaseRequest def .| sinkList
+            res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: TeamMembershipFilter) .| sinkList
             res `shouldBe` testData
 
             receivedReq <- takeMVar receivedReqMVar
@@ -606,9 +606,9 @@ spec = do
 
             stopMockServer svr
 
-        it "streamMembershipList passes query strings build from TeamMembershipQuery to server" $ do
+        it "streamMembershipList passes query strings build from TeamMembershipFilter to server" $ do
             let testData = teamMembershipList ['Z']
-                teamMembershipQuery = TeamMembershipQuery . Just $ TeamId "DummyTeamId"
+                teamMembershipFilter = TeamMembershipFilter . Just $ TeamId "DummyTeamId"
 
             receivedReqMVar <- newEmptyMVar
 
@@ -616,7 +616,7 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp (encode (TeamMembershipList testData)) req respond
 
-            res <- runConduit $ streamTeamMembershipList dummyAuth mockBaseRequest teamMembershipQuery .| sinkList
+            res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest teamMembershipFilter .| sinkList
             res `shouldBe` testData
 
             receivedReq <- takeMVar receivedReqMVar
@@ -628,7 +628,7 @@ spec = do
         it "streamTeamMembershipList streams TeamMembership with automatic pagination" $ do
             svr <- startMockServer . paginationApp $ encode . TeamMembershipList <$> teamMembershipListList
 
-            res <- runConduit $ streamTeamMembershipList dummyAuth mockBaseRequest def .| sinkList
+            res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: TeamMembershipFilter) .| sinkList
             res `shouldBe` concat teamMembershipListList
 
             stopMockServer svr
@@ -795,7 +795,7 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp (encode (RoomList testData)) req respond
 
-            res <- runConduit $ streamRoomList dummyAuth mockBaseRequest def .| sinkList
+            res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: RoomFilter) .| sinkList
             res `shouldBe` testData
 
             receivedReq <- takeMVar receivedReqMVar
@@ -804,11 +804,11 @@ spec = do
 
             stopMockServer svr
 
-        it "streamRoomList passes query strings build from RoomQuery to server" $ do
+        it "streamRoomList passes query strings build from RoomFilter to server" $ do
             let testData = roomList ['Z']
-                roomQuery = RoomQuery (Just $ TeamId "dummyTeamId")
-                                      (Just RoomTypeGroup)
-                                      (Just RoomQuerySortByLastActivity)
+                roomFilter = RoomFilter (Just $ TeamId "dummyTeamId")
+                                        (Just RoomTypeGroup)
+                                        (Just RoomFilterSortByLastActivity)
 
             receivedReqMVar <- newEmptyMVar
 
@@ -816,7 +816,7 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp (encode (RoomList testData)) req respond
 
-            res <- runConduit $ streamRoomList dummyAuth mockBaseRequest roomQuery .| sinkList
+            res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest roomFilter .| sinkList
             res `shouldBe` testData
 
             receivedReq <- takeMVar receivedReqMVar
@@ -830,7 +830,7 @@ spec = do
         it "streamRoomList streams Room with automatic pagination" $ do
             svr <- startMockServer . paginationApp $ encode . RoomList <$> roomListList
 
-            res <- runConduit $ streamRoomList dummyAuth mockBaseRequest def .| sinkList
+            res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: RoomFilter) .| sinkList
             res `shouldBe` concat roomListList
 
             stopMockServer svr
@@ -1001,7 +1001,7 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp (encode (MembershipList testData)) req respond
 
-            res <- runConduit $ streamMembershipList dummyAuth mockBaseRequest def .| sinkList
+            res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: MembershipFilter) .| sinkList
             res `shouldBe` testData
 
             receivedReq <- takeMVar receivedReqMVar
@@ -1010,11 +1010,11 @@ spec = do
 
             stopMockServer svr
 
-        it "streamMembershipList passes query strings build from MembershipQuery to server" $ do
+        it "streamMembershipList passes query strings build from MembershipFilter to server" $ do
             let testData = membershipList ['Z']
-                membershipQuery = MembershipQuery (Just $ RoomId "dummyRoomId")
-                                                  (Just $ PersonId "personIdQuery")
-                                                  (Just $ Email "personEmailQuery")
+                membershipFilter = MembershipFilter (Just $ RoomId "dummyRoomId")
+                                                    (Just $ PersonId "personIdFilter")
+                                                    (Just $ Email "personEmailFilter")
 
             receivedReqMVar <- newEmptyMVar
 
@@ -1022,13 +1022,13 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp (encode (MembershipList testData)) req respond
 
-            res <- runConduit $ streamMembershipList dummyAuth mockBaseRequest membershipQuery .| sinkList
+            res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest membershipFilter .| sinkList
             res `shouldBe` testData
 
             receivedReq <- takeMVar receivedReqMVar
             rawPathInfo receivedReq `shouldBe` "/v1/memberships"
-            (sort . queryString) receivedReq `shouldBe` sort [ ("personId", Just "personIdQuery")
-                                                             , ("personEmail", Just "personEmailQuery")
+            (sort . queryString) receivedReq `shouldBe` sort [ ("personId", Just "personIdFilter")
+                                                             , ("personEmail", Just "personEmailFilter")
                                                              , ("roomId", Just "dummyRoomId") ]
 
             stopMockServer svr
@@ -1036,7 +1036,7 @@ spec = do
         it "streamMembershipList streams Membership with automatic pagination" $ do
             svr <- startMockServer . paginationApp $ encode . MembershipList <$> membershipListList
 
-            res <- runConduit $ streamMembershipList dummyAuth mockBaseRequest def .| sinkList
+            res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: MembershipFilter) .| sinkList
             res `shouldBe` concat membershipListList
 
             stopMockServer svr
@@ -1203,7 +1203,7 @@ spec = do
                                    }
             messageList j = [ messageGen $ j <> show i | i <- [1..3] ]
             messageListList = [ messageList [c] | c <- ['a'..'d'] ]
-            defQuery = defaultMessageQuery $ RoomId "dummyRoomId"
+            defFilter = defaultMessageFilter $ RoomId "dummyRoomId"
             newMessage = CreateMessage { createMessageRoomId        = Just $ RoomId "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
                                        , createMessageToPersonId    = Just $ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"
                                        , createMessageToPersonEmail = Just $ Email "julie@example.com"
@@ -1220,7 +1220,7 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp (encode (MessageList testData)) req respond
 
-            res <- runConduit $ streamMessageList dummyAuth mockBaseRequest defQuery .| sinkList
+            res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest defFilter .| sinkList
             res `shouldBe` testData
 
             receivedReq <- takeMVar receivedReqMVar
@@ -1229,12 +1229,12 @@ spec = do
 
             stopMockServer svr
 
-        it "streamMessageList passes query strings build from MessageQuery to server" $ do
+        it "streamMessageList passes query strings build from MessageFilter to server" $ do
             let testData = messageList ['Z']
-                messageQuery = MessageQuery (RoomId "dummyRoomId")
-                                            (Just $ MentionedPeopleMe)
-                                            (Just $ Timestamp "beforeQuery")
-                                            (Just $ MessageId "beforeMessageQuery")
+                messageFilter = MessageFilter (RoomId "dummyRoomId")
+                                              (Just $ MentionedPeopleMe)
+                                              (Just $ Timestamp "beforeFilter")
+                                              (Just $ MessageId "beforeMessageFilter")
 
             receivedReqMVar <- newEmptyMVar
 
@@ -1242,22 +1242,22 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp (encode (MessageList testData)) req respond
 
-            res <- runConduit $ streamMessageList dummyAuth mockBaseRequest messageQuery .| sinkList
+            res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest messageFilter .| sinkList
             res `shouldBe` testData
 
             receivedReq <- takeMVar receivedReqMVar
             rawPathInfo receivedReq `shouldBe` "/v1/messages"
             (sort . queryString) receivedReq `shouldBe` sort [ ("roomId", Just "dummyRoomId")
                                                              , ("mentionedPeople", Just "me")
-                                                             , ("beforeMessage", Just "beforeMessageQuery")
-                                                             , ("before", Just "beforeQuery") ]
+                                                             , ("beforeMessage", Just "beforeMessageFilter")
+                                                             , ("before", Just "beforeFilter") ]
 
             stopMockServer svr
 
         it "streamMessageList streams Message with automatic pagination" $ do
             svr <- startMockServer . paginationApp $ encode . MessageList <$> messageListList
 
-            res <- runConduit $ streamMessageList dummyAuth mockBaseRequest defQuery .| sinkList
+            res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest defFilter .| sinkList
             res `shouldBe` concat messageListList
 
             stopMockServer svr
@@ -1434,7 +1434,7 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp (encode (LicenseList testData)) req respond
 
-            res <- runConduit $ streamLicenseList dummyAuth mockBaseRequest def .| sinkList
+            res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: LicenseFilter) .| sinkList
             res `shouldBe` testData
 
             receivedReq <- takeMVar receivedReqMVar
@@ -1443,9 +1443,9 @@ spec = do
 
             stopMockServer svr
 
-        it "streamLicenseList passes query strings build from LicenseQuery to server" $ do
+        it "streamLicenseList passes query strings build from LicenseFilter to server" $ do
             let testData = licenseList ['Z']
-                licenseQuery = LicenseQuery (Just $ OrganizationId "orgIdQuery")
+                licenseFilter = LicenseFilter (Just $ OrganizationId "orgIdFilter")
 
             receivedReqMVar <- newEmptyMVar
 
@@ -1453,19 +1453,19 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp (encode (LicenseList testData)) req respond
 
-            res <- runConduit $ streamLicenseList dummyAuth mockBaseRequest licenseQuery .| sinkList
+            res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest licenseFilter .| sinkList
             res `shouldBe` testData
 
             receivedReq <- takeMVar receivedReqMVar
             rawPathInfo receivedReq `shouldBe` "/v1/licenses"
-            queryString receivedReq `shouldBe` [ ("orgId", Just "orgIdQuery") ]
+            queryString receivedReq `shouldBe` [ ("orgId", Just "orgIdFilter") ]
 
             stopMockServer svr
 
         it "streamLicenseList streams License with automatic pagination" $ do
             svr <- startMockServer . paginationApp $ encode . LicenseList <$> licenseListList
 
-            res <- runConduit $ streamLicenseList dummyAuth mockBaseRequest def .| sinkList
+            res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: LicenseFilter) .| sinkList
             res `shouldBe` concat licenseListList
 
             stopMockServer svr

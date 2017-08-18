@@ -20,6 +20,7 @@ import           Data.Aeson.TH               (constructorTagModifier,
                                               omitNothingFields)
 import           Data.ByteString             (ByteString)
 import           Data.Default                (Default (def))
+import           Data.Maybe                  (maybeToList, catMaybes)
 import           Data.Text                   (Text)
 import           Data.Text.Encoding          (encodeUtf8)
 
@@ -80,18 +81,25 @@ class FromJSON (ToList i) => SparkListItem i where
     -- | Get bare list from wrapped type which can be parsed directly from JSON.
     unwrap :: ToList i -> [i]
 
-class FromJSON (ToDetailResponse a) => SparkDetail a where
-    type ToDetailResponse a :: *
-    detailPath :: a -> ByteString
+-- class FromJSON (ToListResponse a) => SparkList a where
+--     type ToListResponse a :: *
+--     listPath :: a -> ByteString
+
+class SparkApiPath a where
+    apiPath :: a -> ByteString
+
+class FromJSON (ToResponse a) => SparkResponse a where
+    type ToResponse a :: *
+
+class (SparkApiPath a, SparkResponse a) => SparkDetail a where
     toIdStr :: a -> Text
 
-class (ToJSON a, FromJSON (ToCreateResponse a)) => SparkCreate a where
-    type ToCreateResponse a :: *
-    createPath :: a -> ByteString
+class (SparkApiPath a, SparkResponse a) => SparkFilter a where
+    toFilterList :: a -> [(ByteString, Maybe ByteString)]
 
-class (ToJSON a, FromJSON (ToUpdateResponse a)) => SparkUpdate a where
-    type ToUpdateResponse a :: *
-    updatePath :: a -> ByteString
+class (SparkApiPath a, SparkResponse a, ToJSON a) => SparkCreate a where
+
+class (SparkApiPath a, SparkResponse a, ToJSON a) => SparkUpdate a where
 
 -- | Type representing timestamp.  For now, it is just copied from API response JSON.
 newtype Timestamp   = Timestamp Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
@@ -183,10 +191,16 @@ data Person = Person
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 6, omitNothingFields = True } ''Person)
 -- ^ 'Person' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | Get detail for a person API uses 'PersonId' and path "people".
+instance SparkApiPath PersonId where
+    apiPath _ = peoplePath
+
+-- | Get detail for a person API uses "PersonId' and responses 'Person'.
+instance SparkResponse PersonId where
+    type ToResponse PersonId = Person
+
 -- | User can get detail of a person.
 instance SparkDetail PersonId where
-    type ToDetailResponse PersonId = Person
-    detailPath _ = peoplePath
     toIdStr (PersonId s) = s
 
 -- | 'PersonList' is decoded from response JSON of List People REST call.  It is list of 'Person'.
@@ -194,17 +208,33 @@ newtype PersonList = PersonList { personListItems :: [Person] } deriving (Eq, Sh
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFields = True } ''PersonList)
 -- ^ 'PersonList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
--- | 'PersonList' wraps 'Person'
+-- | 'PersonList' wraps 'Person'.
 instance SparkListItem Person where
     type ToList Person = PersonList
     unwrap = personListItems
 
 -- | Optional query strings for people list API.
-data PersonQuery = PersonQuery
-    { personQueryEmail       :: Maybe Email             -- ^ Find person who has given email address.
-    , personQueryDisplayName :: Maybe DisplayName       -- ^ Find person who has given display name.
-    , personQueryOrgId       :: Maybe OrganizationId    -- ^ Find person who belongs to given organization.
+data PersonFilter = PersonFilter
+    { personFilterEmail       :: Maybe Email             -- ^ Find person who has given email address.
+    , personFilterDisplayName :: Maybe DisplayName       -- ^ Find person who has given display name.
+    , personFilterOrgId       :: Maybe OrganizationId    -- ^ Find person who belongs to given organization.
     } deriving (Default, Eq, Generic, Show)
+
+-- | List people API uses 'PersonFilter' and path "people".
+instance SparkApiPath PersonFilter where
+    apiPath _ = peoplePath
+
+-- | List people API uses 'PersonFilter' and responses 'Person'.
+instance SparkResponse PersonFilter where
+    type ToResponse PersonFilter = Person
+
+-- | User can list people with filter parameter.
+instance SparkFilter PersonFilter where
+    toFilterList filter = catMaybes
+        [ (\(Email e) -> ("email", Just $ encodeUtf8 e)) <$> personFilterEmail filter
+        , (\(DisplayName n) -> ("displayName", Just (encodeUtf8 n))) <$> personFilterDisplayName filter
+        , (\(OrganizationId o) -> ("orgId", Just (encodeUtf8 o))) <$> personFilterOrgId filter
+        ]
 
 -- | 'CreatePerson' is encoded to request body JSON of Create a Person REST call.
 data CreatePerson = CreatePerson
@@ -221,10 +251,16 @@ data CreatePerson = CreatePerson
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 12, omitNothingFields = True } ''CreatePerson)
 -- ^ 'CreatePerson' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | Create person API uses 'CreatePerson' and path "people".
+instance SparkApiPath CreatePerson where
+    apiPath _ = peoplePath
+
+-- | Create person API uses "CreatePerson' and responses 'Person'.
+instance SparkResponse CreatePerson where
+    type ToResponse CreatePerson = Person
+
 -- | User can create a person.
 instance SparkCreate CreatePerson where
-    type ToCreateResponse CreatePerson = Person
-    createPath _ = peoplePath
 
 -- | 'UpdatePerson' is encoded to request body JSON of Update a Person REST call.
 data UpdatePerson = UpdatePerson
@@ -240,10 +276,16 @@ data UpdatePerson = UpdatePerson
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 12, omitNothingFields = True } ''UpdatePerson)
 -- ^ 'UpdatePerson' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | Update person API uses 'UpdatePerson' and path "people".
+instance SparkApiPath UpdatePerson where
+    apiPath _ = peoplePath
+
+-- | Update person API uses "UpdatePerson' and responses 'Person'.
+instance SparkResponse UpdatePerson where
+    type ToResponse UpdatePerson = Person
+
 -- | User can update a person.
-instance SparkUpdate UpdatePerson where
-    type ToUpdateResponse UpdatePerson = Person
-    updatePath _ = peoplePath
+instance SparkUpdate UpdatePerson
 
 -- | Identifying Team.
 newtype TeamId      = TeamId Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
@@ -266,10 +308,16 @@ data Team = Team
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 4, omitNothingFields = True } ''Team)
 -- ^ 'Team' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | Get detail for a team API uses 'TeamId' and path "teams".
+instance SparkApiPath TeamId where
+    apiPath _ = teamsPath
+
+-- | Get detail for a team API uses "TeamId' and responses 'Team'.
+instance SparkResponse TeamId where
+    type ToResponse TeamId = Team
+
 -- | User can get detail of a team.
 instance SparkDetail TeamId where
-    type ToDetailResponse TeamId = Team
-    detailPath _ = teamsPath
     toIdStr (TeamId s) = s
 
 -- | 'TeamList' is decoded from response JSON of List Teams REST call.  It is list of 'Team'.
@@ -287,20 +335,32 @@ newtype CreateTeam = CreateTeam { createTeamName :: TeamName } deriving (Eq, Sho
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFields = True } ''CreateTeam)
 -- ^ 'CreateTeam' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | Create team API uses 'CreateTeam' and path "teams".
+instance SparkApiPath CreateTeam where
+    apiPath _ = teamsPath
+
+-- | Create team API uses "CreateTeam' and responses 'Team'.
+instance SparkResponse CreateTeam where
+    type ToResponse CreateTeam = Team
+
 -- | User can create a team.
 instance SparkCreate CreateTeam where
-    type ToCreateResponse CreateTeam = Team
-    createPath _ = teamsPath
 
 -- | 'UpdateTeam' is encoded to request body JSON of Update a Team REST call.
 newtype UpdateTeam = UpdateTeam { updateTeamName :: TeamName } deriving (Eq, Show)
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFields = True } ''UpdateTeam)
 -- ^ 'UpdateTeam' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | Update team API uses 'UpdateTeam' and path "teams".
+instance SparkApiPath UpdateTeam where
+    apiPath _ = teamsPath
+
+-- | Update team API uses "UpdateTeam' and responses 'Team'.
+instance SparkResponse UpdateTeam where
+    type ToResponse UpdateTeam = Team
+
 -- | User can update a team.
-instance SparkUpdate UpdateTeam where
-    type ToUpdateResponse UpdateTeam = Team
-    updatePath _ = teamsPath
+instance SparkUpdate UpdateTeam
 
 
 -- | Identifying TeamMembership.
@@ -326,10 +386,16 @@ data TeamMembership = TeamMembership
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 14, omitNothingFields = True } ''TeamMembership)
 -- ^ 'TeamMembership' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | Get detail for a team membership API uses 'TeamMembershipId' and path "team/memberships".
+instance SparkApiPath TeamMembershipId where
+    apiPath _ = teamMembershipsPath
+
+-- | Get detail for a team membership API uses "TeamMembershipId' and responses 'TeamMembership'.
+instance SparkResponse TeamMembershipId where
+    type ToResponse TeamMembershipId = TeamMembership
+
 -- | User can get detail of a team membership.
 instance SparkDetail TeamMembershipId where
-    type ToDetailResponse TeamMembershipId = TeamMembership
-    detailPath _ = teamMembershipsPath
     toIdStr (TeamMembershipId s) = s
 
 -- | 'TeamMembershipList' is decoded from response JSON of List Team Memberships REST call.  It is list of 'TeamMembership'.
@@ -343,9 +409,21 @@ instance SparkListItem TeamMembership where
     unwrap = teamMembershipListItems
 
 -- | Optional query strings for team membership list API
-newtype TeamMembershipQuery = TeamMembershipQuery
-    { teamMembershipQueryTeamId :: Maybe TeamId -- ^ List membership only in given team.
+newtype TeamMembershipFilter = TeamMembershipFilter
+    { teamMembershipFilterTeamId :: Maybe TeamId -- ^ List membership only in given team.
     } deriving (Default, Eq, Generic, Show)
+
+-- | List team memberships API uses 'TeamMembershipFilter' and path "team/memberships".
+instance SparkApiPath TeamMembershipFilter where
+    apiPath _ = teamMembershipsPath
+
+-- | List team memberships API uses 'TeamMembershipFilter' and responses 'TeamMembership'.
+instance SparkResponse TeamMembershipFilter where
+    type ToResponse TeamMembershipFilter = TeamMembership
+
+-- | User can list team membership with filter parameter.
+instance SparkFilter TeamMembershipFilter where
+    toFilterList filter = maybeToList $ (\(TeamId t) -> ("teamId", Just $ encodeUtf8 t)) <$> teamMembershipFilterTeamId filter
 
 -- | 'CreateTeamMembership' is encoded to request body JSON of Create a Team Membership REST call.
 data CreateTeamMembership = CreateTeamMembership
@@ -358,20 +436,32 @@ data CreateTeamMembership = CreateTeamMembership
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 20, omitNothingFields = True } ''CreateTeamMembership)
 -- ^ 'CreateTeamMembership' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
--- | User can add a person to a team.
+-- | Create teamMembership API uses 'CreateTeamMembership' and path "team/memberships".
+instance SparkApiPath CreateTeamMembership where
+    apiPath _ = teamMembershipsPath
+
+-- | Create teamMembership API uses "CreateTeamMembership' and responses 'TeamMembership'.
+instance SparkResponse CreateTeamMembership where
+    type ToResponse CreateTeamMembership = TeamMembership
+
+-- | User can create a teamMembership.
 instance SparkCreate CreateTeamMembership where
-    type ToCreateResponse CreateTeamMembership = TeamMembership
-    createPath _ = teamMembershipsPath
 
 -- | 'UpdateTeamMembership' is encoded to request body JSON of Update a Team Membership REST call.
 newtype UpdateTeamMembership = UpdateTeamMembership { updateTeamMembershipIsModerator :: Bool } deriving (Eq, Show)
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 20, omitNothingFields = True } ''UpdateTeamMembership)
 -- ^ 'UpdateTeamMembership' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | Update teamMembership API uses 'UpdateTeamMembership' and path "team/memberships".
+instance SparkApiPath UpdateTeamMembership where
+    apiPath _ = teamMembershipsPath
+
+-- | Update teamMembership API uses "UpdateTeamMembership' and responses 'TeamMembership'.
+instance SparkResponse UpdateTeamMembership where
+    type ToResponse UpdateTeamMembership = TeamMembership
+
 -- | User can update a teamMembership.
-instance SparkUpdate UpdateTeamMembership where
-    type ToUpdateResponse UpdateTeamMembership = TeamMembership
-    updatePath _ = teamMembershipsPath
+instance SparkUpdate UpdateTeamMembership
 
 
 -- | Identifying 'Room'.
@@ -413,10 +503,16 @@ data Room = Room
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 4, omitNothingFields = True } ''Room)
 -- ^ 'Room' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | Get detail for a room API uses 'RoomId' and path "rooms".
+instance SparkApiPath RoomId where
+    apiPath _ = roomsPath
+
+-- | Get detail for a room API uses "RoomId' and responses 'Room'.
+instance SparkResponse RoomId where
+    type ToResponse RoomId = Room
+
 -- | User can get detail of a room.
 instance SparkDetail RoomId where
-    type ToDetailResponse RoomId = Room
-    detailPath _ = roomsPath
     toIdStr (RoomId s) = s
 
 -- | 'RoomList' is decoded from response JSON of List Rooms REST call.  It is list of 'Room'.
@@ -429,25 +525,41 @@ instance SparkListItem Room where
     type ToList Room = RoomList
     unwrap = roomListItems
 
-data RoomQuerySortBy = RoomQuerySortById | RoomQuerySortByLastActivity | RoomQuerySortByCreated deriving (Eq, Show)
+data RoomFilterSortBy = RoomFilterSortById | RoomFilterSortByLastActivity | RoomFilterSortByCreated deriving (Eq, Show)
 
 -- | Optional query strings for room list API
-data RoomQuery = RoomQuery
-    { roomQueryTeamId   :: Maybe TeamId             -- ^ List rooms only in given team.
-    , roomQueryRoomType :: Maybe RoomType           -- ^ List given type rooms only.
-    , roomQuerySortBy   :: Maybe RoomQuerySortBy    -- ^ Sort response by given option.
+data RoomFilter = RoomFilter
+    { roomFilterTeamId   :: Maybe TeamId             -- ^ List rooms only in given team.
+    , roomFilterRoomType :: Maybe RoomType           -- ^ List given type rooms only.
+    , roomFilterSortBy   :: Maybe RoomFilterSortBy    -- ^ Sort response by given option.
     } deriving (Default, Eq, Generic, Show)
 
 -- | Sum type to ByteString converter for 'RoomType'.
-roomTypeToQueryString :: RoomType -> ByteString
-roomTypeToQueryString RoomTypeDirect = "direct"
-roomTypeToQueryString RoomTypeGroup  = "group"
+roomTypeToFilterString :: RoomType -> ByteString
+roomTypeToFilterString RoomTypeDirect = "direct"
+roomTypeToFilterString RoomTypeGroup  = "group"
 
--- | Sum type to ByteString converter for 'RoomQuerySortBy'.
-roomQuerySortByToQueryString :: RoomQuerySortBy -> ByteString
-roomQuerySortByToQueryString RoomQuerySortById           = "id"
-roomQuerySortByToQueryString RoomQuerySortByLastActivity = "lastactivity"
-roomQuerySortByToQueryString RoomQuerySortByCreated      = "created"
+-- | Sum type to ByteString converter for 'RoomFilterSortBy'.
+roomFilterSortByToFilterString :: RoomFilterSortBy -> ByteString
+roomFilterSortByToFilterString RoomFilterSortById           = "id"
+roomFilterSortByToFilterString RoomFilterSortByLastActivity = "lastactivity"
+roomFilterSortByToFilterString RoomFilterSortByCreated      = "created"
+
+-- | List rooms API uses 'RoomFilter' and path "rooms".
+instance SparkApiPath RoomFilter where
+    apiPath _ = roomsPath
+
+-- | List rooms API uses 'RoomFilter' and responses 'Room'.
+instance SparkResponse RoomFilter where
+    type ToResponse RoomFilter = Room
+
+-- | User can list rooms with filter parameter.
+instance SparkFilter RoomFilter where
+    toFilterList filter = catMaybes
+        [ (\(TeamId e) -> ("teamId", Just $ encodeUtf8 e)) <$> roomFilterTeamId filter
+        , (\t -> ("type", Just $ roomTypeToFilterString t)) <$> roomFilterRoomType filter
+        , (\o -> ("sortBy", Just $ roomFilterSortByToFilterString o)) <$> roomFilterSortBy filter
+        ]
 
 -- | 'CreateRoom' is encoded to request body JSON of Create a Room REST call.
 data CreateRoom = CreateRoom
@@ -458,20 +570,32 @@ data CreateRoom = CreateRoom
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFields = True } ''CreateRoom)
 -- ^ 'CreateRoom' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | Create room API uses 'CreateRoom' and path "rooms".
+instance SparkApiPath CreateRoom where
+    apiPath _ = roomsPath
+
+-- | Create room API uses "CreateRoom' and responses 'Room'.
+instance SparkResponse CreateRoom where
+    type ToResponse CreateRoom = Room
+
 -- | User can create a room.
 instance SparkCreate CreateRoom where
-    type ToCreateResponse CreateRoom = Room
-    createPath _ = roomsPath
 
 -- | 'UpdateRoom' is encoded to request body JSON of Update a Room REST call.
 newtype UpdateRoom = UpdateRoom { updateRoomTitle :: RoomTitle } deriving (Eq, Show)
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFields = True } ''UpdateRoom)
 -- ^ 'UpdateRoom' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | Update room API uses 'UpdateRoom' and path "rooms".
+instance SparkApiPath UpdateRoom where
+    apiPath _ = roomsPath
+
+-- | Update room API uses "UpdateRoom' and responses 'Room'.
+instance SparkResponse UpdateRoom where
+    type ToResponse UpdateRoom = Room
+
 -- | User can update a room.
-instance SparkUpdate UpdateRoom where
-    type ToUpdateResponse UpdateRoom = Room
-    updatePath _ = roomsPath
+instance SparkUpdate UpdateRoom
 
 
 -- | Identifying 'Membership'.
@@ -498,10 +622,16 @@ data Membership = Membership
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFields = True } ''Membership)
 -- ^ 'Membership' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | Get detail for a membership API uses 'MembershipId' and path "memberships".
+instance SparkApiPath MembershipId where
+    apiPath _ = membershipsPath
+
+-- | Get detail for a membership API uses "MembershipId' and responses 'Membership'.
+instance SparkResponse MembershipId where
+    type ToResponse MembershipId = Membership
+
 -- | User can get detail of a membership.
 instance SparkDetail MembershipId where
-    type ToDetailResponse MembershipId = Membership
-    detailPath _ = membershipsPath
     toIdStr (MembershipId s) = s
 
 -- | 'MembershipList' is decoded from response JSON of List Memberships REST call.  It is list of 'Membership'.
@@ -515,11 +645,27 @@ instance SparkListItem Membership where
     unwrap = membershipListItems
 
 -- | Optional query strings for room membership list API
-data MembershipQuery = MembershipQuery
-    { membershipQueryRoomId      :: Maybe RoomId    -- ^ List membership only in given room.
-    , membershipQueryPersonId    :: Maybe PersonId  -- ^ List membership related to given person of personId.
-    , membershipQueryPersonEmail :: Maybe Email     -- ^ List membership related to given person of email.
+data MembershipFilter = MembershipFilter
+    { membershipFilterRoomId      :: Maybe RoomId    -- ^ List membership only in given room.
+    , membershipFilterPersonId    :: Maybe PersonId  -- ^ List membership related to given person of personId.
+    , membershipFilterPersonEmail :: Maybe Email     -- ^ List membership related to given person of email.
     } deriving (Default, Eq, Generic, Show)
+
+-- | List memberships API uses 'MembershipFilter' and path "memberships".
+instance SparkApiPath MembershipFilter where
+    apiPath _ = membershipsPath
+
+-- | List memberships API uses 'MembershipFilter' and responses 'Membership'.
+instance SparkResponse MembershipFilter where
+    type ToResponse MembershipFilter = Membership
+
+-- | User can list memberships with filter parameter.
+instance SparkFilter MembershipFilter where
+    toFilterList filter = catMaybes
+        [ (\(RoomId r) -> ("roomId", Just $ encodeUtf8 r)) <$> membershipFilterRoomId filter
+        , (\(PersonId p) -> ("personId", Just $ encodeUtf8 p)) <$> membershipFilterPersonId filter
+        , (\(Email e) -> ("personEmail", Just $ encodeUtf8 e)) <$> membershipFilterPersonEmail filter
+        ]
 
 -- | 'CreateMembership' is encoded to request body JSON of Create a Membership REST call.
 data CreateMembership = CreateMembership
@@ -532,20 +678,32 @@ data CreateMembership = CreateMembership
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 16, omitNothingFields = True } ''CreateMembership)
 -- ^ 'CreateMembership' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
--- | User can a person to a space.
+-- | Create membership API uses 'CreateMembership' and path "memberships".
+instance SparkApiPath CreateMembership where
+    apiPath _ = membershipsPath
+
+-- | Create membership API uses "CreateMembership' and responses 'Membership'.
+instance SparkResponse CreateMembership where
+    type ToResponse CreateMembership = Membership
+
+-- | User can create a membership.
 instance SparkCreate CreateMembership where
-    type ToCreateResponse CreateMembership = Membership
-    createPath _ = membershipsPath
 
 -- | 'UpdateMembership' is encoded to request body JSON of Update a Membership REST call.
 newtype UpdateMembership = UpdateMembership { updateMembershipIsModerator :: Bool } deriving (Eq, Show)
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 16, omitNothingFields = True } ''UpdateMembership)
 -- ^ 'UpdateMembership' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | Update membership API uses 'UpdateMembership' and path "memberships".
+instance SparkApiPath UpdateMembership where
+    apiPath _ = membershipsPath
+
+-- | Update membership API uses "UpdateMembership' and responses 'Membership'.
+instance SparkResponse UpdateMembership where
+    type ToResponse UpdateMembership = Membership
+
 -- | User can update a membership.
-instance SparkUpdate UpdateMembership where
-    type ToUpdateResponse UpdateMembership = Membership
-    updatePath _ = membershipsPath
+instance SparkUpdate UpdateMembership
 
 
 -- | Identifying 'Message'.
@@ -582,10 +740,16 @@ data Message = Message
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 7, omitNothingFields = True } ''Message)
 -- ^ 'Message' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | Get detail for message API uses 'MessageId' and path "messages".
+instance SparkApiPath MessageId where
+    apiPath _ = messagesPath
+
+-- | Get detail for a message API uses "MessageId' and responses 'Message'.
+instance SparkResponse MessageId where
+    type ToResponse MessageId = Message
+
 -- | User can get detail of a message.
 instance SparkDetail MessageId where
-    type ToDetailResponse MessageId = Message
-    detailPath _ = messagesPath
     toIdStr (MessageId s) = s
 
 -- | 'MessageList' is decoded from response JSON of List Messages REST call.  It is list of 'Message'.
@@ -602,24 +766,42 @@ instance SparkListItem Message where
 data MentionedPeople = MentionedPeopleMe | MentionedPeople PersonId deriving (Eq, Show)
 
 -- | Optional query strings for message list API
-data MessageQuery = MessageQuery
-    { messageQueryRoomId          :: RoomId                 -- ^ Mandatory parameter which room to search.
-    , messageQueryMentionedPeople :: Maybe MentionedPeople  -- ^ List messages only mentioned to given person.
-    , messageQueryBefore          :: Maybe Timestamp        -- ^ List messages posted before given timestamp.
-    , messageQueryBeforeMessage   :: Maybe MessageId        -- ^ List messages posted before given message.
+data MessageFilter = MessageFilter
+    { messageFilterRoomId          :: RoomId                 -- ^ Mandatory parameter which room to search.
+    , messageFilterMentionedPeople :: Maybe MentionedPeople  -- ^ List messages only mentioned to given person.
+    , messageFilterBefore          :: Maybe Timestamp        -- ^ List messages posted before given timestamp.
+    , messageFilterBeforeMessage   :: Maybe MessageId        -- ^ List messages posted before given message.
     } deriving (Eq, Show)
 
 {-|
     Default value of query strings for message list API.
     Because 'RoomId' is mandatory, user have to supply it in order to get rest of defaults.
 -}
-defaultMessageQuery :: RoomId -> MessageQuery
-defaultMessageQuery roomId = MessageQuery roomId Nothing Nothing Nothing
+defaultMessageFilter :: RoomId -> MessageFilter
+defaultMessageFilter roomId = MessageFilter roomId Nothing Nothing Nothing
 
 -- | Sum type to ByteString converter for mentionedPeople query string.
-mentionedPeopleToQueryString :: MentionedPeople -> ByteString
-mentionedPeopleToQueryString MentionedPeopleMe                     = "me"
-mentionedPeopleToQueryString (MentionedPeople (PersonId personId)) = encodeUtf8 personId
+mentionedPeopleToFilterString :: MentionedPeople -> ByteString
+mentionedPeopleToFilterString MentionedPeopleMe                     = "me"
+mentionedPeopleToFilterString (MentionedPeople (PersonId personId)) = encodeUtf8 personId
+
+-- | List messages API uses 'MessageFilter' and path "messages".
+instance SparkApiPath MessageFilter where
+    apiPath _ = messagesPath
+
+-- | List messages API uses 'MessageFilter' and responses 'Message'.
+instance SparkResponse MessageFilter where
+    type ToResponse MessageFilter = Message
+
+-- | User can list messages with filter parameter.
+instance SparkFilter MessageFilter where
+    toFilterList filter = ("roomId", Just $ encodeUtf8 rid) : catMaybes
+        [ (\p -> ("mentionedPeople", Just $ mentionedPeopleToFilterString p)) <$> messageFilterMentionedPeople filter
+        , (\(Timestamp t) -> ("before", Just $ encodeUtf8 t)) <$> messageFilterBefore filter
+        , (\(MessageId m) -> ("beforeMessage", Just $ encodeUtf8 m)) <$> messageFilterBeforeMessage filter
+        ]
+      where
+        (RoomId rid) = messageFilterRoomId filter
 
 -- | 'CreateMessage' is encoded to request body JSON of Create a Message REST call.
 data CreateMessage = CreateMessage
@@ -634,10 +816,16 @@ data CreateMessage = CreateMessage
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 13, omitNothingFields = True } ''CreateMessage)
 -- ^ 'CreateMessage' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
--- | User can post a message.
+-- | Create message API uses 'CreateMessage' and path "messages".
+instance SparkApiPath CreateMessage where
+    apiPath _ = messagesPath
+
+-- | Create message API uses "CreateMessage' and responses 'Message'.
+instance SparkResponse CreateMessage where
+    type ToResponse CreateMessage = Message
+
+-- | User can create a message.
 instance SparkCreate CreateMessage where
-    type ToCreateResponse CreateMessage = Message
-    createPath _ = messagesPath
 
 
 -- | Display name of 'Organization'
@@ -658,21 +846,28 @@ data Organization = Organization
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 12, omitNothingFields = True } ''Organization)
 -- ^ 'Organization' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | Get detail for organization API uses 'OrganizationId' and path "organizations".
+instance SparkApiPath OrganizationId where
+    apiPath _ = organizationsPath
+
+-- | Get detail for a organization API uses "OrganizationId' and responses 'Organization'.
+instance SparkResponse OrganizationId where
+    type ToResponse OrganizationId = Organization
+
+-- | User can get detail of a organization.
+instance SparkDetail OrganizationId where
+    toIdStr (OrganizationId s) = s
+
 -- | 'OrganizationList' is decoded from response JSON of List Organizations REST call.  It is list of 'Organization'.
 newtype OrganizationList = OrganizationList { organizationListItems :: [Organization] } deriving (Eq, Show)
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 16, omitNothingFields = True } ''OrganizationList)
 -- ^ 'OrganizationList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
--- | User can get detail of an organization.
-instance SparkDetail OrganizationId where
-    type ToDetailResponse OrganizationId = Organization
-    detailPath _ = organizationsPath
-    toIdStr (OrganizationId s) = s
-
 -- | 'OrganizationList' wraps 'Organization'
 instance SparkListItem Organization where
     type ToList Organization = OrganizationList
     unwrap = organizationListItems
+
 
 -- | Display name of License
 newtype LicenseName  = LicenseName Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
@@ -694,10 +889,16 @@ data License = License
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 7, omitNothingFields = True } ''License)
 -- ^ 'License' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | Get detail for license API uses 'LicenseId' and path "licenses".
+instance SparkApiPath LicenseId where
+    apiPath _ = licensesPath
+
+-- | Get detail for a license API uses "LicenseId' and responses 'License'.
+instance SparkResponse LicenseId where
+    type ToResponse LicenseId = License
+
 -- | User can get detail of a license.
 instance SparkDetail LicenseId where
-    type ToDetailResponse LicenseId = License
-    detailPath _ = licensesPath
     toIdStr (LicenseId s) = s
 
 -- | 'LicenseList' is decoded from response JSON of List Licenses REST call.  It is list of 'License'.
@@ -711,9 +912,22 @@ instance SparkListItem License where
     unwrap = licenseListItems
 
 -- | Optional query strings for license list API
-newtype LicenseQuery = LicenseQuery
-    { licenseQueryOrgId :: Maybe OrganizationId -- ^ List licenses only applicable to given organization.
+newtype LicenseFilter = LicenseFilter
+    { licenseFilterOrgId :: Maybe OrganizationId -- ^ List licenses only applicable to given organization.
     } deriving (Default, Eq, Generic, Show)
+
+-- | List licenses API uses 'LicenseFilter' and path "licenses".
+instance SparkApiPath LicenseFilter where
+    apiPath _ = licensesPath
+
+-- | List licenses API uses 'LicenseFilter' and responses 'License'.
+instance SparkResponse LicenseFilter where
+    type ToResponse LicenseFilter = License
+
+-- | User can list licenses with filter parameter.
+instance SparkFilter LicenseFilter where
+    toFilterList filter = maybeToList $ (\(OrganizationId o) -> ("orgId", Just $ encodeUtf8 o)) <$> licenseFilterOrgId filter
+
 
 -- | Name of 'Role'
 newtype RoleName    = RoleName Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
@@ -731,10 +945,16 @@ data Role = Role
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 4, omitNothingFields = True } ''Role)
 -- ^ 'RoleName' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | Get detail for role API uses 'RoleId' and path "roles".
+instance SparkApiPath RoleId where
+    apiPath _ = rolesPath
+
+-- | Get detail for a role API uses "RoleId' and responses 'Role'.
+instance SparkResponse RoleId where
+    type ToResponse RoleId = Role
+
 -- | User can get detail of a role.
 instance SparkDetail RoleId where
-    type ToDetailResponse RoleId = Role
-    detailPath _ = rolesPath
     toIdStr (RoleId s) = s
 
 -- | 'RoleList' is decoded from response JSON of List Role REST call.  It is list of 'Role'.
