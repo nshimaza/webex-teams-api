@@ -25,6 +25,34 @@ import           Data.Text.Encoding          (encodeUtf8)
 
 import           Network.CiscoSpark.Internal
 
+peoplePath :: ByteString
+peoplePath = "people"
+
+roomsPath :: ByteString
+roomsPath = "rooms"
+
+membershipsPath :: ByteString
+membershipsPath = "memberships"
+
+messagesPath :: ByteString
+messagesPath = "messages"
+
+teamsPath :: ByteString
+teamsPath = "teams"
+
+teamMembershipsPath :: ByteString
+teamMembershipsPath = "team/memberships"
+
+organizationsPath :: ByteString
+organizationsPath = "organizations"
+
+licensesPath :: ByteString
+licensesPath = "licenses"
+
+rolesPath :: ByteString
+rolesPath = "roles"
+
+
 {-|
     SparkListItem is a type class grouping types with following common usage.
 
@@ -41,6 +69,10 @@ class FromJSON (ToList i) => SparkListItem i where
     type ToList i :: *
     -- | Get bare list from wrapped type which can be parsed directly from JSON.
     unwrap :: ToList i -> [i]
+
+class FromJSON (ToCreateResponse a) => SparkCreate a where
+    type ToCreateResponse a :: *
+    createPath :: a -> ByteString
 
 -- | Type representing timestamp.  For now, it is just copied from API response JSON.
 newtype Timestamp   = Timestamp Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
@@ -214,6 +246,11 @@ newtype CreateTeam = CreateTeam { createTeamName :: TeamName } deriving (Eq, Sho
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFields = True } ''CreateTeam)
 -- ^ 'CreateTeam' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | User can create a team.
+instance SparkCreate CreateTeam where
+    type ToCreateResponse CreateTeam = Team
+    createPath _ = teamsPath
+
 -- | 'UpdateTeam' is encoded to request body JSON of Update a Team REST call.
 newtype UpdateTeam = UpdateTeam { updateTeamName :: TeamName } deriving (Eq, Show)
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFields = True } ''UpdateTeam)
@@ -268,6 +305,11 @@ data CreateTeamMembership = CreateTeamMembership
 
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 20, omitNothingFields = True } ''CreateTeamMembership)
 -- ^ 'CreateTeamMembership' derives ToJSON and FromJSON via deriveJSON template haskell function.
+
+-- | User can add a person to a team.
+instance SparkCreate CreateTeamMembership where
+    type ToCreateResponse CreateTeamMembership = TeamMembership
+    createPath _ = teamMembershipsPath
 
 -- | 'UpdateTeamMembership' is encoded to request body JSON of Update a Team Membership REST call.
 newtype UpdateTeamMembership = UpdateTeamMembership { updateTeamMembershipIsModerator :: Bool } deriving (Eq, Show)
@@ -352,6 +394,11 @@ data CreateRoom = CreateRoom
 
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFields = True } ''CreateRoom)
 -- ^ 'CreateRoom' derives ToJSON and FromJSON via deriveJSON template haskell function.
+
+-- | User can create a room.
+instance SparkCreate CreateRoom where
+    type ToCreateResponse CreateRoom = Room
+    createPath _ = roomsPath
 
 -- | 'UpdateRoom' is encoded to request body JSON of Update a Room REST call.
 newtype UpdateRoom = UpdateRoom { updateRoomTitle :: RoomTitle } deriving (Eq, Show)

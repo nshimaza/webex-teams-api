@@ -364,7 +364,7 @@ spec = do
                 strictRequestBody req >>= putMVar receivedBodyMVar
                 simpleApp teamJson req respond
 
-            resTeam <- getResponseBody <$> createTeam mockBaseRequest dummyAuth newTeam
+            resTeam <- getResponseBody <$> createEntity mockBaseRequest dummyAuth newTeam
             resTeam `shouldBe` team
 
             receivedReq <- takeMVar receivedReqMVar
@@ -386,7 +386,7 @@ spec = do
                 strictRequestBody req >>= putMVar receivedBodyMVar
                 simpleApp teamJson req respond
 
-            (Right resTeam) <- getResponseBody <$> createTeamEither mockBaseRequest dummyAuth newTeam
+            (Right resTeam) <- getResponseBody <$> createEntityEither mockBaseRequest dummyAuth newTeam
             resTeam `shouldBe` team
 
             receivedReq <- takeMVar receivedReqMVar
@@ -517,7 +517,7 @@ spec = do
                 strictRequestBody req >>= putMVar receivedBodyMVar
                 simpleApp teamMembershipJson req respond
 
-            resTeamMembership <- getResponseBody <$> createTeamMembership mockBaseRequest dummyAuth newTeamMembership
+            resTeamMembership <- getResponseBody <$> createEntity mockBaseRequest dummyAuth newTeamMembership
             resTeamMembership `shouldBe` teamMembership
 
             receivedReq <- takeMVar receivedReqMVar
@@ -539,7 +539,7 @@ spec = do
                 strictRequestBody req >>= putMVar receivedBodyMVar
                 simpleApp teamMembershipJson req respond
 
-            (Right resTeamMembership) <- getResponseBody <$> createTeamMembershipEither mockBaseRequest dummyAuth newTeamMembership
+            (Right resTeamMembership) <- getResponseBody <$> createEntityEither mockBaseRequest dummyAuth newTeamMembership
             resTeamMembership `shouldBe` teamMembership
 
             receivedReq <- takeMVar receivedReqMVar
@@ -674,7 +674,7 @@ spec = do
                 strictRequestBody req >>= putMVar receivedBodyMVar
                 simpleApp roomJson req respond
 
-            resRoom <- getResponseBody <$> createRoom mockBaseRequest dummyAuth newRoom
+            resRoom <- getResponseBody <$> createEntity mockBaseRequest dummyAuth newRoom
             resRoom `shouldBe` room
 
             receivedReq <- takeMVar receivedReqMVar
@@ -696,7 +696,7 @@ spec = do
                 strictRequestBody req >>= putMVar receivedBodyMVar
                 simpleApp roomJson req respond
 
-            (Right resRoom) <- getResponseBody <$> createRoomEither mockBaseRequest dummyAuth newRoom
+            (Right resRoom) <- getResponseBody <$> createEntityEither mockBaseRequest dummyAuth newRoom
             resRoom `shouldBe` room
 
             receivedReq <- takeMVar receivedReqMVar

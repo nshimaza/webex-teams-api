@@ -85,6 +85,8 @@ module Network.CiscoSpark
 
     , Timestamp (..)
     -- * Functions
+    , createEntity
+    , createEntityEither
     -- ** People
     , streamPersonList
     , getPersonDetail
@@ -93,8 +95,6 @@ module Network.CiscoSpark
     , streamRoomList
     , getRoomDetail
     , getRoomDetailEither
-    , createRoom
-    , createRoomEither
     -- ** Memberships
     , streamMembershipList
     , getMembershipDetail
@@ -108,14 +108,10 @@ module Network.CiscoSpark
     , streamTeamList
     , getTeamDetailEither
     , getTeamDetail
-    , createTeam
-    , createTeamEither
     -- ** Team Memberships
     , streamTeamMembershipList
     , getTeamMembershipDetail
     , getTeamMembershipDetailEither
-    , createTeamMembership
-    , createTeamMembershipEither
     -- ** Organizations
     , streamOrganizationList
     , getOrganizationDetail
@@ -169,33 +165,6 @@ ciscoSparkBaseRequest
 instance Default CiscoSparkRequest where
     def = CiscoSparkRequest ciscoSparkBaseRequest
 
-peoplePath :: ByteString
-peoplePath = "people"
-
-roomsPath :: ByteString
-roomsPath = "rooms"
-
-membershipsPath :: ByteString
-membershipsPath = "memberships"
-
-messagesPath :: ByteString
-messagesPath = "messages"
-
-teamsPath :: ByteString
-teamsPath = "teams"
-
-teamMembershipsPath :: ByteString
-teamMembershipsPath = "team/memberships"
-
-organizationsPath :: ByteString
-organizationsPath = "organizations"
-
-licensesPath :: ByteString
-licensesPath = "licenses"
-
-rolesPath :: ByteString
-rolesPath = "roles"
-
 -- | Add given Authorization into request header.
 addAuthorizationHeader :: Authorization -> Request -> Request
 addAuthorizationHeader (Authorization auth) = addRequestHeader "Authorization" ("Bearer " <> auth)
@@ -221,6 +190,7 @@ streamList auth req = do
     yieldMany . unwrap $ getResponseBody res
     streamListLoop auth res
 
+-- | Processing pagination by HTTP Link header.
 streamListLoop :: (MonadIO m, FromJSON a, SparkListItem i) => Authorization -> Response a -> Source m i
 streamListLoop auth res = case getNextUrl res >>= (\url -> parseRequest $ "GET " <> (C8.unpack url)) of
     Nothing         -> pure ()
@@ -385,26 +355,11 @@ makeCommonCreateReq (CiscoSparkRequest base) auth path body
     $ addAuthorizationHeader auth
     $ base
 
--- | Create a room with given room name.  A JSONException runtime exception will be thrown on an JSON parse errors.
-createRoom :: MonadIO m => CiscoSparkRequest -> Authorization -> CreateRoom -> m (Response Room)
-createRoom base auth param = httpJSON $ makeCommonCreateReq base auth roomsPath param
+-- | Create an Spark entity with given parameters.  A JSONException runtime exception will be thrown on an JSON parse errors.
+createEntity :: (MonadIO m, SparkCreate a, ToJSON a) => CiscoSparkRequest -> Authorization -> a -> m (Response (ToCreateResponse a))
+createEntity base auth param = httpJSON $ makeCommonCreateReq base auth (createPath param) param
 
--- | Create a room with given room name.  A Left value will be returned on an JSON parse errors.
-createRoomEither :: MonadIO m => CiscoSparkRequest -> Authorization -> CreateRoom -> m (Response (Either JSONException Room))
-createRoomEither base auth param = httpJSONEither $ makeCommonCreateReq base auth roomsPath param
+-- | Create an Spark entity with given parameters.  A Left value will be returned on an JSON parse errors.
+createEntityEither :: (MonadIO m, SparkCreate a, ToJSON a) => CiscoSparkRequest -> Authorization -> a -> m (Response (Either JSONException (ToCreateResponse a)))
+createEntityEither base auth param = httpJSONEither $ makeCommonCreateReq base auth (createPath param) param
 
--- | Create a team with given team name.  A JSONException runtime exception will be thrown on an JSON parse errors.
-createTeam :: MonadIO m => CiscoSparkRequest -> Authorization -> CreateTeam -> m (Response Team)
-createTeam base auth param = httpJSON $ makeCommonCreateReq base auth teamsPath param
-
--- | Create a team with given team name.  A Left value will be returned on an JSON parse errors.
-createTeamEither :: MonadIO m => CiscoSparkRequest -> Authorization -> CreateTeam -> m (Response (Either JSONException Team))
-createTeamEither base auth param = httpJSONEither $ makeCommonCreateReq base auth teamsPath param
-
--- | Add a person to a team.  A JSONException runtime exception will be thrown on an JSON parse errors.
-createTeamMembership :: MonadIO m => CiscoSparkRequest -> Authorization -> CreateTeamMembership -> m (Response TeamMembership)
-createTeamMembership base auth param = httpJSON $ makeCommonCreateReq base auth teamMembershipsPath param
-
--- | Add a person to a team.  A Left value will be returned on an JSON parse errors.
-createTeamMembershipEither :: MonadIO m => CiscoSparkRequest -> Authorization -> CreateTeamMembership -> m (Response (Either JSONException TeamMembership))
-createTeamMembershipEither base auth param = httpJSONEither $ makeCommonCreateReq base auth teamMembershipsPath param
