@@ -221,6 +221,14 @@ spec = do
                                      , createPersonLicenses     = Just [ LicenseId "Y2lzY29zcGFyazovL3VzL1JPT00vOGNkYzQwYzQtZjA5ZS0zY2JhLThjMjYtZGQwZTcwYWRlY2Iy"
                                                                        , LicenseId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"]
                                      }
+            updatePerson = UpdatePerson { updatePersonDisplayName   = Just $ DisplayName "New John Andersen"
+                                        , updatePersonFirstName     = Just $ FirstName "New John"
+                                        , updatePersonLastName      = Just $ LastName "New Andersen"
+                                        , updatePersonAvatar        = Just $ AvatarUrl "https://example.com/newAvatarUrl"
+                                        , updatePersonOrgId         = Just $ OrganizationId "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE"
+                                        , updatePersonRoles         = Just $ [ RoleId "newRoleId1", RoleId "newRoleId2" ]
+                                        , updatePersonLicenses      = Just $ [ LicenseId "newLicenseId1", LicenseId "newLicenseId2" ]
+                                        }
 
         it "streamPersonList streams Team" $ do
             let testData = personList ['Z']
@@ -344,6 +352,50 @@ spec = do
 
             stopMockServer svr
 
+        it "updateEntity for a person sends JSON encoded UpdatePerson as its body of PUT request" $ do
+            receivedReqMVar <- newEmptyMVar
+            receivedBodyMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                strictRequestBody req >>= putMVar receivedBodyMVar
+                simpleApp personJson1 req respond
+
+            resPerson <- getResponseBody <$> updateEntity mockBaseRequest dummyAuth updatePerson
+            resPerson `shouldBe` person1
+
+            receivedReq <- takeMVar receivedReqMVar
+            receivedBody <- takeMVar receivedBodyMVar
+            requestMethod receivedReq `shouldBe` "PUT"
+            rawPathInfo receivedReq `shouldBe` "/v1/people"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+            decode receivedBody `shouldBe` Just updatePerson
+
+            stopMockServer svr
+
+        it "updateEntityEither for a person sends JSON encoded UpdatePerson as its body of PUT request" $ do
+            receivedReqMVar <- newEmptyMVar
+            receivedBodyMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                strictRequestBody req >>= putMVar receivedBodyMVar
+                simpleApp personJson1 req respond
+
+            (Right resPerson) <- getResponseBody <$> updateEntityEither mockBaseRequest dummyAuth updatePerson
+            resPerson `shouldBe` person1
+
+            receivedReq <- takeMVar receivedReqMVar
+            receivedBody <- takeMVar receivedBodyMVar
+            requestMethod receivedReq `shouldBe` "PUT"
+            rawPathInfo receivedReq `shouldBe` "/v1/people"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+            decode receivedBody `shouldBe` Just updatePerson
+
+            stopMockServer svr
+
     describe "Team" $ do
         let teamJson = "{\
                        \  \"id\" : \"Y2lzY29zcGFyazovL3VzL1RFQU0vMTNlMThmNDAtNDJmYy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5\",\
@@ -357,6 +409,7 @@ spec = do
                         , teamCreated   = Timestamp "2015-10-18T14:26:16+00:00"
                         }
             newTeam = CreateTeam $ TeamName "Build Squad"
+            updateTeam = UpdateTeam $ TeamName "updatedTeamName"
 
         it "streamTeamList streams Team" $ do
             let testData = teamList ['Z']
@@ -454,6 +507,50 @@ spec = do
 
             stopMockServer svr
 
+        it "updateEntity for a team sends JSON encoded UpdateTeam as its body of PUT request" $ do
+            receivedReqMVar <- newEmptyMVar
+            receivedBodyMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                strictRequestBody req >>= putMVar receivedBodyMVar
+                simpleApp teamJson req respond
+
+            resTeam <- getResponseBody <$> updateEntity mockBaseRequest dummyAuth updateTeam
+            resTeam `shouldBe` team
+
+            receivedReq <- takeMVar receivedReqMVar
+            receivedBody <- takeMVar receivedBodyMVar
+            requestMethod receivedReq `shouldBe` "PUT"
+            rawPathInfo receivedReq `shouldBe` "/v1/teams"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+            decode receivedBody `shouldBe` Just updateTeam
+
+            stopMockServer svr
+
+        it "updateEntityEither for a team sends JSON encoded UpdateTeam as its body of PUT request" $ do
+            receivedReqMVar <- newEmptyMVar
+            receivedBodyMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                strictRequestBody req >>= putMVar receivedBodyMVar
+                simpleApp teamJson req respond
+
+            (Right resTeam) <- getResponseBody <$> updateEntityEither mockBaseRequest dummyAuth updateTeam
+            resTeam `shouldBe` team
+
+            receivedReq <- takeMVar receivedReqMVar
+            receivedBody <- takeMVar receivedBodyMVar
+            requestMethod receivedReq `shouldBe` "PUT"
+            rawPathInfo receivedReq `shouldBe` "/v1/teams"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+            decode receivedBody `shouldBe` Just updateTeam
+
+            stopMockServer svr
+
     describe "TeamMemberShip" $ do
         let teamMembershipJson = "{\
                                  \  \"id\" : \"Y2lzY29zcGFyazovL3VzL1RFQU1fTUVNQkVSU0hJUC8wZmNmYTJiOC1hZGNjLTQ1ZWEtYTc4Mi1lNDYwNTkyZjgxZWY6MTNlMThmNDAtNDJmYy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5\",\
@@ -490,6 +587,7 @@ spec = do
                                                      , createTeamMembershipPersonEmail  = Just $ Email "added@example.com"
                                                      , createTeamMembershipIsModerator  = Just True
                                                      }
+            updateTeamMembership = UpdateTeamMembership False
 
         it "streamTeamMembershipList streams TeamMembership" $ do
             let testData = teamMembershipList ['Z']
@@ -608,6 +706,50 @@ spec = do
 
             stopMockServer svr
 
+        it "updateEntity for a teamMembership sends JSON encoded UpdateTeamMembership as its body of PUT request" $ do
+            receivedReqMVar <- newEmptyMVar
+            receivedBodyMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                strictRequestBody req >>= putMVar receivedBodyMVar
+                simpleApp teamMembershipJson req respond
+
+            resTeamMembership <- getResponseBody <$> updateEntity mockBaseRequest dummyAuth updateTeamMembership
+            resTeamMembership `shouldBe` teamMembership
+
+            receivedReq <- takeMVar receivedReqMVar
+            receivedBody <- takeMVar receivedBodyMVar
+            requestMethod receivedReq `shouldBe` "PUT"
+            rawPathInfo receivedReq `shouldBe` "/v1/team/memberships"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+            decode receivedBody `shouldBe` Just updateTeamMembership
+
+            stopMockServer svr
+
+        it "updateEntityEither for a teamMembership sends JSON encoded UpdateTeamMembership as its body of PUT request" $ do
+            receivedReqMVar <- newEmptyMVar
+            receivedBodyMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                strictRequestBody req >>= putMVar receivedBodyMVar
+                simpleApp teamMembershipJson req respond
+
+            (Right resTeamMembership) <- getResponseBody <$> updateEntityEither mockBaseRequest dummyAuth updateTeamMembership
+            resTeamMembership `shouldBe` teamMembership
+
+            receivedReq <- takeMVar receivedReqMVar
+            receivedBody <- takeMVar receivedBodyMVar
+            requestMethod receivedReq `shouldBe` "PUT"
+            rawPathInfo receivedReq `shouldBe` "/v1/team/memberships"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+            decode receivedBody `shouldBe` Just updateTeamMembership
+
+            stopMockServer svr
+
     describe "Room" $ do
         let roomJson = "{\
                        \  \"id\" : \"Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0\",\
@@ -643,6 +785,7 @@ spec = do
             roomList j = [ roomGen $ j <> show i | i <- [1..3] ]
             roomListList = [ roomList [c] | c <- ['a'..'d'] ]
             newRoom = CreateRoom (RoomTitle "New Room") (Just $ TeamId "belongingTeam")
+            updateRoom = UpdateRoom $ RoomTitle "updatedRoomTitle"
 
         it "streamRoomList streams Room" $ do
             let testData = roomList ['Z']
@@ -765,6 +908,50 @@ spec = do
 
             stopMockServer svr
 
+        it "updateEntity for a room sends JSON encoded UpdateRoom as its body of PUT request" $ do
+            receivedReqMVar <- newEmptyMVar
+            receivedBodyMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                strictRequestBody req >>= putMVar receivedBodyMVar
+                simpleApp roomJson req respond
+
+            resRoom <- getResponseBody <$> updateEntity mockBaseRequest dummyAuth updateRoom
+            resRoom `shouldBe` room
+
+            receivedReq <- takeMVar receivedReqMVar
+            receivedBody <- takeMVar receivedBodyMVar
+            requestMethod receivedReq `shouldBe` "PUT"
+            rawPathInfo receivedReq `shouldBe` "/v1/rooms"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+            decode receivedBody `shouldBe` Just updateRoom
+
+            stopMockServer svr
+
+        it "updateEntityEither for a room sends JSON encoded UpdateRoom as its body of PUT request" $ do
+            receivedReqMVar <- newEmptyMVar
+            receivedBodyMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                strictRequestBody req >>= putMVar receivedBodyMVar
+                simpleApp roomJson req respond
+
+            (Right resRoom) <- getResponseBody <$> updateEntityEither mockBaseRequest dummyAuth updateRoom
+            resRoom `shouldBe` room
+
+            receivedReq <- takeMVar receivedReqMVar
+            receivedBody <- takeMVar receivedBodyMVar
+            requestMethod receivedReq `shouldBe` "PUT"
+            rawPathInfo receivedReq `shouldBe` "/v1/rooms"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+            decode receivedBody `shouldBe` Just updateRoom
+
+            stopMockServer svr
+
     describe "Membership" $ do
         let membershipJson = "{\
                              \  \"id\" : \"Y2lzY29zcGFyazovL3VzL01FTUJFUlNISVAvMGQwYzkxYjYtY2U2MC00NzI1LWI2ZDAtMzQ1NWQ1ZDExZWYzOmNkZTFkZDQwLTJmMGQtMTFlNS1iYTljLTdiNjU1NmQyMjA3Yg\",\
@@ -804,6 +991,7 @@ spec = do
                                              , createMembershipPersonEmail  = Just $ Email "john.andersen@example.com"
                                              , createMembershipIsModerator  = Just $ True
                                              }
+            updateMembership = UpdateMembership False
 
         it "streamMembershipList streams Membership" $ do
             let testData = membershipList ['Z']
@@ -923,6 +1111,50 @@ spec = do
             (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
             (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
             decode receivedBody `shouldBe` Just newMembership
+
+            stopMockServer svr
+
+        it "updateEntity for a membership sends JSON encoded UpdateMembership as its body of PUT request" $ do
+            receivedReqMVar <- newEmptyMVar
+            receivedBodyMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                strictRequestBody req >>= putMVar receivedBodyMVar
+                simpleApp membershipJson req respond
+
+            resMembership <- getResponseBody <$> updateEntity mockBaseRequest dummyAuth updateMembership
+            resMembership `shouldBe` membership
+
+            receivedReq <- takeMVar receivedReqMVar
+            receivedBody <- takeMVar receivedBodyMVar
+            requestMethod receivedReq `shouldBe` "PUT"
+            rawPathInfo receivedReq `shouldBe` "/v1/memberships"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+            decode receivedBody `shouldBe` Just updateMembership
+
+            stopMockServer svr
+
+        it "updateEntityEither for a membership sends JSON encoded UpdateMembership as its body of PUT request" $ do
+            receivedReqMVar <- newEmptyMVar
+            receivedBodyMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                strictRequestBody req >>= putMVar receivedBodyMVar
+                simpleApp membershipJson req respond
+
+            (Right resMembership) <- getResponseBody <$> updateEntityEither mockBaseRequest dummyAuth updateMembership
+            resMembership `shouldBe` membership
+
+            receivedReq <- takeMVar receivedReqMVar
+            receivedBody <- takeMVar receivedBodyMVar
+            requestMethod receivedReq `shouldBe` "PUT"
+            rawPathInfo receivedReq `shouldBe` "/v1/memberships"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+            decode receivedBody `shouldBe` Just updateMembership
 
             stopMockServer svr
 

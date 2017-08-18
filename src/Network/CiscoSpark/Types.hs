@@ -85,9 +85,13 @@ class FromJSON (ToDetailResponse a) => SparkDetail a where
     detailPath :: a -> ByteString
     toIdStr :: a -> Text
 
-class FromJSON (ToCreateResponse a) => SparkCreate a where
+class (ToJSON a, FromJSON (ToCreateResponse a)) => SparkCreate a where
     type ToCreateResponse a :: *
     createPath :: a -> ByteString
+
+class (ToJSON a, FromJSON (ToUpdateResponse a)) => SparkUpdate a where
+    type ToUpdateResponse a :: *
+    updatePath :: a -> ByteString
 
 -- | Type representing timestamp.  For now, it is just copied from API response JSON.
 newtype Timestamp   = Timestamp Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
@@ -236,6 +240,11 @@ data UpdatePerson = UpdatePerson
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 12, omitNothingFields = True } ''UpdatePerson)
 -- ^ 'UpdatePerson' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | User can update a person.
+instance SparkUpdate UpdatePerson where
+    type ToUpdateResponse UpdatePerson = Person
+    updatePath _ = peoplePath
+
 -- | Identifying Team.
 newtype TeamId      = TeamId Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
 -- | Name of Team
@@ -287,6 +296,11 @@ instance SparkCreate CreateTeam where
 newtype UpdateTeam = UpdateTeam { updateTeamName :: TeamName } deriving (Eq, Show)
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFields = True } ''UpdateTeam)
 -- ^ 'UpdateTeam' derives ToJSON and FromJSON via deriveJSON template haskell function.
+
+-- | User can update a team.
+instance SparkUpdate UpdateTeam where
+    type ToUpdateResponse UpdateTeam = Team
+    updatePath _ = teamsPath
 
 
 -- | Identifying TeamMembership.
@@ -353,6 +367,11 @@ instance SparkCreate CreateTeamMembership where
 newtype UpdateTeamMembership = UpdateTeamMembership { updateTeamMembershipIsModerator :: Bool } deriving (Eq, Show)
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 20, omitNothingFields = True } ''UpdateTeamMembership)
 -- ^ 'UpdateTeamMembership' derives ToJSON and FromJSON via deriveJSON template haskell function.
+
+-- | User can update a teamMembership.
+instance SparkUpdate UpdateTeamMembership where
+    type ToUpdateResponse UpdateTeamMembership = TeamMembership
+    updatePath _ = teamMembershipsPath
 
 
 -- | Identifying 'Room'.
@@ -449,6 +468,11 @@ newtype UpdateRoom = UpdateRoom { updateRoomTitle :: RoomTitle } deriving (Eq, S
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFields = True } ''UpdateRoom)
 -- ^ 'UpdateRoom' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+-- | User can update a room.
+instance SparkUpdate UpdateRoom where
+    type ToUpdateResponse UpdateRoom = Room
+    updatePath _ = roomsPath
+
 
 -- | Identifying 'Membership'.
 newtype MembershipId    = MembershipId Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
@@ -517,6 +541,11 @@ instance SparkCreate CreateMembership where
 newtype UpdateMembership = UpdateMembership { updateMembershipIsModerator :: Bool } deriving (Eq, Show)
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 16, omitNothingFields = True } ''UpdateMembership)
 -- ^ 'UpdateMembership' derives ToJSON and FromJSON via deriveJSON template haskell function.
+
+-- | User can update a membership.
+instance SparkUpdate UpdateMembership where
+    type ToUpdateResponse UpdateMembership = Membership
+    updatePath _ = membershipsPath
 
 
 -- | Identifying 'Message'.
