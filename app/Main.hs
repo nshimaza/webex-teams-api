@@ -53,7 +53,6 @@ emailOptParser = Email . T.pack <$> strOption
     <> help     "An email address to filter result"
     )
 
-
 {-
     Person specific command line option parsers
 -}
@@ -96,6 +95,14 @@ roomIdParser = RoomId . T.pack <$> strArgument
     (  metavar "ROOM_ID"
     <> help    "Identifier of a room")
 
+teamIdOptParser :: Parser TeamId
+teamIdOptParser = TeamId . T.pack <$> strOption
+    (  long     "team"
+    <> short    't'
+    <> metavar "TEAM_ID"
+    <> help    "Identifier of a team to filter result"
+    )
+
 roomTypeParser :: Parser (Maybe RoomType)
 roomTypeParser
     =   flag Nothing (Just RoomTypeDirect)
@@ -119,11 +126,11 @@ roomSortByParser
             (  long "sort-by-created"
             <> help "Sort by most recentlly created")
 
-roomFilterParser :: Parser RoomFilter
-roomFilterParser = RoomFilter <$> maybeTeamIdParser <*> roomTypeParser <*> roomSortByParser
-
 roomListOptParser :: Parser Command
-roomListOptParser = RoomListCommand <$> countParser <*> roomFilterParser
+roomListOptParser = RoomListCommand <$> countParser
+                                    <*> (RoomFilter <$> optional teamIdOptParser
+                                                    <*> roomTypeParser
+                                                    <*> roomSortByParser)
 
 roomDetailOptParser :: Parser Command
 roomDetailOptParser = RoomDetailCommand <$> roomIdParser
@@ -153,11 +160,11 @@ personIdOptParser = PersonId . T.pack <$> strOption
     <> help    "Identifier of a person to filter result"
     )
 
-membershipListFilterParser :: Parser MembershipFilter
-membershipListFilterParser = MembershipFilter <$> optional roomIdOptParser <*> optional personIdOptParser <*> optional emailOptParser
-
 membershipListOptParser :: Parser Command
-membershipListOptParser = MembershipListCommand <$> countParser <*> membershipListFilterParser
+membershipListOptParser = MembershipListCommand <$> countParser
+                                                <*> ( MembershipFilter <$> optional roomIdOptParser
+                                                                       <*> optional personIdOptParser
+                                                                       <*> optional emailOptParser)
 
 membershipDetailOptParser :: Parser Command
 membershipDetailOptParser = MembershipDetailCommand <$> membershipIdParser
@@ -182,9 +189,6 @@ teamIdParser = TeamId . T.pack <$> strArgument
     (  metavar "TEAM_ID"
     <> help    "Identifier of a team"
     )
-
-maybeTeamIdParser :: Parser (Maybe TeamId)
-maybeTeamIdParser = optional teamIdParser
 
 teamListOptParser :: Parser Command
 teamListOptParser = TeamListCommand <$> countParser
