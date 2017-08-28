@@ -22,6 +22,7 @@ data Command
     | RoomDetailCommand RoomId
     | MembershipListCommand Int MembershipFilter
     | MembershipDetailCommand MembershipId
+    | MessageListCommand Int MessageFilter
     | MessageDetailCommand MessageId
     | TeamDetailCommand TeamId
     | TeamMembershipListCommand Int TeamMembershipFilter
@@ -32,12 +33,12 @@ data Command
 {-
     Common command line option parsers
 -}
-countParser :: Parser Int
-countParser = option auto
+countParser :: Int -> Parser Int
+countParser defaultCount = option auto
     (  long    "count"
     <> short   'c'
     <> metavar "MAX_ITEMS"
-    <> value   (maxBound :: Int)
+    <> value   (if defaultCount == def then maxBound else defaultCount)
     <> help "Maximum number of items to print"
     )
 
@@ -86,7 +87,7 @@ personFilterParser :: Parser PersonFilter
 personFilterParser = PersonFilter <$> optional emailOptParser <*> optional displayNameParser <*> optional organizationIdOptParser
 
 personListOptParser :: Parser Command
-personListOptParser = PersonListCommand <$> countParser <*> personFilterParser
+personListOptParser = PersonListCommand <$> countParser def <*> personFilterParser
 
 personDetailOptParser :: Parser Command
 personDetailOptParser = PersonDetailCommand <$> personIdParser
@@ -123,7 +124,7 @@ roomSortByParser
             <> help "Sort by most recentlly created")
 
 roomListOptParser :: Parser Command
-roomListOptParser = RoomListCommand <$> countParser
+roomListOptParser = RoomListCommand <$> countParser def
                                     <*> (RoomFilter <$> optional teamIdOptParser
                                                     <*> roomTypeParser
                                                     <*> roomSortByParser)
@@ -157,7 +158,7 @@ personIdOptParser = PersonId . T.pack <$> strOption
     )
 
 membershipListOptParser :: Parser Command
-membershipListOptParser = MembershipListCommand <$> countParser
+membershipListOptParser = MembershipListCommand <$> countParser def
                                                 <*> (MembershipFilter <$> optional roomIdOptParser
                                                                       <*> optional personIdOptParser
                                                                       <*> optional emailOptParser)
@@ -174,6 +175,44 @@ messageIdParser = MessageId . T.pack <$> strArgument
     <> help    "Identifier of a message"
     )
 
+mentionedPeopleParser :: Parser (Maybe MentionedPeople)
+mentionedPeopleParser
+    =   flag Nothing (Just MentionedPeopleMe)
+            (  long "me"
+            <> help "List messages where the caller is mentioned"
+            )
+    <|> optional (MentionedPeople . PersonId . T.pack <$> strOption
+                    (   long    "mentioned-person"
+                    <>  short   'p'
+                    <>  metavar "PERSON_ID"
+                    <>  help    "List messages where the specified persionId is mentioned"
+                    )
+                 )
+
+beforeOptParser :: Parser Timestamp
+beforeOptParser = Timestamp . T.pack <$> strOption
+    (  long     "before"
+    <> short    'b'
+    <> metavar  "TIMESTAMP"
+    <> help     "List messages sent before a date and time, in ISO8601 format"
+    )
+
+beforeMessageOptParser :: Parser MessageId
+beforeMessageOptParser = MessageId . T.pack <$> strOption
+    (  long     "before-message"
+    <> short    'm'
+    <> metavar  "MESSAGE_ID"
+    <> help     "List messages sent before a message, by ID"
+    )
+
+messageListOptParser :: Parser Command
+messageListOptParser = MessageListCommand <$> countParser 10
+                                          <*> (MessageFilter <$> roomIdParser
+                                                             <*> mentionedPeopleParser
+                                                             <*> optional beforeOptParser
+                                                             <*> optional beforeMessageOptParser
+                                                             )
+
 messageDetailOptParser :: Parser Command
 messageDetailOptParser = MessageDetailCommand <$> messageIdParser
 
@@ -187,7 +226,7 @@ teamIdParser = TeamId . T.pack <$> strArgument
     )
 
 teamListOptParser :: Parser Command
-teamListOptParser = TeamListCommand <$> countParser
+teamListOptParser = TeamListCommand <$> countParser def
 
 teamDetailOptParser :: Parser Command
 teamDetailOptParser = TeamDetailCommand <$> teamIdParser
@@ -202,7 +241,7 @@ teamMembershipIdParser = TeamMembershipId . T.pack <$> strArgument
     )
 
 teamMembershipListOptParser :: Parser Command
-teamMembershipListOptParser = TeamMembershipListCommand <$> countParser
+teamMembershipListOptParser = TeamMembershipListCommand <$> countParser def
                                                         <*> (TeamMembershipFilter <$> teamIdParser)
 
 teamMembershipDetailOptParser :: Parser Command
@@ -221,6 +260,7 @@ commandSubParser = hsubparser
     <> command "room-detail" (info roomDetailOptParser (progDesc "Get detail for a team by ID"))
     <> command "membership-list" (info membershipListOptParser (progDesc "List memberships of authenticated user"))
     <> command "membership-detail" (info membershipDetailOptParser (progDesc "Get detail for a membership by ID"))
+    <> command "message-list" (info messageListOptParser (progDesc "List messages in a room"))
     <> command "message-detail" (info messageDetailOptParser (progDesc "Get detail for a message by ID"))
     <> command "team-membership-list" (info teamMembershipListOptParser (progDesc "List team memberships of authenticated user"))
     <> command "team-membership-detail" (info teamMembershipDetailOptParser (progDesc "Get detail for a team membership by ID"))
@@ -241,6 +281,9 @@ run auth (RoomListCommand count filter) =
     runConduit $ streamEntityWithFilter auth def filter .| takeC count .| mapM_C print
 
 run auth (MembershipListCommand count filter) =
+    runConduit $ streamEntityWithFilter auth def filter .| takeC count .| mapM_C print
+
+run auth (MessageListCommand count filter) =
     runConduit $ streamEntityWithFilter auth def filter .| takeC count .| mapM_C print
 
 run auth (TeamMembershipListCommand count filter) =
