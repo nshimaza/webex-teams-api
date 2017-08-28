@@ -15,15 +15,15 @@ import           System.IO             (hPutStrLn, stderr)
 import           Network.CiscoSpark
 
 data Command
-    = TeamListCommand Int
-    | RoomListCommand Int RoomFilter
-    | PersonListCommand Int PersonFilter
+    = PersonListCommand Int PersonFilter
     | PersonDetailCommand PersonId
+    | RoomListCommand Int RoomFilter
     | RoomDetailCommand RoomId
     | MembershipListCommand Int MembershipFilter
     | MembershipDetailCommand MembershipId
     | MessageListCommand Int MessageFilter
     | MessageDetailCommand MessageId
+    | TeamListCommand Int
     | TeamDetailCommand TeamId
     | TeamMembershipListCommand Int TeamMembershipFilter
     | TeamMembershipDetailCommand TeamMembershipId
@@ -252,9 +252,7 @@ teamMembershipDetailOptParser = TeamMembershipDetailCommand <$> teamMembershipId
 -}
 commandSubParser :: Parser Command
 commandSubParser = hsubparser
-    (  command "team-list" (info teamListOptParser (progDesc "List belonging teams"))
-    <> command "team-detail" (info teamDetailOptParser (progDesc "Get detail for a team by ID"))
-    <> command "person-list" (info personListOptParser (progDesc "List people"))
+    (  command "person-list" (info personListOptParser (progDesc "List people"))
     <> command "person-detail" (info personDetailOptParser (progDesc "Get detail for a person by ID"))
     <> command "room-list" (info roomListOptParser (progDesc "List belonging spaces"))
     <> command "room-detail" (info roomDetailOptParser (progDesc "Get detail for a team by ID"))
@@ -262,6 +260,8 @@ commandSubParser = hsubparser
     <> command "membership-detail" (info membershipDetailOptParser (progDesc "Get detail for a membership by ID"))
     <> command "message-list" (info messageListOptParser (progDesc "List messages in a room"))
     <> command "message-detail" (info messageDetailOptParser (progDesc "Get detail for a message by ID"))
+    <> command "team-list" (info teamListOptParser (progDesc "List belonging teams"))
+    <> command "team-detail" (info teamDetailOptParser (progDesc "Get detail for a team by ID"))
     <> command "team-membership-list" (info teamMembershipListOptParser (progDesc "List team memberships of authenticated user"))
     <> command "team-membership-detail" (info teamMembershipDetailOptParser (progDesc "Get detail for a team membership by ID"))
     )
