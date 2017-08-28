@@ -28,11 +28,6 @@ data Command
     deriving (Show)
 
 
-data Options = Options
-    { optAuth  :: Authorization
-    , optCount :: Int
-    } deriving (Show)
-
 {-
     Common command line option parsers
 -}
