@@ -17,6 +17,7 @@ import           Network.CiscoSpark
 data Command
     = TeamListCommand Int
     | RoomListCommand Int RoomFilter
+    | PeopleListCommand Int PersonFilter
     | PersonDetailCommand PersonId
     | RoomDetailCommand RoomId
     | MembershipDetailCommand MembershipId
@@ -58,6 +59,36 @@ personIdParser = PersonId . T.pack <$> strArgument
     (  metavar "PERSON_ID"
     <> help    "Identifier of a person"
     )
+
+emailParser :: Parser Email
+emailParser = Email . T.pack <$> strOption
+    (  long     "email"
+    <> short    'e'
+    <> metavar  "EMAIL_ADDRESS"
+    <> help     "An email address of the person to look up"
+    )
+
+displayNameParser :: Parser DisplayName
+displayNameParser = DisplayName . T.pack <$> strOption
+    (  long     "name"
+    <> short    'n'
+    <> metavar  "DISPLAY_NAME"
+    <> help     "Display name of the person to look up"
+    )
+
+organizationIdOptParser :: Parser OrganizationId
+organizationIdOptParser = OrganizationId . T.pack <$> strOption
+    (  long     "org"
+    <> short    'o'
+    <> metavar "ORGANIZATION_ID"
+    <> help    "Identifier of a organization to be searched"
+    )
+
+personFilterParser :: Parser PersonFilter
+personFilterParser = PersonFilter <$> optional emailParser <*> optional displayNameParser <*> optional organizationIdOptParser
+
+peopleListOptParser :: Parser Command
+peopleListOptParser = PeopleListCommand <$> countParser <*> personFilterParser
 
 personDetailOptParser :: Parser Command
 personDetailOptParser = PersonDetailCommand <$> personIdParser
@@ -163,6 +194,7 @@ commandSubParser :: Parser Command
 commandSubParser = hsubparser
     (  command "team-list" (info teamListOptParser (progDesc "List belonging teams"))
     <> command "team-detail" (info teamDetailOptParser (progDesc "Get detail for a team by ID"))
+    <> command "person-list" (info peopleListOptParser (progDesc "List poeple"))
     <> command "person-detail" (info personDetailOptParser (progDesc "Get detail for a person by ID"))
     <> command "room-list" (info roomListOptParser (progDesc "List belonging spaces"))
     <> command "room-detail" (info roomDetailOptParser (progDesc "Get detail for a team by ID"))
@@ -179,11 +211,14 @@ programOptions = info (commandSubParser <**> helper)
     )
 
 run :: Authorization -> Command -> IO ()
-run auth (TeamListCommand count) =
-    runConduit $ streamTeamList auth def .| takeC count .| mapM_C print
+run auth (PeopleListCommand count filter) =
+    runConduit $ streamEntityWithFilter auth def filter .| takeC count .| mapM_C print
 
 run auth (RoomListCommand count filter) =
     runConduit $ streamEntityWithFilter auth def filter .| takeC count .| mapM_C print
+
+run auth (TeamListCommand count) =
+    runConduit $ streamTeamList auth def .| takeC count .| mapM_C print
 
 run auth (PersonDetailCommand personId) =
     getDetail auth def personId >>= print . getResponseBody

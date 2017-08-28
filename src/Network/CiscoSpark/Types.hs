@@ -137,6 +137,7 @@ data PersonStatus   = PersonStatusActive        -- ^ The 'Person' is currently a
                     | PersonStatusInactive      -- ^ The 'Person' is currently not active.  Decoded from \"inactive\".
                     | PersonStatusOutOfOffice   -- ^ Email system of the 'Person' currently sets vacation.  Decoded from \"OutOfOffice\".
                     | PersonStatusDoNotDisturb  -- ^ The 'Person' is explicitly indicated do-not-disturb.  Decoded from \"DoNotDisturb\".
+                    | PersonStatusUnknown       -- ^ The status of the 'Person' is unknown.  Decoded from \"unknown\".
                     deriving (Eq, Show, Generic)
 
 -- | 'PersonStatus' implements 'toEncoding' to encode each constructor into JSON enum value.
@@ -145,6 +146,7 @@ instance ToJSON PersonStatus where
     toEncoding PersonStatusInactive     = string "inactive"
     toEncoding PersonStatusOutOfOffice  = string "OutOfOffice"
     toEncoding PersonStatusDoNotDisturb = string "DoNotDisturb"
+    toEncoding PersonStatusUnknown      = string "unknown"
 
 -- | 'PersonStatus' implements 'parseJSON' to decode JSON enum value to a constructor.
 instance FromJSON PersonStatus where
@@ -153,7 +155,8 @@ instance FromJSON PersonStatus where
         "inactive"      -> pure PersonStatusInactive
         "OutOfOffice"   -> pure PersonStatusOutOfOffice
         "DoNotDisturb"  -> pure PersonStatusDoNotDisturb
-        _               -> fail "Parsing Person.Status value failed: expected \"active\", \"inactive\", \"OutOfOffice\" or \"DoNotDisturb\""
+        "unknown"       -> pure PersonStatusUnknown
+        _               -> fail "Parsing Person.Status value failed: expected \"active\", \"inactive\", \"OutOfOffice\", \"DoNotDisturb\" or \"unknown\""
 
 -- | 'PersonType' indicates whether the Person is real human or bot.
 data PersonType     = PersonTypePerson  -- ^ The 'Person' is a real human.  Decoded from \"person\".
