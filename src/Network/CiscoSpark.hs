@@ -94,6 +94,7 @@ module Network.CiscoSpark
     , updateEntity
     , updateEntityEither
     , defaultMessageFilter
+    , defaultTeamMembershipFilter
     , streamTeamList
     , streamOrganizationList
     , streamRoleList

@@ -24,6 +24,7 @@ data Command
     | MembershipDetailCommand MembershipId
     | MessageDetailCommand MessageId
     | TeamDetailCommand TeamId
+    | TeamMembershipListCommand Int TeamMembershipFilter
     | TeamMembershipDetailCommand TeamMembershipId
     deriving (Show)
 
@@ -46,6 +47,14 @@ emailOptParser = Email . T.pack <$> strOption
     <> short    'e'
     <> metavar  "EMAIL_ADDRESS"
     <> help     "An email address to filter result"
+    )
+
+teamIdOptParser :: Parser TeamId
+teamIdOptParser = TeamId . T.pack <$> strOption
+    (  long     "team"
+    <> short    't'
+    <> metavar "TEAM_ID"
+    <> help    "Identifier of a team to filter result"
     )
 
 {-
@@ -89,14 +98,6 @@ roomIdParser :: Parser RoomId
 roomIdParser = RoomId . T.pack <$> strArgument
     (  metavar "ROOM_ID"
     <> help    "Identifier of a room")
-
-teamIdOptParser :: Parser TeamId
-teamIdOptParser = TeamId . T.pack <$> strOption
-    (  long     "team"
-    <> short    't'
-    <> metavar "TEAM_ID"
-    <> help    "Identifier of a team to filter result"
-    )
 
 roomTypeParser :: Parser (Maybe RoomType)
 roomTypeParser
@@ -157,9 +158,9 @@ personIdOptParser = PersonId . T.pack <$> strOption
 
 membershipListOptParser :: Parser Command
 membershipListOptParser = MembershipListCommand <$> countParser
-                                                <*> ( MembershipFilter <$> optional roomIdOptParser
-                                                                       <*> optional personIdOptParser
-                                                                       <*> optional emailOptParser)
+                                                <*> (MembershipFilter <$> optional roomIdOptParser
+                                                                      <*> optional personIdOptParser
+                                                                      <*> optional emailOptParser)
 
 membershipDetailOptParser :: Parser Command
 membershipDetailOptParser = MembershipDetailCommand <$> membershipIdParser
@@ -200,6 +201,10 @@ teamMembershipIdParser = TeamMembershipId . T.pack <$> strArgument
     <> help    "Identifier of a team membership"
     )
 
+teamMembershipListOptParser :: Parser Command
+teamMembershipListOptParser = TeamMembershipListCommand <$> countParser
+                                                        <*> (TeamMembershipFilter <$> teamIdParser)
+
 teamMembershipDetailOptParser :: Parser Command
 teamMembershipDetailOptParser = TeamMembershipDetailCommand <$> teamMembershipIdParser
 
@@ -217,6 +222,7 @@ commandSubParser = hsubparser
     <> command "membership-list" (info membershipListOptParser (progDesc "List memberships of authenticated user"))
     <> command "membership-detail" (info membershipDetailOptParser (progDesc "Get detail for a membership by ID"))
     <> command "message-detail" (info messageDetailOptParser (progDesc "Get detail for a message by ID"))
+    <> command "team-membership-list" (info teamMembershipListOptParser (progDesc "List team memberships of authenticated user"))
     <> command "team-membership-detail" (info teamMembershipDetailOptParser (progDesc "Get detail for a team membership by ID"))
     )
 
@@ -235,6 +241,9 @@ run auth (RoomListCommand count filter) =
     runConduit $ streamEntityWithFilter auth def filter .| takeC count .| mapM_C print
 
 run auth (MembershipListCommand count filter) =
+    runConduit $ streamEntityWithFilter auth def filter .| takeC count .| mapM_C print
+
+run auth (TeamMembershipListCommand count filter) =
     runConduit $ streamEntityWithFilter auth def filter .| takeC count .| mapM_C print
 
 run auth (TeamListCommand count) =

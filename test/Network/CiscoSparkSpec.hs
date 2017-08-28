@@ -582,6 +582,7 @@ spec = do
                                                  }
             teamMembershipList j = [ teamMembershipGen $ j <> show i | i <- [1..3] ]
             teamMembershipListList = [ teamMembershipList [c] | c <- ['a'..'d'] ]
+            defFilter = defaultTeamMembershipFilter $ TeamId "dummyTeamId"
             newTeamMembership = CreateTeamMembership { createTeamMembershipTeamId       = TeamId "targetTeam"
                                                      , createTeamMembershipPersonId     = Just $ PersonId "addedPerson"
                                                      , createTeamMembershipPersonEmail  = Just $ Email "added@example.com"
@@ -597,18 +598,18 @@ spec = do
                 putMVar receivedReqMVar req
                 simpleApp (encode (TeamMembershipList testData)) req respond
 
-            res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: TeamMembershipFilter) .| sinkList
+            res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest defFilter .| sinkList
             res `shouldBe` testData
 
             receivedReq <- takeMVar receivedReqMVar
             rawPathInfo receivedReq `shouldBe` "/v1/team/memberships"
-            queryString receivedReq `shouldBe` []
+            queryString receivedReq `shouldBe` [ ("teamId", Just "dummyTeamId") ]
 
             stopMockServer svr
 
         it "streamMembershipList passes query strings build from TeamMembershipFilter to server" $ do
             let testData = teamMembershipList ['Z']
-                teamMembershipFilter = TeamMembershipFilter . Just $ TeamId "DummyTeamId"
+                teamMembershipFilter = TeamMembershipFilter $ TeamId "DummyTeamId"
 
             receivedReqMVar <- newEmptyMVar
 
@@ -628,7 +629,7 @@ spec = do
         it "streamTeamMembershipList streams TeamMembership with automatic pagination" $ do
             svr <- startMockServer . paginationApp $ encode . TeamMembershipList <$> teamMembershipListList
 
-            res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: TeamMembershipFilter) .| sinkList
+            res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest defFilter .| sinkList
             res `shouldBe` concat teamMembershipListList
 
             stopMockServer svr

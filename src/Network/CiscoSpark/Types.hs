@@ -413,8 +413,8 @@ instance SparkListItem TeamMembership where
 
 -- | Optional query strings for team membership list API
 newtype TeamMembershipFilter = TeamMembershipFilter
-    { teamMembershipFilterTeamId :: Maybe TeamId -- ^ List membership only in given team.
-    } deriving (Default, Eq, Generic, Show)
+    { teamMembershipFilterTeamId :: TeamId  -- ^ List membership only in given team.
+    } deriving (Eq, Show)
 
 -- | List team memberships API uses 'TeamMembershipFilter' and path "team/memberships".
 instance SparkApiPath TeamMembershipFilter where
@@ -426,7 +426,16 @@ instance SparkResponse TeamMembershipFilter where
 
 -- | User can list team membership with filter parameter.
 instance SparkFilter TeamMembershipFilter where
-    toFilterList filter = maybeToList $ (\(TeamId t) -> ("teamId", Just $ encodeUtf8 t)) <$> teamMembershipFilterTeamId filter
+    toFilterList filter = let (TeamId t) = teamMembershipFilterTeamId filter in [("teamId", Just $ encodeUtf8 t)]
+
+{-|
+    Default value of query strings for team membership list API.
+    Because 'TeamId' is mandatory, user have to supply it in order to get rest of defaults.
+    As of writing, there is no filter parameter other than TeamId but 'TeamMembershipFilter' is
+    used for providing consistent API like 'streamEntityWithFilter'.
+-}
+defaultTeamMembershipFilter :: TeamId -> TeamMembershipFilter
+defaultTeamMembershipFilter teamId = TeamMembershipFilter teamId
 
 -- | 'CreateTeamMembership' is encoded to request body JSON of Create a Team Membership REST call.
 data CreateTeamMembership = CreateTeamMembership
