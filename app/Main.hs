@@ -14,6 +14,57 @@ import           System.IO             (hPutStrLn, stderr)
 
 import           Network.CiscoSpark
 
+main :: IO ()
+main = do
+    lookupEnv "SPARK_AUTH" >>= runIfEnvFound
+      where
+        runIfEnvFound Nothing   = hPutStrLn stderr "Missing SPARK_AUTH.  Set Spark authorization string to SPARK_AUTH environment variable."
+        runIfEnvFound (Just s)  = do
+            opts <- execParser programOptions
+            print opts
+            run (Authorization $ BC8.pack s) opts
+
+run :: Authorization -> Command -> IO ()
+run auth (PersonListCommand count filter) =
+    runConduit $ streamEntityWithFilter auth def filter .| takeC count .| mapM_C print
+
+run auth (RoomListCommand count filter) =
+    runConduit $ streamEntityWithFilter auth def filter .| takeC count .| mapM_C print
+
+run auth (MembershipListCommand count filter) =
+    runConduit $ streamEntityWithFilter auth def filter .| takeC count .| mapM_C print
+
+run auth (MessageListCommand count filter) =
+    runConduit $ streamEntityWithFilter auth def filter .| takeC count .| mapM_C print
+
+run auth (TeamMembershipListCommand count filter) =
+    runConduit $ streamEntityWithFilter auth def filter .| takeC count .| mapM_C print
+
+run auth (TeamListCommand count) =
+    runConduit $ streamTeamList auth def .| takeC count .| mapM_C print
+
+run auth (PersonDetailCommand personId) =
+    getDetail auth def personId >>= print . getResponseBody
+
+run auth (RoomDetailCommand roomId) =
+    getDetail auth def roomId >>= print . getResponseBody
+
+run auth (MembershipDetailCommand membershipId) =
+    getDetail auth def membershipId >>= print . getResponseBody
+
+run auth (MessageDetailCommand messageId) =
+    getDetail auth def messageId >>= print . getResponseBody
+
+run auth (TeamDetailCommand teamId) =
+    getDetail auth def teamId >>= print . getResponseBody
+
+run auth (TeamMembershipDetailCommand teamMembershipId) =
+    getDetail auth def teamMembershipId >>= print . getResponseBody
+
+
+{-
+    Command line parser
+-}
 data Command
     = PersonListCommand Int PersonFilter
     | PersonDetailCommand PersonId
@@ -260,51 +311,3 @@ programOptions = info (commandSubParser <**> helper)
     <> progDesc "Sample porgram demonstrating how to use cisco-spark-api"
     <> header   "cisco-spark-api-exe -- Sample porgram demonstrating how to use cisco-spark-api"
     )
-
-run :: Authorization -> Command -> IO ()
-run auth (PersonListCommand count filter) =
-    runConduit $ streamEntityWithFilter auth def filter .| takeC count .| mapM_C print
-
-run auth (RoomListCommand count filter) =
-    runConduit $ streamEntityWithFilter auth def filter .| takeC count .| mapM_C print
-
-run auth (MembershipListCommand count filter) =
-    runConduit $ streamEntityWithFilter auth def filter .| takeC count .| mapM_C print
-
-run auth (MessageListCommand count filter) =
-    runConduit $ streamEntityWithFilter auth def filter .| takeC count .| mapM_C print
-
-run auth (TeamMembershipListCommand count filter) =
-    runConduit $ streamEntityWithFilter auth def filter .| takeC count .| mapM_C print
-
-run auth (TeamListCommand count) =
-    runConduit $ streamTeamList auth def .| takeC count .| mapM_C print
-
-run auth (PersonDetailCommand personId) =
-    getDetail auth def personId >>= print . getResponseBody
-
-run auth (RoomDetailCommand roomId) =
-    getDetail auth def roomId >>= print . getResponseBody
-
-run auth (MembershipDetailCommand membershipId) =
-    getDetail auth def membershipId >>= print . getResponseBody
-
-run auth (MessageDetailCommand messageId) =
-    getDetail auth def messageId >>= print . getResponseBody
-
-run auth (TeamDetailCommand teamId) =
-    getDetail auth def teamId >>= print . getResponseBody
-
-run auth (TeamMembershipDetailCommand teamMembershipId) =
-    getDetail auth def teamMembershipId >>= print . getResponseBody
-
-
-main :: IO ()
-main = do
-    lookupEnv "SPARK_AUTH" >>= runIfEnvFound
-      where
-        runIfEnvFound Nothing   = hPutStrLn stderr "Missing SPARK_AUTH.  Set Spark authorization string to SPARK_AUTH environment variable."
-        runIfEnvFound (Just s)  = do
-            opts <- execParser programOptions
-            print opts
-            run (Authorization $ BC8.pack s) opts
