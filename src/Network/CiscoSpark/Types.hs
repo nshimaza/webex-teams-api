@@ -81,24 +81,26 @@ class FromJSON (ToList i) => SparkListItem i where
     -- | Get bare list from wrapped type which can be parsed directly from JSON.
     unwrap :: ToList i -> [i]
 
--- class FromJSON (ToListResponse a) => SparkList a where
---     type ToListResponse a :: *
---     listPath :: a -> ByteString
-
+-- | Type class for getting URL path of API category from given type of value.
 class SparkApiPath a where
     apiPath :: a -> ByteString
 
+-- | Type family to associate a type appears in an argument to response type.
 class FromJSON (ToResponse a) => SparkResponse a where
     type ToResponse a :: *
 
+-- | Extract containing entity ID string from given type of value.
 class (SparkApiPath a, SparkResponse a) => SparkDetail a where
     toIdStr :: a -> Text
 
+-- | Convert given filter condition parameter in a concrete type to HTTP query strings.
 class (SparkApiPath a, SparkResponse a) => SparkFilter a where
     toFilterList :: a -> [(ByteString, Maybe ByteString)]
 
+-- | Type class for parameter type for create entity API.
 class (SparkApiPath a, SparkResponse a, ToJSON a) => SparkCreate a where
 
+-- | Type class for parameter type for update entity API.
 class (SparkApiPath a, SparkResponse a, ToJSON a) => SparkUpdate a where
 
 -- | Type representing timestamp.  For now, it is just copied from API response JSON.
@@ -537,6 +539,7 @@ instance SparkListItem Room where
     type ToList Room = RoomList
     unwrap = roomListItems
 
+-- | Sorting option for room list API.
 data RoomFilterSortBy = RoomFilterSortById | RoomFilterSortByLastActivity | RoomFilterSortByCreated deriving (Eq, Show)
 
 -- | Optional query strings for room list API

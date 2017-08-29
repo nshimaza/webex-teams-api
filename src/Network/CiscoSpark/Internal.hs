@@ -135,11 +135,12 @@ linkHeader = do
     params <- many' param
     pure $ LinkHeader uri params
 
+-- | Accept all RFC5988 Link HTTP header, filter first header containing rel="next" param, parse URL part.
 extractNextUrl :: [ByteString] -> [ByteString]
 extractNextUrl = map linkHeaderUrl . filter isNextRel . rights . map (parseOnly linkHeader)
   where
     isNextRel = any (\(param, str) -> param == Rel && str == "next") . linkHeaderParams
 
+-- | Return URL for next page if it exists in given response.
 getNextUrl :: Response a -> Maybe ByteString
 getNextUrl = listToMaybe . extractNextUrl . getResponseHeader "Link"
-
