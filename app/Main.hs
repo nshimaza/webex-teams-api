@@ -64,6 +64,8 @@ run auth (TeamMembershipDetailCommand teamMembershipId) =
 run auth (CreateRoomCommand createRoom) =
     createEntity auth def createRoom >>= print . getResponseBody
 
+run auth (DeleteRoomCommand roomId) =
+    deleteRoom auth def roomId >>= print . getResponseBody
 
 {-
     Command line parser
@@ -74,6 +76,7 @@ data Command
     | RoomListCommand Int RoomFilter
     | RoomDetailCommand RoomId
     | CreateRoomCommand CreateRoom
+    | DeleteRoomCommand RoomId
     | MembershipListCommand Int MembershipFilter
     | MembershipDetailCommand MembershipId
     | MessageListCommand Int MessageFilter
@@ -192,6 +195,9 @@ roomDetailOptParser = RoomDetailCommand <$> roomIdParser
 createRoomOptParser :: Parser Command
 createRoomOptParser = CreateRoomCommand <$> (CreateRoom <$> roomTitleParser
                                                         <*> optional teamIdOptParser)
+deleteRoomOptParser :: Parser Command
+deleteRoomOptParser = DeleteRoomCommand <$> roomIdParser
+
 
 {-
     Membership specific command line option parsers
@@ -309,6 +315,7 @@ commandSubParser = hsubparser
     <> command "room-list" (info roomListOptParser (progDesc "List belonging spaces"))
     <> command "room-detail" (info roomDetailOptParser (progDesc "Get detail for a team by ID"))
     <> command "create-room" (info createRoomOptParser (progDesc "Create a room"))
+    <> command "delete-room" (info deleteRoomOptParser (progDesc "Delete a room"))
     <> command "membership-list" (info membershipListOptParser (progDesc "List memberships of authenticated user"))
     <> command "membership-detail" (info membershipDetailOptParser (progDesc "Get detail for a membership by ID"))
     <> command "message-list" (info messageListOptParser (progDesc "List messages in a room"))
