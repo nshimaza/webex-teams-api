@@ -551,6 +551,23 @@ spec = do
 
             stopMockServer svr
 
+        it "deleteTeam sends DELETE request with teamId on URL path" $ do
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                simpleApp "" req respond
+
+            deleteTeam dummyAuth mockBaseRequest (TeamId "testTeamId")
+
+            receivedReq <- takeMVar receivedReqMVar
+            requestMethod receivedReq `shouldBe` "DELETE"
+            rawPathInfo receivedReq `shouldBe` "/v1/teams/testTeamId"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+
+            stopMockServer svr
+
     describe "TeamMemberShip" $ do
         let teamMembershipJson = "{\
                                  \  \"id\" : \"Y2lzY29zcGFyazovL3VzL1RFQU1fTUVNQkVSU0hJUC8wZmNmYTJiOC1hZGNjLTQ1ZWEtYTc4Mi1lNDYwNTkyZjgxZWY6MTNlMThmNDAtNDJmYy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5\",\
@@ -748,6 +765,23 @@ spec = do
             (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
             (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
             decode receivedBody `shouldBe` Just updateTeamMembership
+
+            stopMockServer svr
+
+        it "deleteTeamMembership sends DELETE request with teamMembershipId on URL path" $ do
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                simpleApp "" req respond
+
+            deleteTeamMembership dummyAuth mockBaseRequest (TeamMembershipId "testTeamMembershipId")
+
+            receivedReq <- takeMVar receivedReqMVar
+            requestMethod receivedReq `shouldBe` "DELETE"
+            rawPathInfo receivedReq `shouldBe` "/v1/team/memberships/testTeamMembershipId"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
 
             stopMockServer svr
 
@@ -950,6 +984,23 @@ spec = do
             (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
             (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
             decode receivedBody `shouldBe` Just updateRoom
+
+            stopMockServer svr
+
+        it "deleteRoom sends DELETE request with roomId on URL path" $ do
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                simpleApp "" req respond
+
+            deleteRoom dummyAuth mockBaseRequest (RoomId "testRoomId")
+
+            receivedReq <- takeMVar receivedReqMVar
+            requestMethod receivedReq `shouldBe` "DELETE"
+            rawPathInfo receivedReq `shouldBe` "/v1/rooms/testRoomId"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
 
             stopMockServer svr
 
@@ -1159,6 +1210,23 @@ spec = do
 
             stopMockServer svr
 
+        it "deleteMembership sends DELETE request with membershipId on URL path" $ do
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                simpleApp "" req respond
+
+            deleteMembership dummyAuth mockBaseRequest (MembershipId "testMembershipId")
+
+            receivedReq <- takeMVar receivedReqMVar
+            requestMethod receivedReq `shouldBe` "DELETE"
+            rawPathInfo receivedReq `shouldBe` "/v1/memberships/testMembershipId"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
+
+            stopMockServer svr
+
     describe "Message" $ do
         let messageJson = "{\
                           \  \"id\" : \"Y2lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk\",\
@@ -1333,6 +1401,23 @@ spec = do
             (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
             (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
             decode receivedBody `shouldBe` Just newMessage
+
+            stopMockServer svr
+
+        it "deleteMessage sends DELETE request with messageId on URL path" $ do
+            receivedReqMVar <- newEmptyMVar
+
+            svr <- startMockServer $ \req respond -> do
+                putMVar receivedReqMVar req
+                simpleApp "" req respond
+
+            deleteMessage dummyAuth mockBaseRequest (MessageId "testMessageId")
+
+            receivedReq <- takeMVar receivedReqMVar
+            requestMethod receivedReq `shouldBe` "DELETE"
+            rawPathInfo receivedReq `shouldBe` "/v1/messages/testMessageId"
+            (lookup "Authorization" . requestHeaders) receivedReq `shouldBe` Just "Bearer dummyAuth"
+            (lookup "Content-Type" . requestHeaders) receivedReq `shouldBe` Just "application/json; charset=utf-8"
 
             stopMockServer svr
 

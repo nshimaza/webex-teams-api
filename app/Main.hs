@@ -61,6 +61,9 @@ run auth (TeamDetailCommand teamId) =
 run auth (TeamMembershipDetailCommand teamMembershipId) =
     getDetail auth def teamMembershipId >>= print . getResponseBody
 
+run auth (CreateRoomCommand createRoom) =
+    createEntity auth def createRoom >>= print . getResponseBody
+
 
 {-
     Command line parser
@@ -70,6 +73,7 @@ data Command
     | PersonDetailCommand PersonId
     | RoomListCommand Int RoomFilter
     | RoomDetailCommand RoomId
+    | CreateRoomCommand CreateRoom
     | MembershipListCommand Int MembershipFilter
     | MembershipDetailCommand MembershipId
     | MessageListCommand Int MessageFilter
@@ -111,7 +115,7 @@ teamIdOptParser = TeamId . T.pack <$> strOption
     (  long     "team"
     <> short    't'
     <> metavar "TEAM_ID"
-    <> help    "Identifier of a team to filter result"
+    <> help    "Identifier of a team"
     )
 
 {-
@@ -171,6 +175,11 @@ roomSortByParser
             (  long "sort-by-created"
             <> help "Sort by most recentlly created")
 
+roomTitleParser :: Parser RoomTitle
+roomTitleParser = RoomTitle . T.pack <$> strArgument
+    (  metavar  "ROOM_TITLE"
+    <> help     "A user-friendly name for the room")
+
 roomListOptParser :: Parser Command
 roomListOptParser = RoomListCommand <$> countParser def
                                     <*> (RoomFilter <$> optional teamIdOptParser
@@ -179,6 +188,10 @@ roomListOptParser = RoomListCommand <$> countParser def
 
 roomDetailOptParser :: Parser Command
 roomDetailOptParser = RoomDetailCommand <$> roomIdParser
+
+createRoomOptParser :: Parser Command
+createRoomOptParser = CreateRoomCommand <$> (CreateRoom <$> roomTitleParser
+                                                        <*> optional teamIdOptParser)
 
 {-
     Membership specific command line option parsers
@@ -295,6 +308,7 @@ commandSubParser = hsubparser
     <> command "person-detail" (info personDetailOptParser (progDesc "Get detail for a person by ID"))
     <> command "room-list" (info roomListOptParser (progDesc "List belonging spaces"))
     <> command "room-detail" (info roomDetailOptParser (progDesc "Get detail for a team by ID"))
+    <> command "create-room" (info createRoomOptParser (progDesc "Create a room"))
     <> command "membership-list" (info membershipListOptParser (progDesc "List memberships of authenticated user"))
     <> command "membership-detail" (info membershipDetailOptParser (progDesc "Get detail for a membership by ID"))
     <> command "message-list" (info messageListOptParser (progDesc "List messages in a room"))

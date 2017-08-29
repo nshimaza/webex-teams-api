@@ -98,6 +98,11 @@ module Network.CiscoSpark
     , streamTeamList
     , streamOrganizationList
     , streamRoleList
+    , deleteRoom
+    , deleteMembership
+    , deleteMessage
+    , deleteTeam
+    , deleteTeamMembership
     ) where
 
 import           Conduit
@@ -113,12 +118,6 @@ import           Network.HTTP.Simple
 
 import           Network.CiscoSpark.Internal
 import           Network.CiscoSpark.Types
-
-
-
-
-
-
 
 
 -- | Authorization string against Spark API to be contained in HTTP Authorization header of every request.
@@ -249,7 +248,7 @@ makeCommonCreateReq (CiscoSparkRequest base) auth path body
 -}
 createEntity :: (MonadIO m, SparkCreate createParams)
     => Authorization        -- ^ Authorization string against Spark API.
-    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API
+    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API.
     -> createParams         -- ^ One of 'CreatePerson', 'CreateRoom', 'CreateMembership', 'CreateMessage',
                             --   'CreateTeam' and 'CreateTeamMembership'.
     -> m (Response (ToResponse createParams))
@@ -281,7 +280,7 @@ makeCommonUpdateReq (CiscoSparkRequest base) auth path body
 -}
 updateEntity :: (MonadIO m, SparkUpdate updateParams)
     => Authorization        -- ^ Authorization string against Spark API.
-    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API
+    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API.
     -> updateParams         -- ^ One of 'UpdatePerson', 'UpdateRoom', 'UpdateMembership',
                             --   'UpdateTeam' and 'UpdateTeamMembership'.
     -> m (Response (ToResponse updateParams))
@@ -294,3 +293,64 @@ updateEntityEither :: (MonadIO m, SparkUpdate updateParams)
     -> updateParams
     -> m (Response (Either JSONException (ToResponse updateParams)))
 updateEntityEither auth base param = httpJSONEither $ makeCommonUpdateReq base auth (apiPath param) param
+
+
+makeCommonDeleteReq
+    :: Authorization        -- ^ Authorization string against Spark API.
+    -> CiscoSparkRequest    -- ^ Common request components.
+    -> ByteString           -- ^ API category part of REST URL path.
+    -> Text                 -- ^ Identifier string part of REST URL path.
+    -> Request
+makeCommonDeleteReq auth (CiscoSparkRequest base) path idStr
+    = setRequestPath ("/v1/" <> path <> "/" <> encodeUtf8 idStr)
+    $ setRequestMethod "DELETE"
+    $ addAuthorizationHeader auth
+    $ base
+
+-- | Polymorphic version of delete.  Intentionally not exposed to outside of the module.
+deleteEntity :: (MonadIO m, SparkDetail key)
+    => Authorization        -- ^ Authorization string against Spark API.
+    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API.
+    -> key                  -- ^ One of PersonId, RoomId, MembershipId, MessageId, TeamId, TeamMembershipId.
+    -> m (Response ())
+deleteEntity auth base entityId = httpNoBody $ makeCommonDeleteReq auth base (apiPath entityId) (toIdStr entityId)
+
+-- | Deletes a room, by ID.
+deleteRoom :: MonadIO m
+    => Authorization        -- ^ Authorization string against Spark API.
+    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API.
+    -> RoomId               -- ^ Identifier of a space to be deleted.
+    -> m (Response ())
+deleteRoom = deleteEntity
+
+-- | Deletes a membership, by ID.
+deleteMembership :: MonadIO m
+    => Authorization        -- ^ Authorization string against Spark API.
+    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API.
+    -> MembershipId         -- ^ Identifier of a space to be deleted.
+    -> m (Response ())
+deleteMembership = deleteEntity
+
+-- | Deletes a message, by ID.
+deleteMessage :: MonadIO m
+    => Authorization        -- ^ Authorization string against Spark API.
+    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API.
+    -> MessageId            -- ^ Identifier of a space to be deleted.
+    -> m (Response ())
+deleteMessage = deleteEntity
+
+-- | Deletes a team, by ID.
+deleteTeam :: MonadIO m
+    => Authorization        -- ^ Authorization string against Spark API.
+    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API.
+    -> TeamId               -- ^ Identifier of a space to be deleted.
+    -> m (Response ())
+deleteTeam = deleteEntity
+
+-- | Deletes a teamMembership, by ID.
+deleteTeamMembership :: MonadIO m
+    => Authorization        -- ^ Authorization string against Spark API.
+    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API.
+    -> TeamMembershipId     -- ^ Identifier of a space to be deleted.
+    -> m (Response ())
+deleteTeamMembership = deleteEntity
