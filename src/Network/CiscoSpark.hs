@@ -51,7 +51,8 @@ but you can make it by yourself so easily as described.
 -}
 module Network.CiscoSpark
     (
-    -- * Common Types
+    -- * Types
+    -- ** Common Types
       Authorization (..)
     , CiscoSparkRequest (..)
     -- ** People related types
@@ -133,18 +134,24 @@ module Network.CiscoSpark
 
     , Timestamp (..)
     -- * Functions
+    -- ** Getting detail of an entity
     , getDetail
     , getDetailEither
+    -- ** Streaming response of List API with auto pagenation
     , streamEntityWithFilter
-    , createEntity
-    , createEntityEither
-    , updateEntity
-    , updateEntityEither
-    , defaultMessageFilter
-    , defaultTeamMembershipFilter
     , streamTeamList
     , streamOrganizationList
     , streamRoleList
+    -- ** Creating an entity
+    , createEntity
+    , createEntityEither
+    -- ** Updating an entity
+    , updateEntity
+    , updateEntityEither
+    -- ** Creating default filter spec from mandatory field
+    , defaultMessageFilter
+    , defaultTeamMembershipFilter
+    -- ** Deleting an entity
     , deleteRoom
     , deleteMembership
     , deleteMessage
