@@ -6,6 +6,37 @@
 {-# LANGUAGE TemplateHaskell     #-}
 {-# LANGUAGE TypeFamilies        #-}
 
+{-|
+Module      : Network.CiscoSpark.Types
+Copyright   : (c) Naoto Shimazaki 2017
+License     : MIT (see the file LICENSE)
+
+Maintainer  : https://github.com/nshimaza
+Stability   : experimental
+
+This module defines most of types and records used in cisco-spark-api package.
+Records used for REST communications are designed to be converted from / to JSON using Aeson package.
+Those records are also designed to allow create lenses by Control.Lens.TH.makeFields.
+
+Following example creates overloaded accessors for 'Person', 'Room' and 'Team'.
+
+@
+makeFields ''Person
+makeFields ''Room
+makeFields ''Team
+@
+
+You can access 'personId', 'roomId' and 'teamId' via overloaded accessor function 'id' like this.
+
+@
+    let yourPersonId = yourPerson ^. id
+        yourRoomId = yourRoom ^. id
+        yourTeamId = yourTeam ^. id
+@
+
+This package doesn't pre-generate those lenses for you because it is so easy.
+Please create them by yourself as needed.
+-}
 module Network.CiscoSpark.Types where
 
 

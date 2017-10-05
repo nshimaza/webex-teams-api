@@ -1,5 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+{-|
+Module      : Network.CiscoSpark.Internal
+Copyright   : (c) Naoto Shimazaki 2017
+License     : MIT (see the file LICENSE)
+
+Maintainer  : https://github.com/nshimaza
+Stability   : experimental
+
+Implements some internal functions for Cisco Spark API.
+-}
 module Network.CiscoSpark.Internal where
 
 import           Prelude                    hiding (concat, takeWhile)
@@ -36,16 +46,6 @@ dropAndLow n = toLowerHead . drop n
   where
     toLowerHead []     = []
     toLowerHead (c:cs) = toLower c : cs
-
-
-
-{-
-    Attoparsec parser of RFC5988 HTTP Link Header.
-    Link header is defined in RFC5988 https://tools.ietf.org/html/rfc5988.
-    This parser doesn't parse complete spec of RFC5988 but only parses rel="next" link for simple pagination.
-    It doesn't parse obs-fold defined in RFC7230 https://tools.ietf.org/html/rfc7230
-    It assumes Header in Response never contains CRLF or LF.
--}
 
 -- | Parsed Link header parameter.  Convert only rel param to 'Rel' and keeps other params as-is.
 data LinkParam = Rel | Other ByteString deriving (Eq, Show)
