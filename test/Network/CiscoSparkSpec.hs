@@ -9,8 +9,9 @@ import           Control.Concurrent.MVar      (MVar, newEmptyMVar, putMVar,
 import           Control.Monad                (void)
 import           Data.Aeson                   (decode, encode)
 import           Data.Attoparsec.ByteString   (parseOnly)
-import           Data.ByteString.Char8        as C8 (unpack)
-import           Data.ByteString.Lazy         as L (ByteString)
+import qualified Data.ByteString              as S (ByteString)
+import qualified Data.ByteString.Char8        as C8 (unpack)
+import qualified Data.ByteString.Lazy         as L (ByteString)
 import           Data.Default                 (def)
 import           Data.List                    (sort)
 import           Data.Maybe                   (fromJust)
@@ -38,14 +39,18 @@ import           Data.Typeable                (typeOf)
 
 newtype MockServer = MockServer ThreadMap
 
-mockBaseRequest :: CiscoSparkRequest
-mockBaseRequest
-    = CiscoSparkRequest
-    $ C.addRequestHeader "Content-Type" "application/json; charset=utf-8"
+mockBaseRequestHost :: S.ByteString
+mockBaseRequestHost = "localhost"
+
+mockBaseRequestRequest
+    = C.addRequestHeader "Content-Type" "application/json; charset=utf-8"
     $ C.setRequestPort 3000
-    $ C.setRequestHost "localhost"
+    $ C.setRequestHost mockBaseRequestHost
     $ C.setRequestSecure False
     $ C.defaultRequest
+
+mockBaseRequest :: CiscoSparkRequest
+mockBaseRequest = CiscoSparkRequest mockBaseRequestRequest False mockBaseRequestHost
 
 dummyAuth :: Authorization
 dummyAuth = Authorization "dummyAuth"
@@ -103,10 +108,10 @@ spec = do
     describe "Mock Applications" $ do
         it "simple mock app returns list of team" $ do
             receivedReqMVar <- newEmptyMVar
-            let (CiscoSparkRequest base) = mockBaseRequest
+            let (CiscoSparkRequest baseReq _ _) = mockBaseRequest
                 req = setRequestPath "/v1/teams"
                     $ setRequestMethod "GET"
-                    $ base
+                    $ baseReq
                 testData = TeamList $ teamList ['Z']
 
             svr <- startMockServer $ \req respond -> do
@@ -125,10 +130,10 @@ spec = do
 
         it "pagenation mock app returns list of team and Link header" $ do
             receivedReqMVar <- newEmptyMVar
-            let (CiscoSparkRequest base) = mockBaseRequest
+            let (CiscoSparkRequest baseReq _ _) = mockBaseRequest
                 req = setRequestPath "/v1/teams"
                     $ setRequestMethod "GET"
-                    $ base
+                    $ baseReq
                 testData = encode . TeamList <$> teamListList
 
             svr <- startMockServer $ \req respond -> do

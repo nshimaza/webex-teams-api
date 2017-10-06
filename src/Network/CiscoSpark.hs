@@ -177,20 +177,28 @@ import           Network.CiscoSpark.Types
 -- | Authorization string against Spark API to be contained in HTTP Authorization header of every request.
 newtype Authorization = Authorization ByteString deriving (Eq, Show)
 -- | Wrapping 'Request' in order to provide easy default value specifically for Cisco Spark public API.
-newtype CiscoSparkRequest = CiscoSparkRequest Request deriving (Show)
+data CiscoSparkRequest = CiscoSparkRequest
+    { ciscoSparkRequestRequest  :: Request      -- ^ Holds pre-set 'Request' for REST API.
+    , ciscoSparkRequestIsSecure :: Bool         -- ^ True if https schema is used.
+    , ciscoSparkRequestHost     :: ByteString   -- ^ FQDN hosting Spark API.
+    } deriving (Show)
+
+-- | Defining FQDN of Cisco Spark REST API.
+ciscoSparkBaseRequestHost :: ByteString
+ciscoSparkBaseRequestHost = "api.ciscospark.com"
 
 -- | Common part of 'Request' against Spark API.
 ciscoSparkBaseRequest :: Request
 ciscoSparkBaseRequest
     = addRequestHeader "Content-Type" "application/json; charset=utf-8"
     $ setRequestPort 443
-    $ setRequestHost "api.ciscospark.com"
+    $ setRequestHost ciscoSparkBaseRequestHost
     $ setRequestSecure True
     $ defaultRequest
 
 -- | Default parameters for HTTP request to Cisco Spark REST API.
 instance Default CiscoSparkRequest where
-    def = CiscoSparkRequest ciscoSparkBaseRequest
+    def = CiscoSparkRequest ciscoSparkBaseRequest True ciscoSparkBaseRequestHost
 
 -- | Add given Authorization into request header.
 addAuthorizationHeader :: Authorization -> Request -> Request
@@ -201,18 +209,17 @@ addAuthorizationHeader (Authorization auth) = addRequestHeader "Authorization" (
 makeCommonListReq
     :: CiscoSparkRequest    -- ^ Common request components
     -> ByteString           -- ^ API category part of REST URL path
-    -> Request
-makeCommonListReq (CiscoSparkRequest base) path = setRequestPath ("/v1/" <> path)
-                                                $ setRequestMethod "GET"
-                                                $ base
+    -> CiscoSparkRequest
+makeCommonListReq base@(CiscoSparkRequest { ciscoSparkRequestRequest = req }) path
+    = base { ciscoSparkRequestRequest = setRequestPath ("/v1/" <> path) $ setRequestMethod "GET" req }
 
 {-|
     Common worker function for List APIs.
     It accesses List API with given 'Request', unwrap result into list of items, stream them to Conduit pipe
     and finally it automatically accesses next page designated via HTTP Link header if available.
 -}
-streamList :: (MonadIO m, SparkListItem i) => Authorization -> Request -> Source m i
-streamList auth req = do
+streamList :: (MonadIO m, SparkListItem i) => Authorization -> CiscoSparkRequest -> Source m i
+streamList auth (CiscoSparkRequest req _ _) = do
     res <- httpJSON $ addAuthorizationHeader auth req
     yieldMany . unwrap $ getResponseBody res
     streamListLoop auth res
@@ -233,7 +240,10 @@ streamEntityWithFilter :: (MonadIO m, SparkFilter filter, SparkListItem (ToRespo
     -> filter
     -> Source m (ToResponse filter)
 streamEntityWithFilter auth base param =
-    streamList auth $ setRequestQueryString (toFilterList param) $ makeCommonListReq base (apiPath param)
+    streamList auth $ setQeuryString $ makeCommonListReq base (apiPath param)
+      where
+        setQeuryString comm@(CiscoSparkRequest { ciscoSparkRequestRequest = req })
+            = comm { ciscoSparkRequestRequest = setRequestQueryString (toFilterList param) req }
 
 -- | List of 'Team' and stream it into Conduit pipe.  It automatically performs pagination.
 streamTeamList :: MonadIO m => Authorization -> CiscoSparkRequest -> Source m Team
@@ -254,7 +264,7 @@ makeCommonDetailReq
     -> ByteString           -- ^ API category part of REST URL path.
     -> Text                 -- ^ Identifier string part of REST URL path.
     -> Request
-makeCommonDetailReq (CiscoSparkRequest base) auth path idStr
+makeCommonDetailReq (CiscoSparkRequest base _ _) auth path idStr
     = setRequestPath ("/v1/" <> path <> "/" <> encodeUtf8 idStr)
     $ setRequestMethod "GET"
     $ addAuthorizationHeader auth
@@ -286,7 +296,7 @@ getDetailEither auth base entityId = httpJSONEither $ makeCommonDetailReq base a
 
 
 makeCommonCreateReq :: ToJSON a => CiscoSparkRequest -> Authorization -> ByteString -> a -> Request
-makeCommonCreateReq (CiscoSparkRequest base) auth path body
+makeCommonCreateReq (CiscoSparkRequest base _ _) auth path body
     = setRequestBodyJSON body
     $ setRequestPath ("/v1/" <> path)
     $ setRequestMethod "POST"
@@ -318,7 +328,7 @@ createEntityEither auth base param = httpJSONEither $ makeCommonCreateReq base a
 
 
 makeCommonUpdateReq :: ToJSON a => CiscoSparkRequest -> Authorization -> ByteString -> a -> Request
-makeCommonUpdateReq (CiscoSparkRequest base) auth path body
+makeCommonUpdateReq (CiscoSparkRequest base _ _) auth path body
     = setRequestBodyJSON body
     $ setRequestPath ("/v1/" <> path)
     $ setRequestMethod "PUT"
@@ -350,12 +360,12 @@ updateEntityEither auth base param = httpJSONEither $ makeCommonUpdateReq base a
 
 
 makeCommonDeleteReq
-    :: Authorization        -- ^ Authorization string against Spark API.
-    -> CiscoSparkRequest    -- ^ Common request components.
-    -> ByteString           -- ^ API category part of REST URL path.
-    -> Text                 -- ^ Identifier string part of REST URL path.
+    :: Authorization    -- ^ Authorization string against Spark API.
+    -> Request          -- ^ Common request components.
+    -> ByteString       -- ^ API category part of REST URL path.
+    -> Text             -- ^ Identifier string part of REST URL path.
     -> Request
-makeCommonDeleteReq auth (CiscoSparkRequest base) path idStr
+makeCommonDeleteReq auth base path idStr
     = setRequestPath ("/v1/" <> path <> "/" <> encodeUtf8 idStr)
     $ setRequestMethod "DELETE"
     $ addAuthorizationHeader auth
@@ -367,7 +377,8 @@ deleteEntity :: (MonadIO m, SparkDetail key)
     -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API.
     -> key                  -- ^ One of PersonId, RoomId, MembershipId, MessageId, TeamId, TeamMembershipId.
     -> m (Response ())
-deleteEntity auth base entityId = httpNoBody $ makeCommonDeleteReq auth base (apiPath entityId) (toIdStr entityId)
+deleteEntity auth (CiscoSparkRequest base _ _) entityId
+    = httpNoBody $ makeCommonDeleteReq auth base (apiPath entityId) (toIdStr entityId)
 
 -- | Deletes a room, by ID.
 deleteRoom :: MonadIO m
