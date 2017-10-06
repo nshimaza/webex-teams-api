@@ -5,6 +5,7 @@ module Network.CiscoSpark.InternalSpec where
 import           Data.Attoparsec.ByteString
 import           Data.ByteString            (pack)
 import           Data.Either                (isLeft)
+import           Network.URI                (URIAuth (..))
 
 import           Test.Hspec
 
@@ -52,3 +53,29 @@ spec = do
         it "ignores invalid header" $ do
             extractNextUrl ["invalid header", "<http://valid>; rel=next"] `shouldBe` ["http://valid"]
 
+    describe "HTTP Link Header validator" $ do
+        it "validates URL if it has same schema and URI Authority" $ do
+            validateUrl "https:" (URIAuth "" "api.ciscospark.com" "")
+                        "https://api.ciscospark.com/v1/people?link=to&next=page"
+                        `shouldBe` Just "https://api.ciscospark.com/v1/people?link=to&next=page"
+
+        it "checks port number part too for validation" $ do
+            validateUrl "http:" (URIAuth "" "localhost" ":3000")
+                        "http://localhost:3000/v1/people?link=to&next=page"
+                        `shouldBe` Just "http://localhost:3000/v1/people?link=to&next=page"
+
+        it "ignores path part of URL for validation" $ do
+            validateUrl "https:" (URIAuth "" "api.ciscospark.com" "") "https://api.ciscospark.com/abcdef"
+                        `shouldBe` Just "https://api.ciscospark.com/abcdef"
+
+        it "invalidates URL if scheme is different" $ do
+            validateUrl "https:" (URIAuth "" "api.ciscospark.com" "") "http://api.ciscospark.com/abcdef"
+                        `shouldBe` Nothing
+
+        it "invalidates URL if host name is different" $ do
+            validateUrl "https:" (URIAuth "" "api.ciscospark.com" "") "http://host.example.com/abcdef"
+                        `shouldBe` Nothing
+
+        it "invalidates URL if port is different" $ do
+            validateUrl "https:" (URIAuth "" "localhost" ":3000") "http://localhost:8888/abcdef"
+                        `shouldBe` Nothing

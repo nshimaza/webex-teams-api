@@ -169,6 +169,7 @@ import           Data.Monoid                 ((<>))
 import           Data.Text                   (Text)
 import           Data.Text.Encoding          (encodeUtf8)
 import           Network.HTTP.Simple
+import           Network.URI                 (URIAuth (..))
 
 import           Network.CiscoSpark.Internal
 import           Network.CiscoSpark.Types
@@ -178,27 +179,23 @@ import           Network.CiscoSpark.Types
 newtype Authorization = Authorization ByteString deriving (Eq, Show)
 -- | Wrapping 'Request' in order to provide easy default value specifically for Cisco Spark public API.
 data CiscoSparkRequest = CiscoSparkRequest
-    { ciscoSparkRequestRequest  :: Request      -- ^ Holds pre-set 'Request' for REST API.
-    , ciscoSparkRequestIsSecure :: Bool         -- ^ True if https schema is used.
-    , ciscoSparkRequestHost     :: ByteString   -- ^ FQDN hosting Spark API.
+    { ciscoSparkRequestRequest      :: Request  -- ^ Holds pre-set 'Request' for REST API.
+    , ciscoSparkRequestScheme       :: String   -- ^ Should be "https:" in production.
+    , ciscoSparkRequestAuthority    :: URIAuth  -- ^ Authority part of request URI.
     } deriving (Show)
-
--- | Defining FQDN of Cisco Spark REST API.
-ciscoSparkBaseRequestHost :: ByteString
-ciscoSparkBaseRequestHost = "api.ciscospark.com"
 
 -- | Common part of 'Request' against Spark API.
 ciscoSparkBaseRequest :: Request
 ciscoSparkBaseRequest
     = addRequestHeader "Content-Type" "application/json; charset=utf-8"
     $ setRequestPort 443
-    $ setRequestHost ciscoSparkBaseRequestHost
+    $ setRequestHost "api.ciscospark.com"
     $ setRequestSecure True
     $ defaultRequest
 
 -- | Default parameters for HTTP request to Cisco Spark REST API.
 instance Default CiscoSparkRequest where
-    def = CiscoSparkRequest ciscoSparkBaseRequest True ciscoSparkBaseRequestHost
+    def = CiscoSparkRequest ciscoSparkBaseRequest "https:" $ URIAuth "" "api.ciscospark.com" ""
 
 -- | Add given Authorization into request header.
 addAuthorizationHeader :: Authorization -> Request -> Request
@@ -219,19 +216,20 @@ makeCommonListReq base@(CiscoSparkRequest { ciscoSparkRequestRequest = req }) pa
     and finally it automatically accesses next page designated via HTTP Link header if available.
 -}
 streamList :: (MonadIO m, SparkListItem i) => Authorization -> CiscoSparkRequest -> Source m i
-streamList auth (CiscoSparkRequest req _ _) = do
+streamList auth (CiscoSparkRequest req scheme uriAuth) = do
     res <- httpJSON $ addAuthorizationHeader auth req
     yieldMany . unwrap $ getResponseBody res
-    streamListLoop auth res
+    streamListLoop auth res scheme uriAuth
 
 -- | Processing pagination by HTTP Link header.
-streamListLoop :: (MonadIO m, FromJSON a, SparkListItem i) => Authorization -> Response a -> Source m i
-streamListLoop auth res = case getNextUrl res >>= (\url -> parseRequest $ "GET " <> (C8.unpack url)) of
+streamListLoop :: (MonadIO m, FromJSON a, SparkListItem i) => Authorization -> Response a -> String -> URIAuth -> Source m i
+streamListLoop auth res scheme uriAuth
+    = case getNextUrl res >>= validateUrl scheme uriAuth >>= (\url -> parseRequest $ "GET " <> (C8.unpack url)) of
     Nothing         -> pure ()
     Just nextReq    -> do
         nextRes <- httpJSON $ addAuthorizationHeader auth nextReq
         yieldMany . unwrap $ getResponseBody nextRes
-        streamListLoop auth nextRes
+        streamListLoop auth nextRes scheme uriAuth
 
 -- | Get list of entities with query parameter and stream it into Conduit pipe.  It automatically performs pagination.
 streamEntityWithFilter :: (MonadIO m, SparkFilter filter, SparkListItem (ToResponse filter))

@@ -58,6 +58,4 @@ Following items are not yet implemented.
 - WebHook
 - Element level error in List API
 
-### Known Security Hole
-
-Current implementation does not check Link Header URL points same host and schema with responding server.
+Also, relative reference in Link Header is not recognized as next page

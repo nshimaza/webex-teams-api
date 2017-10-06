@@ -37,6 +37,7 @@ library
                      , conduit-combinators
                      , data-default
                      , http-conduit
+                     , network-uri
                      , text
                      , bitset-word8
   default-language:    Haskell2010
@@ -72,6 +73,7 @@ test-suite cisco-spark-api-test
                      , data-default
                      , http-conduit
                      , http-types
+                     , network-uri
                      , text
                      , wai
                      , warp

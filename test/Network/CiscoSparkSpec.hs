@@ -21,6 +21,7 @@ import           Data.Text                    (pack)
 import           Network.HTTP.Simple          as C
 
 import           Network.HTTP.Types           (Header, status200)
+import           Network.URI                  (URIAuth (..))
 import           Network.Wai
 import           Network.Wai.Handler.Warp     (Settings, defaultSettings,
                                                runSettings, setBeforeMainLoop)
@@ -39,18 +40,15 @@ import           Data.Typeable                (typeOf)
 
 newtype MockServer = MockServer ThreadMap
 
-mockBaseRequestHost :: S.ByteString
-mockBaseRequestHost = "localhost"
-
 mockBaseRequestRequest
     = C.addRequestHeader "Content-Type" "application/json; charset=utf-8"
     $ C.setRequestPort 3000
-    $ C.setRequestHost mockBaseRequestHost
+    $ C.setRequestHost "localhost"
     $ C.setRequestSecure False
     $ C.defaultRequest
 
 mockBaseRequest :: CiscoSparkRequest
-mockBaseRequest = CiscoSparkRequest mockBaseRequestRequest False mockBaseRequestHost
+mockBaseRequest = CiscoSparkRequest mockBaseRequestRequest "http:" $ URIAuth "" "localhost" ":3000"
 
 dummyAuth :: Authorization
 dummyAuth = Authorization "dummyAuth"
@@ -89,6 +87,17 @@ paginationApp ress req respond = do
         dispatch "/2"   = ([contentType, ("Link", "<http://localhost:3000/3>; rel=\"next\"")], ress !! 2)
         dispatch "/3"   = ([contentType], ress !! 3)
         dispatch _      = ([contentType, ("Link", "<http://localhost:3000/1>; rel=\"next\"")], ress !! 0)
+
+invalidPaginationApp :: [L.ByteString] -> Application
+invalidPaginationApp ress req respond = do
+    let (cTypes, body) = dispatch $ rawPathInfo req
+    respond $ responseLBS status200 cTypes body
+      where
+        dispatch "/1"   = ([contentType, ("Link", "<http://localhost:8888/2>; rel=\"next\"")], ress !! 1)
+        dispatch "/2"   = ([contentType, ("Link", "<http://localhost:3000/3>; rel=\"next\"")], ress !! 2)
+        dispatch "/3"   = ([contentType], ress !! 3)
+        dispatch _      = ([contentType, ("Link", "<http://localhost:3000/1>; rel=\"next\"")], ress !! 0)
+
 
 teamGen :: String -> Team
 teamGen i = Team { teamId           = TeamId . pack $ "teamId" <> i
@@ -283,6 +292,14 @@ spec = do
 
             stopMockServer svr
 
+        it "streamPersonList stops pagination at invalid Link Header" $ do
+            svr <- startMockServer . invalidPaginationApp $ encode . PersonList <$> personListList
+
+            res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: PersonFilter) .| sinkList
+            res `shouldBe` concat (take 2 personListList)
+
+            stopMockServer svr
+
         it "getDetail for a person returns a Person" $ do
             receivedReqMVar <- newEmptyMVar
 
@@ -436,6 +453,14 @@ spec = do
 
             res <- runConduit $ streamTeamList dummyAuth mockBaseRequest .| sinkList
             res `shouldBe` concat teamListList
+
+            stopMockServer svr
+
+        it "streamTeamList stops pagination at invalid Link Header" $ do
+            svr <- startMockServer . invalidPaginationApp $ encode . TeamList <$> teamListList
+
+            res <- runConduit $ streamTeamList dummyAuth mockBaseRequest .| sinkList
+            res `shouldBe` concat (take 2 teamListList)
 
             stopMockServer svr
 
@@ -656,6 +681,14 @@ spec = do
 
             stopMockServer svr
 
+        it "streamTeamMembershipList stops pagination at invalid Link Header" $ do
+            svr <- startMockServer . invalidPaginationApp $ encode . TeamMembershipList <$> teamMembershipListList
+
+            res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest defFilter .| sinkList
+            res `shouldBe` concat (take 2 teamMembershipListList)
+
+            stopMockServer svr
+
         it "getDetail for a team membership returns a TeamMembership" $ do
             receivedReqMVar <- newEmptyMVar
 
@@ -872,6 +905,14 @@ spec = do
 
             res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: RoomFilter) .| sinkList
             res `shouldBe` concat roomListList
+
+            stopMockServer svr
+
+        it "streamRoomList stops pagination at invalid Link Header" $ do
+            svr <- startMockServer . invalidPaginationApp $ encode . RoomList <$> roomListList
+
+            res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: RoomFilter) .| sinkList
+            res `shouldBe` concat (take 2 roomListList)
 
             stopMockServer svr
 
@@ -1095,6 +1136,14 @@ spec = do
 
             res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: MembershipFilter) .| sinkList
             res `shouldBe` concat membershipListList
+
+            stopMockServer svr
+
+        it "streamMembershipList stops pagination at invalid Link Header" $ do
+            svr <- startMockServer . invalidPaginationApp $ encode . MembershipList <$> membershipListList
+
+            res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: MembershipFilter) .| sinkList
+            res `shouldBe` concat (take 2 membershipListList)
 
             stopMockServer svr
 
@@ -1336,6 +1385,14 @@ spec = do
 
             stopMockServer svr
 
+        it "streamMessageList stops pagination at invalid Link Header" $ do
+            svr <- startMockServer . invalidPaginationApp $ encode . MessageList <$> messageListList
+
+            res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest defFilter .| sinkList
+            res `shouldBe` concat (take 2 messageListList)
+
+            stopMockServer svr
+
         it "getDetail for a message returns a Message" $ do
             receivedReqMVar <- newEmptyMVar
 
@@ -1468,6 +1525,14 @@ spec = do
 
             stopMockServer svr
 
+        it "streamOrganizationList stops pagination at invalid Link Header" $ do
+            svr <- startMockServer . invalidPaginationApp $ encode . OrganizationList <$> organizationListList
+
+            res <- runConduit $ streamOrganizationList dummyAuth mockBaseRequest .| sinkList
+            res `shouldBe` concat (take 2 organizationListList)
+
+            stopMockServer svr
+
         it "getDetail for an organization returns a Organization" $ do
             receivedReqMVar <- newEmptyMVar
 
@@ -1561,6 +1626,14 @@ spec = do
 
             stopMockServer svr
 
+        it "streamLicenseList stops pagination at invalid Link Header" $ do
+            svr <- startMockServer . invalidPaginationApp $ encode . LicenseList <$> licenseListList
+
+            res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: LicenseFilter) .| sinkList
+            res `shouldBe` concat (take 2 licenseListList)
+
+            stopMockServer svr
+
         it "getDetail for a license returns a License" $ do
             receivedReqMVar <- newEmptyMVar
 
@@ -1626,6 +1699,14 @@ spec = do
 
             res <- runConduit $ streamRoleList dummyAuth mockBaseRequest .| sinkList
             res `shouldBe` concat roleListList
+
+            stopMockServer svr
+
+        it "streamRoleList stops pagination at invalid Link Header" $ do
+            svr <- startMockServer . invalidPaginationApp $ encode . RoleList <$> roleListList
+
+            res <- runConduit $ streamRoleList dummyAuth mockBaseRequest .| sinkList
+            res `shouldBe` concat (take 2 roleListList)
 
             stopMockServer svr
 

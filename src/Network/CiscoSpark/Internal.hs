@@ -18,6 +18,7 @@ import           Control.Applicative
 import           Data.Attoparsec.ByteString
 import           Data.ByteString            (ByteString, concat, pack,
                                              singleton)
+import           Data.ByteString.Char8      (unpack)
 import           Data.Char                  (toLower)
 import           Data.Either                (rights)
 import           Data.Maybe                 (listToMaybe)
@@ -28,6 +29,7 @@ import           Data.BitSetWord8           (member, rfc3986UriReference,
                                              rfc7230TChar)
 
 import           Network.HTTP.Simple        (Response, getResponseHeader)
+import           Network.URI                (URI (..), URIAuth (..), parseURI)
 
 
 {-|
@@ -46,6 +48,14 @@ dropAndLow n = toLowerHead . drop n
   where
     toLowerHead []     = []
     toLowerHead (c:cs) = toLower c : cs
+
+{-
+    From here, defining Attoparsec parser of RFC5988 HTTP Link Header.
+    Link header is defined in RFC5988 https://tools.ietf.org/html/rfc5988.
+    This parser doesn't parse complete spec of RFC5988 but only parses rel="next" link for simple pagination.
+    It doesn't parse obs-fold defined in RFC7230 https://tools.ietf.org/html/rfc7230.
+    It assumes Header in Response never contains CRLF or LF.
+-}
 
 -- | Parsed Link header parameter.  Convert only rel param to 'Rel' and keeps other params as-is.
 data LinkParam = Rel | Other ByteString deriving (Eq, Show)
@@ -144,3 +154,13 @@ extractNextUrl = map linkHeaderUrl . filter isNextRel . rights . map (parseOnly 
 -- | Return URL for next page if it exists in given response.
 getNextUrl :: Response a -> Maybe ByteString
 getNextUrl = listToMaybe . extractNextUrl . getResponseHeader "Link"
+
+{-|
+    Validate extracted URL from HTTP Link Header by 'getNextUrl'.
+    Check if it has same scheme and URI authority as original request.
+-}
+validateUrl :: String -> URIAuth -> ByteString -> Maybe ByteString
+validateUrl scheme uriAuth url = do
+    uri <- parseURI $ unpack url
+    auth <- uriAuthority uri
+    if (uriScheme uri == scheme) && (auth == uriAuth) then pure url else Nothing
