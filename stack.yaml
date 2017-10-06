@@ -15,7 +15,7 @@
 # resolver:
 #  name: custom-snapshot
 #  location: "./custom-snapshot.yaml"
-resolver: lts-8.20
+resolver: nightly-2017-10-06
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -37,14 +37,6 @@ resolver: lts-8.20
 # will not be run. This is useful for tweaking upstream packages.
 packages:
 - '.'
-- location:
-    git: https://github.com/nshimaza/thread-hierarchy.git
-    commit: a3e620cfdd57d5c26f32123f61e90897580a27b7
-  extra-dep: true
-- location:
-    git: https://github.com/nshimaza/bitset-word8.git
-    commit : 6f0f7ab2061e98b860d6ab160b83c604f1ba7baa
-  extra-dep: true
 
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
