@@ -134,8 +134,26 @@ class (SparkApiPath a, SparkResponse a, ToJSON a) => SparkCreate a where
 -- | Type class for parameter type for update entity API.
 class (SparkApiPath a, SparkResponse a, ToJSON a) => SparkUpdate a where
 
+
+{-
+    Common type definnitions
+-}
 -- | Type representing timestamp.  For now, it is just copied from API response JSON.
 newtype Timestamp   = Timestamp Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
+-- | Error code for element level error potentially contained in List API responses.
+newtype ErrorCode   = ErrorCode Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
+
+data ErrorTitle = ErrorTitle
+    { errorTitleCode  :: ErrorCode
+    , errorTitleReason :: Text
+    } deriving (Eq, Show)
+
+$(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFields = True } ''ErrorTitle)
+-- ^ 'ErrorTitle' derives ToJSON and FromJSON via deriveJSON template haskell function.
+
+newtype Errors = Errors { errorsTitle :: ErrorTitle } deriving (Eq, Show)
+$(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 6, omitNothingFields = True } ''Errors)
+-- ^ 'Errors' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- Person
 -- | Identifying 'Person' describing detail of Cisco Spark user or bot.
@@ -205,23 +223,24 @@ $(deriveJSON defaultOptions { constructorTagModifier = dropAndLow 10 } ''PersonT
     It is also element type of response of List People call.
 -}
 data Person = Person
-    { personId            :: PersonId           -- ^ Identifier of the Person.
-    , personEmails        :: [Email]            -- ^ List of email addresses which the Person has.
-    , personDisplayName   :: DisplayName        -- ^ Display name of the Person.
-    , personNickName      :: Maybe NickName     -- ^ Nickname of the Person.
-    , personFirstName     :: Maybe FirstName    -- ^ First name of the Person.
-    , personLastName      :: Maybe LastName     -- ^ Last name of the Person.
-    , personAvatar        :: Maybe AvatarUrl    -- ^ URL pointing a image used for Avatar of the Person.
-    , personOrgId         :: OrganizationId     -- ^ 'Organization' which the Person belongs to.
-    , personRoles         :: Maybe [RoleId]     -- ^ List of roles assigned to the Person.
-    , personLicenses      :: Maybe [LicenseId]  -- ^ List of licenses effective on the Person.
-    , personCreated       :: Timestamp          -- ^ Timestamp when the Person was created.
-    , personTimezone      :: Maybe Timezone     -- ^ Timezone of the Person.
-    , personLastActivity  :: Maybe Timestamp    -- ^ Timestamp of the latest activity of the Person.
-    , personStatus        :: Maybe PersonStatus -- ^ Current status of the Person
-    , personInvitePending :: Maybe Bool         -- ^ True if invitation for the Person is pending.
-    , personLoginEnabled  :: Maybe Bool         -- ^ True if login of the Person is enabled.
-    , personType          :: Maybe PersonType   -- ^ Indicating if the Person is real human or bot.
+    { personId            :: PersonId               -- ^ Identifier of the Person.
+    , personErrors        :: Maybe Errors           -- ^ Element level error possibly contained in List API response.
+    , personEmails        :: Maybe [Email]          -- ^ List of email addresses which the Person has.
+    , personDisplayName   :: Maybe DisplayName      -- ^ Display name of the Person.
+    , personNickName      :: Maybe NickName         -- ^ Nickname of the Person.
+    , personFirstName     :: Maybe FirstName        -- ^ First name of the Person.
+    , personLastName      :: Maybe LastName         -- ^ Last name of the Person.
+    , personAvatar        :: Maybe AvatarUrl        -- ^ URL pointing a image used for Avatar of the Person.
+    , personOrgId         :: Maybe OrganizationId   -- ^ 'Organization' which the Person belongs to.
+    , personRoles         :: Maybe [RoleId]         -- ^ List of roles assigned to the Person.
+    , personLicenses      :: Maybe [LicenseId]      -- ^ List of licenses effective on the Person.
+    , personCreated       :: Maybe Timestamp        -- ^ Timestamp when the Person was created.
+    , personTimezone      :: Maybe Timezone         -- ^ Timezone of the Person.
+    , personLastActivity  :: Maybe Timestamp        -- ^ Timestamp of the latest activity of the Person.
+    , personStatus        :: Maybe PersonStatus     -- ^ Current status of the Person
+    , personInvitePending :: Maybe Bool             -- ^ True if invitation for the Person is pending.
+    , personLoginEnabled  :: Maybe Bool             -- ^ True if login of the Person is enabled.
+    , personType          :: Maybe PersonType       -- ^ Indicating if the Person is real human or bot.
     } deriving (Eq, Show)
 
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 6, omitNothingFields = True } ''Person)
@@ -239,7 +258,6 @@ instance SparkResponse PersonId where
 instance SparkDetail PersonId where
     toIdStr (PersonId s) = s
 
--- | 'PersonList' is decoded from response JSON of List People REST call.  It is list of 'Person'.
 newtype PersonList = PersonList { personListItems :: [Person] } deriving (Eq, Show)
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFields = True } ''PersonList)
 -- ^ 'PersonList' derives ToJSON and FromJSON via deriveJSON template haskell function.
@@ -335,10 +353,11 @@ newtype TeamName    = TeamName Text deriving (Eq, Show, Generic, ToJSON, FromJSO
     It is also element type of response of List Teams call.
 -}
 data Team = Team
-    { teamId        :: TeamId       -- ^ Identifier of the Team.
-    , teamName      :: TeamName     -- ^ Name of the Team.
-    , teamCreatorId :: PersonId     -- ^ Identifier of the Person who created the Team.
-    , teamCreated   :: Timestamp    -- ^ Timestamp when the Team was created.
+    { teamId        :: TeamId           -- ^ Identifier of the Team.
+    , teamErrors    :: Maybe Errors     -- ^ Element level error possibly contained in List API response.
+    , teamName      :: Maybe TeamName   -- ^ Name of the Team.
+    , teamCreatorId :: Maybe PersonId   -- ^ Identifier of the Person who created the Team.
+    , teamCreated   :: Maybe Timestamp  -- ^ Timestamp when the Team was created.
     } deriving (Eq, Show)
 
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 4, omitNothingFields = True } ''Team)
@@ -409,14 +428,15 @@ newtype TeamMembershipId    = TeamMembershipId Text deriving (Eq, Show, Generic,
     It is also element type of response of List Team Memberships call.
 -}
 data TeamMembership = TeamMembership
-    { teamMembershipId                :: TeamMembershipId   -- ^ Identifier of the TeamMembership entry.
-    , teamMembershipTeamId            :: TeamId             -- ^ Identifier of the 'Team' which the Person belongs to.
-    , teamMembershipPersonId          :: PersonId           -- ^ Identifier of user who belongs to the Team.
-    , teamMembershipPersonEmail       :: Email              -- ^ Email address of the user identified by the PersonId.
-    , teamMembershipPersonDisplayName :: DisplayName        -- ^ Display name of the user identified by the PersonId.
-    , teamMembershipPersonOrgId       :: OrganizationId     -- ^ Identifier of 'Organization' which the Team blongs to.
-    , teamMembershipIsModerator       :: Bool               -- ^ The Person is moderator of the Team when True.
-    , teamMembershipCreated           :: Timestamp          -- ^ Timestamp when the TeamMembership entry created.
+    { teamMembershipId                :: TeamMembershipId       -- ^ Identifier of the TeamMembership entry.
+    , teamMembershipErrors            :: Maybe Errors           -- ^ Element level error possibly contained in List API response.
+    , teamMembershipTeamId            :: Maybe TeamId           -- ^ Identifier of the 'Team' which the Person belongs to.
+    , teamMembershipPersonId          :: Maybe PersonId         -- ^ Identifier of user who belongs to the Team.
+    , teamMembershipPersonEmail       :: Maybe Email            -- ^ Email address of the user identified by the PersonId.
+    , teamMembershipPersonDisplayName :: Maybe DisplayName      -- ^ Display name of the user identified by the PersonId.
+    , teamMembershipPersonOrgId       :: Maybe OrganizationId   -- ^ Identifier of 'Organization' which the Team blongs to.
+    , teamMembershipIsModerator       :: Maybe Bool             -- ^ The Person is moderator of the Team when True.
+    , teamMembershipCreated           :: Maybe Timestamp        -- ^ Timestamp when the TeamMembership entry created.
     } deriving (Eq, Show)
 
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 14, omitNothingFields = True } ''TeamMembership)
@@ -534,15 +554,16 @@ $(deriveJSON defaultOptions { constructorTagModifier = dropAndLow 8 } ''RoomType
     It is also element type of response of List Rooms call.
 -}
 data Room = Room
-    { roomId           :: RoomId        -- ^ Identifier of the Room.
-    , roomTitle        :: RoomTitle     -- ^ Title text of the Room.
-    , roomType         :: RoomType      -- ^ Indicates if the Room is for 1:1 or group.
-    , roomIsLocked     :: Bool          -- ^ True if the Room is locked.
-    , roomSipAddress   :: Maybe SipAddr -- ^ SIP address of the Room.
-    , roomLastActivity :: Timestamp     -- ^ Timestamp when the last activity was happen on the Room.
-    , roomTeamId       :: Maybe TeamId  -- ^ Identifier of the 'Team' which the Room belongs to.
-    , roomCreatorId    :: PersonId      -- ^ Identifier of 'Person' who created the Room.
-    , roomCreated      :: Timestamp     -- ^ Timestamp when the Room was created.
+    { roomId           :: RoomId            -- ^ Identifier of the Room.
+    , roomErrors       :: Maybe Errors      -- ^ Element level error possibly contained in List API response.
+    , roomTitle        :: Maybe RoomTitle   -- ^ Title text of the Room.
+    , roomType         :: Maybe RoomType    -- ^ Indicates if the Room is for 1:1 or group.
+    , roomIsLocked     :: Maybe Bool        -- ^ True if the Room is locked.
+    , roomSipAddress   :: Maybe SipAddr     -- ^ SIP address of the Room.
+    , roomLastActivity :: Maybe Timestamp   -- ^ Timestamp when the last activity was happen on the Room.
+    , roomTeamId       :: Maybe TeamId      -- ^ Identifier of the 'Team' which the Room belongs to.
+    , roomCreatorId    :: Maybe PersonId    -- ^ Identifier of 'Person' who created the Room.
+    , roomCreated      :: Maybe Timestamp   -- ^ Timestamp when the Room was created.
     } deriving (Eq, Show)
 
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 4, omitNothingFields = True } ''Room)
@@ -654,15 +675,16 @@ newtype MembershipId    = MembershipId Text deriving (Eq, Show, Generic, ToJSON,
     It is also element type of response of List Memberships call.
 -}
 data Membership = Membership
-    { membershipId                :: MembershipId   -- ^ Identifier of the Membership entry.
-    , membershipRoomId            :: RoomId         -- ^ Identifier of the 'Room' associated to the Person
-    , membershipPersonId          :: PersonId       -- ^ Identifier of the 'Person' associated to the Room
-    , membershipPersonEmail       :: Email          -- ^ Email of the Person
-    , membershipPersonDisplayName :: DisplayName    -- ^ Display name of the Person
-    , membershipPersonOrgId       :: OrganizationId -- ^ Identifier of 'Organization' which the Person belongs to.
-    , membershipIsModerator       :: Bool           -- ^ True if the Person is a moderator of the room.
-    , membershipIsMonitor         :: Bool           -- ^ True if the Person is monitoring the Room.
-    , membershipCreated           :: Timestamp      -- ^ Timestamp when the Membership was created.
+    { membershipId                :: MembershipId           -- ^ Identifier of the Membership entry.
+    , membershipErrors            :: Maybe Errors           -- ^ Element level error possibly contained in List API response.
+    , membershipRoomId            :: Maybe RoomId           -- ^ Identifier of the 'Room' associated to the Person
+    , membershipPersonId          :: Maybe PersonId         -- ^ Identifier of the 'Person' associated to the Room
+    , membershipPersonEmail       :: Maybe Email            -- ^ Email of the Person
+    , membershipPersonDisplayName :: Maybe DisplayName      -- ^ Display name of the Person
+    , membershipPersonOrgId       :: Maybe OrganizationId   -- ^ Identifier of 'Organization' which the Person belongs to.
+    , membershipIsModerator       :: Maybe Bool             -- ^ True if the Person is a moderator of the room.
+    , membershipIsMonitor         :: Maybe Bool             -- ^ True if the Person is monitoring the Room.
+    , membershipCreated           :: Maybe Timestamp        -- ^ Timestamp when the Membership was created.
     } deriving (Eq, Show)
 
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFields = True } ''Membership)
@@ -770,16 +792,17 @@ newtype FileUrl     = FileUrl Text deriving (Eq, Show, Generic, ToJSON, FromJSON
 -}
 data Message = Message
     { messageId              :: MessageId           -- ^ Identifier of the Message.
-    , messageRoomId          :: RoomId              -- ^ Identifier of the room where the Message was sent.
-    , messageRoomType        :: RoomType            -- ^ Type of Room the message was sent to.
+    , messageErrors          :: Maybe Errors        -- ^ Element level error possibly contained in List API response.
+    , messageRoomId          :: Maybe RoomId        -- ^ Identifier of the room where the Message was sent.
+    , messageRoomType        :: Maybe RoomType      -- ^ Type of Room the message was sent to.
     , messageToPersonId      :: Maybe PersonId      -- ^ Presents in documentation but doesn't appear in actual API response.
     , messageToPersonEmail   :: Maybe Email         -- ^ Presents in documentation but doesn't appear in actual API response.
-    , messageText            :: MessageText         -- ^ Message body in plain text.
+    , messageText            :: Maybe MessageText   -- ^ Message body in plain text.
     , messageHtml            :: Maybe MessageHtml   -- ^ Message body in HTML.
     , messageFiles           :: Maybe [FileUrl]     -- ^ URL to files attached to the message.
-    , messagePersonId        :: PersonId            -- ^ Identifier of 'Person' who sent the message.
-    , messagePersonEmail     :: Email               -- ^ Email of Person who sent the message.
-    , messageCreated         :: Timestamp           -- ^ Timestamp when the massage was sent.
+    , messagePersonId        :: Maybe PersonId      -- ^ Identifier of 'Person' who sent the message.
+    , messagePersonEmail     :: Maybe Email         -- ^ Email of Person who sent the message.
+    , messageCreated         :: Maybe Timestamp     -- ^ Timestamp when the massage was sent.
     , messageMentionedPeople :: Maybe [PersonId]    -- ^ List of identifiers of Person were mentioned in the message.
     } deriving (Eq, Show)
 
@@ -884,9 +907,10 @@ newtype OrganizationDisplayName  = OrganizationDisplayName Text deriving (Eq, Sh
     It is also element type of response of List Organizations call.
 -}
 data Organization = Organization
-    { organizationId          :: OrganizationId             -- ^ Identifier of the Organization.
-    , organizationDisplayName :: OrganizationDisplayName    -- ^ Display name of the Organization.
-    , organizationCreated     :: Timestamp                  -- ^ Timestamp when the Organization was created.
+    { organizationId          :: OrganizationId                 -- ^ Identifier of the Organization.
+    , organizationErrors      :: Maybe Errors                   -- ^ Element level error possibly contained in List API response.
+    , organizationDisplayName :: Maybe OrganizationDisplayName  -- ^ Display name of the Organization.
+    , organizationCreated     :: Maybe Timestamp                -- ^ Timestamp when the Organization was created.
     } deriving (Eq, Show)
 
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 12, omitNothingFields = True } ''Organization)
@@ -926,10 +950,11 @@ newtype LicenseUnit         = LicenseUnit Integer deriving (Eq, Show, Generic, T
     It is also element type of response of List Licenses call.
 -}
 data License = License
-    { licenseId            :: LicenseId      -- ^ Identifier of the License.
-    , licenseName          :: LicenseName    -- ^ Name of the License.
-    , licenseTotalUnits    :: LicenseUnit    -- ^ Number of granted License.
-    , licenseConsumedUnits :: LicenseUnit    -- ^ Number of currently consumed License.
+    { licenseId            :: LicenseId         -- ^ Identifier of the License.
+    , licenseErrors        :: Maybe Errors      -- ^ Element level error possibly contained in List API response.
+    , licenseName          :: Maybe LicenseName -- ^ Name of the License.
+    , licenseTotalUnits    :: Maybe LicenseUnit -- ^ Number of granted License.
+    , licenseConsumedUnits :: Maybe LicenseUnit -- ^ Number of currently consumed License.
     } deriving (Eq, Show)
 
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 7, omitNothingFields = True } ''License)
@@ -984,8 +1009,9 @@ newtype RoleName    = RoleName Text deriving (Eq, Show, Generic, ToJSON, FromJSO
     It is also element type of response of List Roles call.
 -}
 data Role = Role
-    { roleId   :: RoleId    -- ^ Identifier of the Role
-    , roleName :: RoleName  -- ^ Name of the Role
+    { roleId     :: RoleId          -- ^ Identifier of the Role
+    , roleErrors :: Maybe Errors    -- ^ Element level error possibly contained in List API response.
+    , roleName   :: Maybe RoleName  -- ^ Name of the Role
     } deriving (Eq, Show)
 
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 4, omitNothingFields = True } ''Role)

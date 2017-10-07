@@ -55,6 +55,10 @@ module Network.CiscoSpark
     -- ** Common Types
       Authorization (..)
     , CiscoSparkRequest (..)
+    , Timestamp (..)
+    , ErrorCode (..)
+    , ErrorTitle (..)
+    , Errors (..)
     -- ** People related types
     , Person (..)
     , PersonId (..)
@@ -132,7 +136,6 @@ module Network.CiscoSpark
     , RoleName (..)
     , RoleList (..)
 
-    , Timestamp (..)
     -- * Functions
     -- ** Getting detail of an entity
     , getDetail

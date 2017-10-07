@@ -11,6 +11,22 @@ import           Network.CiscoSpark.Types
 
 spec :: Spec
 spec = do
+    describe "Error" $ do
+        let errorsJson = "{\
+                         \  \"title\": {\
+                         \    \"code\": \"kms_failure\",\
+                         \    \"reason\": \"Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html\"\
+                         \  }\
+                         \}"
+            errors = Errors { errorsTitle = ErrorTitle { errorTitleCode = ErrorCode "kms_failure"
+                                                       , errorTitleReason = "Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html"
+                                                       }
+                            }
+
+        it "decodes errors field in response JSON containd in List API" $ do
+            eitherDecode errorsJson `shouldBe` Right errors
+            (decode . encode) errors `shouldBe` Just errors
+
     describe "People" $ do
         let personJson1 = "{\
                           \  \"id\" : \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY\",\
@@ -30,20 +46,21 @@ spec = do
                           \  \"loginEnabled\" : true\
                           \}"
             person1 = Person { personId            = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
-                             , personEmails        = [Email "johnny.chang@foomail.com", Email "jchang@barmail.com"]
-                             , personDisplayName   = DisplayName "John Andersen"
+                             , personErrors        = Nothing
+                             , personEmails        = Just [Email "johnny.chang@foomail.com", Email "jchang@barmail.com"]
+                             , personDisplayName   = Just $ DisplayName "John Andersen"
                              , personNickName      = Nothing
-                             , personFirstName     = Just (FirstName "John")
-                             , personLastName      = Just (LastName "Andersen")
-                             , personAvatar        = Just (AvatarUrl "https://1efa7a94ed21783e352-c62266528714497a17239ececf39e9e2.ssl.cf1.rackcdn.com/V1~54c844c89e678e5a7b16a306bc2897b9~wx29yGtlTpilEFlYzqPKag==~1600")
-                             , personOrgId         = OrganizationId "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE"
+                             , personFirstName     = Just $ FirstName "John"
+                             , personLastName      = Just $ LastName "Andersen"
+                             , personAvatar        = Just $ AvatarUrl "https://1efa7a94ed21783e352-c62266528714497a17239ececf39e9e2.ssl.cf1.rackcdn.com/V1~54c844c89e678e5a7b16a306bc2897b9~wx29yGtlTpilEFlYzqPKag==~1600"
+                             , personOrgId         = Just $ OrganizationId "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE"
                              , personRoles         = Just [ RoleId "Y2lzY29zcGFyazovL3VzL1JPT00vOGNkYzQwYzQtZjA5ZS0zY2JhLThjMjYtZGQwZTcwYWRlY2Iy"
                                                           , RoleId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"]
                              , personLicenses      = Just [ LicenseId "Y2lzY29zcGFyazovL3VzL1JPT00vOGNkYzQwYzQtZjA5ZS0zY2JhLThjMjYtZGQwZTcwYWRlY2Iy"
                                                           , LicenseId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"]
-                             , personCreated       = Timestamp "2015-10-18T14:26:16.000Z"
-                             , personTimezone      = Just (Timezone "America/Denver")
-                             , personLastActivity  = Just (Timestamp "2015-10-18T14:26:16.028Z")
+                             , personCreated       = Just $ Timestamp "2015-10-18T14:26:16.000Z"
+                             , personTimezone      = Just $ Timezone "America/Denver"
+                             , personLastActivity  = Just $ Timestamp "2015-10-18T14:26:16.028Z"
                              , personStatus        = Just PersonStatusActive
                              , personInvitePending = Just False
                              , personLoginEnabled  = Just True
@@ -66,28 +83,62 @@ spec = do
                           \  \"type\": \"person\"\
                           \}"
             person2 = Person { personId            = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
-                             , personEmails        = [Email "sample@email.com" ]
-                             , personDisplayName   = DisplayName "Taro Yamada"
-                             , personNickName      = Just (NickName "Taro")
-                             , personFirstName     = Just (FirstName "Taro")
-                             , personLastName      = Just (LastName "Yamada")
-                             , personAvatar        = Just (AvatarUrl "https://1efa7a94ed21783e352-c62266528714497a17239ececf39e9e2.ssl.cf1.rackcdn.com/V1~54c844c89e678e5a7b16a306bc2897b9~wx29yGtlTpilEFlYzqPKag==~1600")
-                             , personOrgId         = OrganizationId "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE"
+                             , personErrors        = Nothing
+                             , personEmails        = Just [Email "sample@email.com" ]
+                             , personDisplayName   = Just $ DisplayName "Taro Yamada"
+                             , personNickName      = Just $ NickName "Taro"
+                             , personFirstName     = Just $ FirstName "Taro"
+                             , personLastName      = Just $ LastName "Yamada"
+                             , personAvatar        = Just $ AvatarUrl "https://1efa7a94ed21783e352-c62266528714497a17239ececf39e9e2.ssl.cf1.rackcdn.com/V1~54c844c89e678e5a7b16a306bc2897b9~wx29yGtlTpilEFlYzqPKag==~1600"
+                             , personOrgId         = Just $ OrganizationId "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE"
                              , personRoles         = Nothing
                              , personLicenses      = Nothing
-                             , personCreated       = Timestamp "2012-06-15T20:35:48.682Z"
+                             , personCreated       = Just $ Timestamp "2012-06-15T20:35:48.682Z"
                              , personTimezone      = Nothing
-                             , personLastActivity  = Just (Timestamp "2017-06-30T15:30:20.016Z")
+                             , personLastActivity  = Just $ Timestamp "2017-06-30T15:30:20.016Z"
                              , personStatus        = Just PersonStatusInactive
                              , personInvitePending = Nothing
                              , personLoginEnabled  = Nothing
                              , personType          = Just PersonTypePerson
                              }
-            personListJson = "{\"items\":[" <> personJson1 <> "," <> personJson2 <> "]}"
-            personList = PersonList [ person1, person2 ]
+            personErrorJson = "{\
+                              \  \"id\": \"Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5\",\
+                              \  \"errors\": {\
+                              \    \"title\": {\
+                              \      \"code\": \"kms_failure\",\
+                              \      \"reason\": \"Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html\"\
+                              \    }\
+                              \  }\
+                              \}"
+            personError = Person { personId = PersonId "Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5"
+                                 , personErrors = Just $ Errors
+                                     { errorsTitle = ErrorTitle
+                                         { errorTitleCode = ErrorCode "kms_failure"
+                                         , errorTitleReason = "Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html"
+                                         }
+                                     }
+                                 ,personEmails        = Nothing
+                                 ,personDisplayName   = Nothing
+                                 ,personNickName      = Nothing
+                                 ,personFirstName     = Nothing
+                                 ,personLastName      = Nothing
+                                 ,personAvatar        = Nothing
+                                 ,personOrgId         = Nothing
+                                 ,personRoles         = Nothing
+                                 ,personLicenses      = Nothing
+                                 ,personCreated       = Nothing
+                                 ,personTimezone      = Nothing
+                                 ,personLastActivity  = Nothing
+                                 ,personStatus        = Nothing
+                                 ,personInvitePending = Nothing
+                                 ,personLoginEnabled  = Nothing
+                                 ,personType          = Nothing
+                             }
+            personListJson = "{\"items\":[" <> personJson1 <> "," <> personJson2 <> "," <> personErrorJson <> "]}"
+            personList = PersonList [ person1, person2, personError ]
 
         it "can be unwrapped from PersonList" $ do
-            unwrap personList `shouldBe` [ person1, person2 ]
+            unwrap personList `shouldBe` [ person1, person2, personError ]
 
         it "decodes People API response JSON" $ do
             eitherDecode personJson1 `shouldBe` Right person1
@@ -135,15 +186,36 @@ spec = do
                        \  \"created\" : \"2015-10-18T14:26:16+00:00\"\
                        \}"
             team = Team { teamId        = TeamId "Y2lzY29zcGFyazovL3VzL1RFQU0vMTNlMThmNDAtNDJmYy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5"
-                        , teamName      = TeamName "Build Squad"
-                        , teamCreatorId = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
-                        , teamCreated   = Timestamp "2015-10-18T14:26:16+00:00"
+                        , teamErrors    = Nothing
+                        , teamName      = Just $ TeamName "Build Squad"
+                        , teamCreatorId = Just $ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
+                        , teamCreated   = Just $ Timestamp "2015-10-18T14:26:16+00:00"
                         }
-            teamListJson = "{\"items\":[" <> teamJson <> "]}"
-            teamList = TeamList [ team ]
+            teamErrorJson = "{\
+                            \  \"id\": \"Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5\",\
+                            \  \"errors\": {\
+                            \    \"title\": {\
+                            \      \"code\": \"kms_failure\",\
+                            \      \"reason\": \"Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html\"\
+                            \    }\
+                            \  }\
+                            \}"
+            teamError = Team { teamId = TeamId "Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5"
+                             , teamErrors = Just $ Errors
+                                 { errorsTitle = ErrorTitle
+                                     { errorTitleCode = ErrorCode "kms_failure"
+                                     , errorTitleReason = "Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html"
+                                     }
+                                 }
+                             , teamName      = Nothing
+                             , teamCreatorId = Nothing
+                             , teamCreated   = Nothing
+                             }
+            teamListJson = "{\"items\":[" <> teamJson <> "," <> teamErrorJson <> "]}"
+            teamList = TeamList [ team, teamError ]
 
         it "can be unwrapped from TeamList" $ do
-            unwrap teamList `shouldBe` [ team ]
+            unwrap teamList `shouldBe` [ team, teamError ]
 
         it "decodes Team API response JSON" $ do
             eitherDecode teamJson `shouldBe` Right team
@@ -177,19 +249,44 @@ spec = do
                                  \  \"created\" : \"2015-10-18T14:26:16.057Z\"\
                                  \}"
             teamMembership = TeamMembership { teamMembershipId                  = TeamMembershipId "Y2lzY29zcGFyazovL3VzL1RFQU1fTUVNQkVSU0hJUC8wZmNmYTJiOC1hZGNjLTQ1ZWEtYTc4Mi1lNDYwNTkyZjgxZWY6MTNlMThmNDAtNDJmYy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5"
-                                            , teamMembershipTeamId              = TeamId "Y2lzY29zcGFyazovL3VzL1RFQU0vMTNlMThmNDAtNDJmYy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5"
-                                            , teamMembershipPersonId            = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
-                                            , teamMembershipPersonEmail         = Email "johnny.chang@foomail.com"
-                                            , teamMembershipPersonDisplayName   = DisplayName "John Andersen"
-                                            , teamMembershipPersonOrgId         = OrganizationId "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE"
-                                            , teamMembershipIsModerator         = True
-                                            , teamMembershipCreated             = Timestamp "2015-10-18T14:26:16.057Z"
+                                            , teamMembershipErrors              = Nothing
+                                            , teamMembershipTeamId              = Just $ TeamId "Y2lzY29zcGFyazovL3VzL1RFQU0vMTNlMThmNDAtNDJmYy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5"
+                                            , teamMembershipPersonId            = Just $ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
+                                            , teamMembershipPersonEmail         = Just $ Email "johnny.chang@foomail.com"
+                                            , teamMembershipPersonDisplayName   = Just $ DisplayName "John Andersen"
+                                            , teamMembershipPersonOrgId         = Just $ OrganizationId "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE"
+                                            , teamMembershipIsModerator         = Just True
+                                            , teamMembershipCreated             = Just $ Timestamp "2015-10-18T14:26:16.057Z"
                                             }
-            teamMembershipListJson = "{\"items\":[" <> teamMembershipJson <> "]}"
-            teamMembershipList = TeamMembershipList [ teamMembership ]
+            teamMembershipErrorJson = "{\
+                                      \  \"id\": \"Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5\",\
+                                      \  \"errors\": {\
+                                      \    \"title\": {\
+                                      \      \"code\": \"kms_failure\",\
+                                      \      \"reason\": \"Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html\"\
+                                      \    }\
+                                      \  }\
+                                      \}"
+            teamMembershipError = TeamMembership { teamMembershipId = TeamMembershipId "Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5"
+                                                 , teamMembershipErrors = Just $ Errors
+                                                     { errorsTitle = ErrorTitle
+                                                         { errorTitleCode = ErrorCode "kms_failure"
+                                                         , errorTitleReason = "Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html"
+                                                         }
+                                                     }
+                                                 , teamMembershipTeamId             = Nothing
+                                                 , teamMembershipPersonId           = Nothing
+                                                 , teamMembershipPersonEmail        = Nothing
+                                                 , teamMembershipPersonDisplayName  = Nothing
+                                                 , teamMembershipPersonOrgId        = Nothing
+                                                 , teamMembershipIsModerator        = Nothing
+                                                 , teamMembershipCreated            = Nothing
+                                                 }
+            teamMembershipListJson = "{\"items\":[" <> teamMembershipJson <> "," <> teamMembershipErrorJson <> "]}"
+            teamMembershipList = TeamMembershipList [ teamMembership, teamMembershipError ]
 
         it "can be unwrapped from TeamMembershipList" $ do
-            unwrap teamMembershipList `shouldBe` [ teamMembership ]
+            unwrap teamMembershipList `shouldBe` [ teamMembership, teamMembershipError ]
 
         it "decodes Team Membership API response JSON" $ do
             eitherDecode teamMembershipJson `shouldBe` Right teamMembership
@@ -234,20 +331,46 @@ spec = do
                        \  \"created\" : \"2016-04-21T19:01:55.966Z\"\
                        \}"
             room = Room { roomId            = RoomId  "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
-                        , roomTitle         = RoomTitle "Project Unicorn - Sprint 0"
-                        , roomType          = RoomTypeGroup
-                        , roomIsLocked      = True
+                        , roomErrors        = Nothing
+                        , roomTitle         = Just $ RoomTitle "Project Unicorn - Sprint 0"
+                        , roomType          = Just RoomTypeGroup
+                        , roomIsLocked      = Just True
                         , roomSipAddress    = Just $ SipAddr "01234567890@meet.ciscospark.com"
-                        , roomLastActivity  = Timestamp "2016-04-21T19:12:48.920Z"
+                        , roomLastActivity  = Just $ Timestamp "2016-04-21T19:12:48.920Z"
                         , roomTeamId        = Just $ TeamId "Y2lzY29zcGFyazovL3VzL1JPT00vNjRlNDVhZTAtYzQ2Yi0xMWU1LTlkZjktMGQ0MWUzNDIxOTcz"
-                        , roomCreatorId     = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
-                        , roomCreated       = Timestamp "2016-04-21T19:01:55.966Z"
+                        , roomCreatorId     = Just $ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
+                        , roomCreated       = Just $ Timestamp "2016-04-21T19:01:55.966Z"
                         }
-            roomListJson = "{\"items\":[" <> roomJson <> "]}"
-            roomList = RoomList [ room ]
+            roomErrorJson = "{\
+                            \  \"id\": \"Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5\",\
+                            \  \"errors\": {\
+                            \    \"title\": {\
+                            \      \"code\": \"kms_failure\",\
+                            \      \"reason\": \"Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html\"\
+                            \    }\
+                            \  }\
+                            \}"
+            roomError = Room { roomId = RoomId "Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5"
+                             , roomErrors = Just $ Errors
+                                 { errorsTitle = ErrorTitle
+                                     { errorTitleCode = ErrorCode "kms_failure"
+                                     , errorTitleReason = "Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html"
+                                     }
+                                 }
+                             , roomTitle = Nothing
+                             , roomType = Nothing
+                             , roomIsLocked = Nothing
+                             , roomSipAddress = Nothing
+                             , roomLastActivity = Nothing
+                             , roomTeamId = Nothing
+                             , roomCreatorId = Nothing
+                             , roomCreated = Nothing
+                             }
+            roomListJson = "{\"items\":[" <> roomJson <> "," <> roomErrorJson <> "]}"
+            roomList = RoomList [ room, roomError ]
 
         it "can be unwrapped from RoomList" $ do
-            unwrap roomList `shouldBe` [ room ]
+            unwrap roomList `shouldBe` [ room, roomError ]
 
         it "decodes Room API response JSON" $ do
             eitherDecode roomJson `shouldBe` Right room
@@ -287,20 +410,46 @@ spec = do
                              \  \"created\" : \"2015-10-18T14:26:16.203Z\"\
                              \}"
             membership = Membership { membershipId                  = MembershipId "Y2lzY29zcGFyazovL3VzL01FTUJFUlNISVAvMGQwYzkxYjYtY2U2MC00NzI1LWI2ZDAtMzQ1NWQ1ZDExZWYzOmNkZTFkZDQwLTJmMGQtMTFlNS1iYTljLTdiNjU1NmQyMjA3Yg"
-                                    , membershipRoomId              = RoomId "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
-                                    , membershipPersonId            = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
-                                    , membershipPersonEmail         = Email "john.andersen@example.com"
-                                    , membershipPersonDisplayName   = DisplayName "John Andersen"
-                                    , membershipPersonOrgId         = OrganizationId "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE"
-                                    , membershipIsModerator         = True
-                                    , membershipIsMonitor           = True
-                                    , membershipCreated             = Timestamp "2015-10-18T14:26:16.203Z"
+                                    , membershipErrors              = Nothing
+                                    , membershipRoomId              = Just $ RoomId "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
+                                    , membershipPersonId            = Just $ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
+                                    , membershipPersonEmail         = Just $ Email "john.andersen@example.com"
+                                    , membershipPersonDisplayName   = Just $ DisplayName "John Andersen"
+                                    , membershipPersonOrgId         = Just $ OrganizationId "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE"
+                                    , membershipIsModerator         = Just True
+                                    , membershipIsMonitor           = Just True
+                                    , membershipCreated             = Just $ Timestamp "2015-10-18T14:26:16.203Z"
                                     }
-            membershipListJson = "{\"items\":[" <> membershipJson <> "]}"
-            membershipList = MembershipList [ membership ]
+            membershipErrorJson = "{\
+                                  \  \"id\": \"Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5\",\
+                                  \  \"errors\": {\
+                                  \    \"title\": {\
+                                  \      \"code\": \"kms_failure\",\
+                                  \      \"reason\": \"Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html\"\
+                                  \    }\
+                                  \  }\
+                                  \}"
+            membershipError = Membership { membershipId = MembershipId "Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5"
+                                         , membershipErrors = Just $ Errors
+                                             { errorsTitle = ErrorTitle
+                                                 { errorTitleCode = ErrorCode "kms_failure"
+                                                 , errorTitleReason = "Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html"
+                                                 }
+                                             }
+                                         , membershipRoomId              = Nothing
+                                         , membershipPersonId            = Nothing
+                                         , membershipPersonEmail         = Nothing
+                                         , membershipPersonDisplayName   = Nothing
+                                         , membershipPersonOrgId         = Nothing
+                                         , membershipIsModerator         = Nothing
+                                         , membershipIsMonitor           = Nothing
+                                         , membershipCreated             = Nothing
+                                         }
+            membershipListJson = "{\"items\":[" <> membershipJson <> "," <> membershipErrorJson <> "]}"
+            membershipList = MembershipList [ membership, membershipError ]
 
         it "can be unwrapped from MembershipList" $ do
-            unwrap membershipList `shouldBe` [ membership ]
+            unwrap membershipList `shouldBe` [ membership, membershipError ]
 
         it "decodes Team Membership API response JSON" $ do
             eitherDecode membershipJson `shouldBe` Right membership
@@ -348,24 +497,53 @@ spec = do
                           \  \"mentionedPeople\" : [ \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM\", \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg\" ]\
                           \}"
             message = Message { messageId               = MessageId "Y2lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk"
-                              , messageRoomId           = RoomId "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
-                              , messageRoomType         = RoomTypeGroup
+                              , messageErrors           = Nothing
+                              , messageRoomId           = Just $ RoomId "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
+                              , messageRoomType         = Just $ RoomTypeGroup
                               , messageToPersonId       = Just $ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"
                               , messageToPersonEmail    = Just $ Email "julie@example.com"
-                              , messageText             = MessageText "PROJECT UPDATE - A new project plan has been published on Box: http://box.com/s/lf5vj. The PM for this project is Mike C. and the Engineering Manager is Jane W."
+                              , messageText             = Just $ MessageText "PROJECT UPDATE - A new project plan has been published on Box: http://box.com/s/lf5vj. The PM for this project is Mike C. and the Engineering Manager is Jane W."
                               , messageHtml             = Just $ MessageHtml "<h1>HTML formatted message goes here</h1><p>when the message was posted in markdown format.</p>"
-                              , messageFiles            = Just $ [ FileUrl "http://www.example.com/images/media.png" ]
-                              , messagePersonId         = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
-                              , messagePersonEmail      = Email "matt@example.com"
-                              , messageCreated          = Timestamp "2015-10-18T14:26:16+00:00"
-                              , messageMentionedPeople  = Just $ [ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM"
-                                                                 , PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ]
+                              , messageFiles            = Just [ FileUrl "http://www.example.com/images/media.png" ]
+                              , messagePersonId         = Just $ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
+                              , messagePersonEmail      = Just $ Email "matt@example.com"
+                              , messageCreated          = Just $ Timestamp "2015-10-18T14:26:16+00:00"
+                              , messageMentionedPeople  = Just [ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM"
+                                                               , PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ]
                               }
-            messageListJson = "{\"items\":[" <> messageJson <> "]}"
-            messageList = MessageList [ message ]
+            messageErrorJson = "{\
+                               \  \"id\": \"Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5\",\
+                               \  \"errors\": {\
+                               \    \"title\": {\
+                               \      \"code\": \"kms_failure\",\
+                               \      \"reason\": \"Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html\"\
+                               \    }\
+                               \  }\
+                               \}"
+            messageError = Message { messageId = MessageId "Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5"
+                                   , messageErrors = Just $ Errors
+                                       { errorsTitle = ErrorTitle
+                                           { errorTitleCode = ErrorCode "kms_failure"
+                                           , errorTitleReason = "Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html"
+                                           }
+                                       }
+                                   , messageRoomId           = Nothing
+                                   , messageRoomType         = Nothing
+                                   , messageToPersonId       = Nothing
+                                   , messageToPersonEmail    = Nothing
+                                   , messageText             = Nothing
+                                   , messageHtml             = Nothing
+                                   , messageFiles            = Nothing
+                                   , messagePersonId         = Nothing
+                                   , messagePersonEmail      = Nothing
+                                   , messageCreated          = Nothing
+                                   , messageMentionedPeople  = Nothing
+                                   }
+            messageListJson = "{\"items\":[" <> messageJson <> "," <> messageErrorJson <> "]}"
+            messageList = MessageList [ message, messageError ]
 
         it "can be unwrapped from MessageList" $ do
-            unwrap messageList `shouldBe` [ message ]
+            unwrap messageList `shouldBe` [ message, messageError ]
 
         it "decodes Team Message API response JSON" $ do
             eitherDecode messageJson `shouldBe` Right message
@@ -402,14 +580,34 @@ spec = do
                                \  \"created\" : \"2015-10-18T14:26:16+00:00\"\
                                \}"
             organization = Organization { organizationId            = OrganizationId "OTZhYmMyYWEtM2RjYy0xMWU1LWExNTItZmUzNDgxOWNkYzlh"
-                                        , organizationDisplayName   = OrganizationDisplayName "Cisco, Inc."
-                                        , organizationCreated       = Timestamp "2015-10-18T14:26:16+00:00"
+                                        , organizationErrors        = Nothing
+                                        , organizationDisplayName   = Just $ OrganizationDisplayName "Cisco, Inc."
+                                        , organizationCreated       = Just $ Timestamp "2015-10-18T14:26:16+00:00"
                                         }
-            organizationListJson = "{\"items\":[" <> organizationJson <> "]}"
-            organizationList = OrganizationList [ organization ]
+            organizationErrorJson = "{\
+                                    \  \"id\": \"Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5\",\
+                                    \  \"errors\": {\
+                                    \    \"title\": {\
+                                    \      \"code\": \"kms_failure\",\
+                                    \      \"reason\": \"Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html\"\
+                                    \    }\
+                                    \  }\
+                                    \}"
+            organizationError = Organization { organizationId = OrganizationId "Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5"
+                                             , organizationErrors = Just $ Errors
+                                                 { errorsTitle = ErrorTitle
+                                                     { errorTitleCode = ErrorCode "kms_failure"
+                                                     , errorTitleReason = "Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html"
+                                                     }
+                                                 }
+                                             , organizationDisplayName   = Nothing
+                                             , organizationCreated       = Nothing
+                                             }
+            organizationListJson = "{\"items\":[" <> organizationJson <> "," <> organizationErrorJson <> "]}"
+            organizationList = OrganizationList [ organization, organizationError ]
 
         it "can be unwrapped from OrganizationList" $ do
-            unwrap organizationList `shouldBe` [ organization ]
+            unwrap organizationList `shouldBe` [ organization, organizationError ]
 
         it "decodes Team Organization API response JSON" $ do
             eitherDecode organizationJson `shouldBe` Right organization
@@ -427,15 +625,36 @@ spec = do
                           \  \"consumedUnits\" : 8\
                           \}"
             license = License { licenseId               = LicenseId "OTZhYmMyYWEtM2RjYy0xMWU1LWExNTItZmUzNDgxOWNkYzlh"
-                              , licenseName             = LicenseName "Spark Calling"
-                              , licenseTotalUnits       = LicenseUnit 42
-                              , licenseConsumedUnits    = LicenseUnit 8
+                              , licenseErrors           = Nothing
+                              , licenseName             = Just $ LicenseName "Spark Calling"
+                              , licenseTotalUnits       = Just $ LicenseUnit 42
+                              , licenseConsumedUnits    = Just $ LicenseUnit 8
                               }
-            licenseListJson = "{\"items\":[" <> licenseJson <> "]}"
-            licenseList = LicenseList [ license ]
+            licenseErrorJson = "{\
+                                \  \"id\": \"Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5\",\
+                                \  \"errors\": {\
+                                \    \"title\": {\
+                                \      \"code\": \"kms_failure\",\
+                                \      \"reason\": \"Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html\"\
+                                \    }\
+                                \  }\
+                                \}"
+            licenseError = License { licenseId = LicenseId "Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5"
+                                   , licenseErrors = Just $ Errors
+                                       { errorsTitle = ErrorTitle
+                                           { errorTitleCode = ErrorCode "kms_failure"
+                                           , errorTitleReason = "Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html"
+                                           }
+                                       }
+                                   , licenseName             = Nothing
+                                   , licenseTotalUnits       = Nothing
+                                   , licenseConsumedUnits    = Nothing
+                                   }
+            licenseListJson = "{\"items\":[" <> licenseJson <> "," <> licenseErrorJson <> "]}"
+            licenseList = LicenseList [ license, licenseError ]
 
         it "can be unwrapped from LicenseList" $ do
-            unwrap licenseList `shouldBe` [ license ]
+            unwrap licenseList `shouldBe` [ license, licenseError ]
 
         it "decodes Team License API response JSON" $ do
             eitherDecode licenseJson `shouldBe` Right license
@@ -450,9 +669,28 @@ spec = do
                        \  \"id\" : \"OTZhYmMyYWEtM2RjYy0xMWU1LWExNTItZmUzNDgxOWNkYzlh\",\
                        \  \"name\" : \"Full Administrator\"\
                        \}"
-            role = Role { roleId    = RoleId "OTZhYmMyYWEtM2RjYy0xMWU1LWExNTItZmUzNDgxOWNkYzlh"
-                        , roleName  = RoleName "Full Administrator"
+            role = Role { roleId     = RoleId "OTZhYmMyYWEtM2RjYy0xMWU1LWExNTItZmUzNDgxOWNkYzlh"
+                        , roleErrors = Nothing
+                        , roleName   = Just $ RoleName "Full Administrator"
                         }
+            roleErrorJson = "{\
+                             \  \"id\": \"Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5\",\
+                             \  \"errors\": {\
+                             \    \"title\": {\
+                             \      \"code\": \"kms_failure\",\
+                             \      \"reason\": \"Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html\"\
+                             \    }\
+                             \  }\
+                             \}"
+            roleError = Role { roleId = RoleId "Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5"
+                             , roleErrors = Just $ Errors
+                                 { errorsTitle = ErrorTitle
+                                     { errorTitleCode = ErrorCode "kms_failure"
+                                     , errorTitleReason = "Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html"
+                                     }
+                                 }
+                             , roleName = Nothing
+                             }
             roleListJson = "{\"items\":[" <> roleJson <> "]}"
             roleList = RoleList [ role ]
 

@@ -101,9 +101,10 @@ invalidPaginationApp ress req respond = do
 
 teamGen :: String -> Team
 teamGen i = Team { teamId           = TeamId . pack $ "teamId" <> i
-                 , teamName         = TeamName . pack $ "teamName" <> i
-                 , teamCreatorId    = PersonId . pack $ "teamCreatorId" <> i
-                 , teamCreated      = Timestamp . pack $ "teamCreated" <> i
+                 , teamErrors       = Nothing
+                 , teamName         = Just . TeamName . pack $ "teamName" <> i
+                 , teamCreatorId    = Just . PersonId . pack $ "teamCreatorId" <> i
+                 , teamCreated      = Just . Timestamp . pack $ "teamCreated" <> i
                  }
 
 teamList :: String -> [Team]
@@ -183,40 +184,42 @@ spec = do
                           \  \"loginEnabled\" : true\
                           \}"
             person1 = Person { personId            = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
-                             , personEmails        = [Email "johnny.chang@foomail.com", Email "jchang@barmail.com"]
-                             , personDisplayName   = DisplayName "John Andersen"
+                             , personErrors        = Nothing
+                             , personEmails        = Just [Email "johnny.chang@foomail.com", Email "jchang@barmail.com"]
+                             , personDisplayName   = Just $ DisplayName "John Andersen"
                              , personNickName      = Nothing
-                             , personFirstName     = Just (FirstName "John")
-                             , personLastName      = Just (LastName "Andersen")
-                             , personAvatar        = Just (AvatarUrl "https://1efa7a94ed21783e352-c62266528714497a17239ececf39e9e2.ssl.cf1.rackcdn.com/V1~54c844c89e678e5a7b16a306bc2897b9~wx29yGtlTpilEFlYzqPKag==~1600")
-                             , personOrgId         = OrganizationId "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE"
+                             , personFirstName     = Just $ FirstName "John"
+                             , personLastName      = Just $ LastName "Andersen"
+                             , personAvatar        = Just $ AvatarUrl "https://1efa7a94ed21783e352-c62266528714497a17239ececf39e9e2.ssl.cf1.rackcdn.com/V1~54c844c89e678e5a7b16a306bc2897b9~wx29yGtlTpilEFlYzqPKag==~1600"
+                             , personOrgId         = Just $ OrganizationId "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE"
                              , personRoles         = Just [ RoleId "Y2lzY29zcGFyazovL3VzL1JPT00vOGNkYzQwYzQtZjA5ZS0zY2JhLThjMjYtZGQwZTcwYWRlY2Iy"
                                                           , RoleId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"]
                              , personLicenses      = Just [ LicenseId "Y2lzY29zcGFyazovL3VzL1JPT00vOGNkYzQwYzQtZjA5ZS0zY2JhLThjMjYtZGQwZTcwYWRlY2Iy"
                                                           , LicenseId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"]
-                             , personCreated       = Timestamp "2015-10-18T14:26:16.000Z"
-                             , personTimezone      = Just (Timezone "America/Denver")
-                             , personLastActivity  = Just (Timestamp "2015-10-18T14:26:16.028Z")
+                             , personCreated       = Just $ Timestamp "2015-10-18T14:26:16.000Z"
+                             , personTimezone      = Just $ Timezone "America/Denver"
+                             , personLastActivity  = Just $ Timestamp "2015-10-18T14:26:16.028Z"
                              , personStatus        = Just PersonStatusActive
                              , personInvitePending = Just False
                              , personLoginEnabled  = Just True
                              , personType          = Nothing
                              }
             personGen i = Person { personId            = PersonId . pack $ "PersonId" <> i
-                                 , personEmails        = [Email . pack $ "email" <> i <> "@foomail.com", Email . pack $ "email" <> i <> "@barmail.com"]
-                                 , personDisplayName   = DisplayName . pack $ "John Andersen" <> i
+                                 , personErrors        = Nothing
+                                 , personEmails        = Just [Email . pack $ "email" <> i <> "@foomail.com", Email . pack $ "email" <> i <> "@barmail.com"]
+                                 , personDisplayName   = Just . DisplayName . pack $ "John Andersen" <> i
                                  , personNickName      = Nothing
-                                 , personFirstName     = Just (FirstName . pack $ "John" <> i)
-                                 , personLastName      = Just (LastName . pack $ "Andersen" <> i)
-                                 , personAvatar        = Just (AvatarUrl . pack $ "https://AvatarUrl" <> i)
-                                 , personOrgId         = OrganizationId . pack $ "OrganizationId" <> i
+                                 , personFirstName     = Just $ FirstName . pack $ "John" <> i
+                                 , personLastName      = Just $ LastName . pack $ "Andersen" <> i
+                                 , personAvatar        = Just $ AvatarUrl . pack $ "https://AvatarUrl" <> i
+                                 , personOrgId         = Just . OrganizationId . pack $ "OrganizationId" <> i
                                  , personRoles         = Just [ RoleId . pack $ "RoleIdA" <> i
                                                               , RoleId . pack $ "RoleIdB" <> i]
                                  , personLicenses      = Just [ LicenseId . pack $ "LicenseIdX" <> i
                                                               , LicenseId . pack $ "LicenseIdY" <> i]
-                                 , personCreated       = Timestamp . pack $ "Created" <> i
-                                 , personTimezone      = Just (Timezone . pack $ "Timezone" <> i)
-                                 , personLastActivity  = Just (Timestamp . pack $ "LastActivity" <> i)
+                                 , personCreated       = Just . Timestamp . pack $ "Created" <> i
+                                 , personTimezone      = Just $ Timezone . pack $ "Timezone" <> i
+                                 , personLastActivity  = Just $ Timestamp . pack $ "LastActivity" <> i
                                  , personStatus        = Just PersonStatusActive
                                  , personInvitePending = Just False
                                  , personLoginEnabled  = Just True
@@ -226,9 +229,9 @@ spec = do
             personListList = [ personList [c] | c <- ['a'..'d'] ]
             newPerson = CreatePerson { createPersonEmails       = Just $ [Email "johnny.chang@foomail.com", Email "jchang@barmail.com"]
                                      , createPersonDisplayName  = Just $ DisplayName "John Andersen"
-                                     , createPersonFirstName    = Just (FirstName "John")
-                                     , createPersonLastName     = Just (LastName "Andersen")
-                                     , createPersonAvatar       = Just (AvatarUrl "https://1efa7a94ed21783e352-c62266528714497a17239ececf39e9e2.ssl.cf1.rackcdn.com/V1~54c844c89e678e5a7b16a306bc2897b9~wx29yGtlTpilEFlYzqPKag==~1600")
+                                     , createPersonFirstName    = Just $ FirstName "John"
+                                     , createPersonLastName     = Just $ LastName "Andersen"
+                                     , createPersonAvatar       = Just $ AvatarUrl "https://1efa7a94ed21783e352-c62266528714497a17239ececf39e9e2.ssl.cf1.rackcdn.com/V1~54c844c89e678e5a7b16a306bc2897b9~wx29yGtlTpilEFlYzqPKag==~1600"
                                      , createPersonOrgId        = Just $ OrganizationId "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE"
                                      , createPersonRoles        = Just [ RoleId "Y2lzY29zcGFyazovL3VzL1JPT00vOGNkYzQwYzQtZjA5ZS0zY2JhLThjMjYtZGQwZTcwYWRlY2Iy"
                                                                        , RoleId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"]
@@ -426,9 +429,10 @@ spec = do
                        \  \"created\" : \"2015-10-18T14:26:16+00:00\"\
                        \}"
             team = Team { teamId        = TeamId "Y2lzY29zcGFyazovL3VzL1RFQU0vMTNlMThmNDAtNDJmYy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5"
-                        , teamName      = TeamName "Build Squad"
-                        , teamCreatorId = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
-                        , teamCreated   = Timestamp "2015-10-18T14:26:16+00:00"
+                        , teamErrors    = Nothing
+                        , teamName      = Just $ TeamName "Build Squad"
+                        , teamCreatorId = Just $ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
+                        , teamCreated   = Just $ Timestamp "2015-10-18T14:26:16+00:00"
                         }
             newTeam = CreateTeam $ TeamName "Build Squad"
             updateTeam = UpdateTeam $ TeamName "updatedTeamName"
@@ -610,22 +614,24 @@ spec = do
                                  \  \"created\" : \"2015-10-18T14:26:16.057Z\"\
                                  \}"
             teamMembership = TeamMembership { teamMembershipId                  = TeamMembershipId "Y2lzY29zcGFyazovL3VzL1RFQU1fTUVNQkVSU0hJUC8wZmNmYTJiOC1hZGNjLTQ1ZWEtYTc4Mi1lNDYwNTkyZjgxZWY6MTNlMThmNDAtNDJmYy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5"
-                                            , teamMembershipTeamId              = TeamId "Y2lzY29zcGFyazovL3VzL1RFQU0vMTNlMThmNDAtNDJmYy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5"
-                                            , teamMembershipPersonId            = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
-                                            , teamMembershipPersonEmail         = Email "john.andersen@example.com"
-                                            , teamMembershipPersonDisplayName   = DisplayName "John Andersen"
-                                            , teamMembershipPersonOrgId         = OrganizationId "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE"
-                                            , teamMembershipIsModerator         = True
-                                            , teamMembershipCreated             = Timestamp "2015-10-18T14:26:16.057Z"
+                                            , teamMembershipErrors              = Nothing
+                                            , teamMembershipTeamId              = Just $ TeamId "Y2lzY29zcGFyazovL3VzL1RFQU0vMTNlMThmNDAtNDJmYy0xMWU2LWE5ZDgtMjExYTBkYzc5NzY5"
+                                            , teamMembershipPersonId            = Just $ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
+                                            , teamMembershipPersonEmail         = Just $ Email "john.andersen@example.com"
+                                            , teamMembershipPersonDisplayName   = Just $ DisplayName "John Andersen"
+                                            , teamMembershipPersonOrgId         = Just $ OrganizationId "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE"
+                                            , teamMembershipIsModerator         = Just True
+                                            , teamMembershipCreated             = Just $ Timestamp "2015-10-18T14:26:16.057Z"
                                             }
             teamMembershipGen i = TeamMembership { teamMembershipId                  = TeamMembershipId . pack $ "teamMembershipId" <> i
-                                                 , teamMembershipTeamId              = TeamId . pack $ "teamId" <> i
-                                                 , teamMembershipPersonId            = PersonId . pack $ "personId" <> i
-                                                 , teamMembershipPersonEmail         = Email . pack $ "email" <> i <> "@example.com"
-                                                 , teamMembershipPersonDisplayName   = DisplayName . pack $ "DisplayName" <> i
-                                                 , teamMembershipPersonOrgId         = OrganizationId . pack $ "OrganizationId" <> i
-                                                 , teamMembershipIsModerator         = True
-                                                 , teamMembershipCreated             = Timestamp . pack $ "Timestamp" <> i
+                                                 , teamMembershipErrors              = Nothing
+                                                 , teamMembershipTeamId              = Just . TeamId . pack $ "teamId" <> i
+                                                 , teamMembershipPersonId            = Just . PersonId . pack $ "personId" <> i
+                                                 , teamMembershipPersonEmail         = Just . Email . pack $ "email" <> i <> "@example.com"
+                                                 , teamMembershipPersonDisplayName   = Just . DisplayName . pack $ "DisplayName" <> i
+                                                 , teamMembershipPersonOrgId         = Just . OrganizationId . pack $ "OrganizationId" <> i
+                                                 , teamMembershipIsModerator         = Just True
+                                                 , teamMembershipCreated             = Just . Timestamp . pack $ "Timestamp" <> i
                                                  }
             teamMembershipList j = [ teamMembershipGen $ j <> show i | i <- [1..3] ]
             teamMembershipListList = [ teamMembershipList [c] | c <- ['a'..'d'] ]
@@ -836,24 +842,26 @@ spec = do
                        \  \"created\" : \"2016-04-21T19:01:55.966Z\"\
                        \}"
             room = Room { roomId            = RoomId  "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
-                        , roomTitle         = RoomTitle "Project Unicorn - Sprint 0"
-                        , roomType          = RoomTypeGroup
-                        , roomIsLocked      = True
+                        , roomErrors        = Nothing
+                        , roomTitle         = Just $ RoomTitle "Project Unicorn - Sprint 0"
+                        , roomType          = Just RoomTypeGroup
+                        , roomIsLocked      = Just True
                         , roomSipAddress    = Just $ SipAddr "01234567890@meet.ciscospark.com"
-                        , roomLastActivity  = Timestamp "2016-04-21T19:12:48.920Z"
+                        , roomLastActivity  = Just $ Timestamp "2016-04-21T19:12:48.920Z"
                         , roomTeamId        = Just $ TeamId "Y2lzY29zcGFyazovL3VzL1JPT00vNjRlNDVhZTAtYzQ2Yi0xMWU1LTlkZjktMGQ0MWUzNDIxOTcz"
-                        , roomCreatorId     = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
-                        , roomCreated       = Timestamp "2016-04-21T19:01:55.966Z"
+                        , roomCreatorId     = Just $ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
+                        , roomCreated       = Just $ Timestamp "2016-04-21T19:01:55.966Z"
                         }
             roomGen i = Room { roomId           = RoomId . pack $ "roomId" <> i
-                             , roomTitle        = RoomTitle . pack $ "roomTitle" <> i
-                             , roomType         = RoomTypeGroup
-                             , roomIsLocked     = True
+                             , roomErrors       = Nothing
+                             , roomTitle        = Just . RoomTitle . pack $ "roomTitle" <> i
+                             , roomType         = Just RoomTypeGroup
+                             , roomIsLocked     = Just True
                              , roomSipAddress   = Just $ SipAddr . pack $ "rooomSipAddress" <> i <> "@meet.ciscospark.com"
-                             , roomLastActivity = Timestamp . pack $ "roomLastActivity" <> i
+                             , roomLastActivity = Just . Timestamp . pack $ "roomLastActivity" <> i
                              , roomTeamId       = Just $ TeamId . pack $ "roomTeamId" <> i
-                             , roomCreatorId    = PersonId . pack $ "personId" <> i
-                             , roomCreated      = Timestamp .pack $ "roomCreated" <> i
+                             , roomCreatorId    = Just . PersonId . pack $ "personId" <> i
+                             , roomCreated      = Just .Timestamp .pack $ "roomCreated" <> i
                              }
             roomList j = [ roomGen $ j <> show i | i <- [1..3] ]
             roomListList = [ roomList [c] | c <- ['a'..'d'] ]
@@ -1063,24 +1071,26 @@ spec = do
                              \  \"created\" : \"2015-10-18T14:26:16.203Z\"\
                              \}"
             membership = Membership { membershipId                  = MembershipId "Y2lzY29zcGFyazovL3VzL01FTUJFUlNISVAvMGQwYzkxYjYtY2U2MC00NzI1LWI2ZDAtMzQ1NWQ1ZDExZWYzOmNkZTFkZDQwLTJmMGQtMTFlNS1iYTljLTdiNjU1NmQyMjA3Yg"
-                                    , membershipRoomId              = RoomId "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
-                                    , membershipPersonId            = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
-                                    , membershipPersonEmail         = Email "john.andersen@example.com"
-                                    , membershipPersonDisplayName   = DisplayName "John Andersen"
-                                    , membershipPersonOrgId         = OrganizationId "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE"
-                                    , membershipIsModerator         = True
-                                    , membershipIsMonitor           = True
-                                    , membershipCreated             = Timestamp "2015-10-18T14:26:16.203Z"
+                                    , membershipErrors              = Nothing
+                                    , membershipRoomId              = Just $ RoomId "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
+                                    , membershipPersonId            = Just $ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
+                                    , membershipPersonEmail         = Just $ Email "john.andersen@example.com"
+                                    , membershipPersonDisplayName   = Just $ DisplayName "John Andersen"
+                                    , membershipPersonOrgId         = Just $ OrganizationId "Y2lzY29zcGFyazovL3VzL09SR0FOSVpBVElPTi85NmFiYzJhYS0zZGNjLTExZTUtYTE1Mi1mZTM0ODE5Y2RjOWE"
+                                    , membershipIsModerator         = Just True
+                                    , membershipIsMonitor           = Just True
+                                    , membershipCreated             = Just $ Timestamp "2015-10-18T14:26:16.203Z"
                                     }
             membershipGen i = Membership { membershipId                 = MembershipId . pack $ "membershipId" <> i
-                                         , membershipRoomId             = RoomId . pack $ "roomId" <> i
-                                         , membershipPersonId           = PersonId . pack $ "personId" <> i
-                                         , membershipPersonEmail        = Email . pack $ "email" <> i <> "@example.com"
-                                         , membershipPersonDisplayName  = DisplayName . pack $ "displayName" <> i
-                                         , membershipPersonOrgId        = OrganizationId . pack $ "orgId" <> i
-                                         , membershipIsModerator        = True
-                                         , membershipIsMonitor          = True
-                                         , membershipCreated            = Timestamp . pack $ "timestamp" <> i
+                                         , membershipErrors             = Nothing
+                                         , membershipRoomId             = Just . RoomId . pack $ "roomId" <> i
+                                         , membershipPersonId           = Just . PersonId . pack $ "personId" <> i
+                                         , membershipPersonEmail        = Just . Email . pack $ "email" <> i <> "@example.com"
+                                         , membershipPersonDisplayName  = Just . DisplayName . pack $ "displayName" <> i
+                                         , membershipPersonOrgId        = Just . OrganizationId . pack $ "orgId" <> i
+                                         , membershipIsModerator        = Just True
+                                         , membershipIsMonitor          = Just True
+                                         , membershipCreated            = Just . Timestamp . pack $ "timestamp" <> i
                                          }
             membershipList j = [ membershipGen $ j <> show i | i <- [1..3] ]
             membershipListList = [ membershipList [c] | c <- ['a'..'d'] ]
@@ -1297,32 +1307,34 @@ spec = do
                           \  \"mentionedPeople\" : [ \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM\", \"Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg\" ]\
                           \}"
             message = Message { messageId               = MessageId "Y2lzY29zcGFyazovL3VzL01FU1NBR0UvOTJkYjNiZTAtNDNiZC0xMWU2LThhZTktZGQ1YjNkZmM1NjVk"
-                              , messageRoomId           = RoomId "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
-                              , messageRoomType         = RoomTypeGroup
+                              , messageErrors           = Nothing
+                              , messageRoomId           = Just $ RoomId "Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
+                              , messageRoomType         = Just $ RoomTypeGroup
                               , messageToPersonId       = Just $ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mMDZkNzFhNS0wODMzLTRmYTUtYTcyYS1jYzg5YjI1ZWVlMmX"
                               , messageToPersonEmail    = Just $ Email "julie@example.com"
-                              , messageText             = MessageText "PROJECT UPDATE - A new project plan has been published on Box: http://box.com/s/lf5vj. The PM for this project is Mike C. and the Engineering Manager is Jane W."
+                              , messageText             = Just $ MessageText "PROJECT UPDATE - A new project plan has been published on Box: http://box.com/s/lf5vj. The PM for this project is Mike C. and the Engineering Manager is Jane W."
                               , messageHtml             = Just $ MessageHtml "<h1>HTML formatted message goes here</h1><p>when the message was posted in markdown format.</p>"
-                              , messageFiles            = Just $ [ FileUrl "http://www.example.com/images/media.png" ]
-                              , messagePersonId         = PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
-                              , messagePersonEmail      = Email "matt@example.com"
-                              , messageCreated          = Timestamp "2015-10-18T14:26:16+00:00"
-                              , messageMentionedPeople  = Just $ [ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM"
-                                                                 , PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ]
+                              , messageFiles            = Just [ FileUrl "http://www.example.com/images/media.png" ]
+                              , messagePersonId         = Just $ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNWIzNjE4Ny1jOGRkLTQ3MjctOGIyZi1mOWM0NDdmMjkwNDY"
+                              , messagePersonEmail      = Just $ Email "matt@example.com"
+                              , messageCreated          = Just $ Timestamp "2015-10-18T14:26:16+00:00"
+                              , messageMentionedPeople  = Just [ PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8yNDlmNzRkOS1kYjhhLTQzY2EtODk2Yi04NzllZDI0MGFjNTM"
+                                                               , PersonId "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83YWYyZjcyYy0xZDk1LTQxZjAtYTcxNi00MjlmZmNmYmM0ZDg" ]
                               }
             messageGen i = Message { messageId               = MessageId . pack $ "messageId" <> i
-                                   , messageRoomId           = RoomId . pack $ "roomId" <> i
-                                   , messageRoomType         = RoomTypeGroup
+                                   , messageErrors           = Nothing
+                                   , messageRoomId           = Just . RoomId . pack $ "roomId" <> i
+                                   , messageRoomType         = Just RoomTypeGroup
                                    , messageToPersonId       = Just . PersonId . pack $ "toPersonId" <> i
                                    , messageToPersonEmail    = Just . Email . pack $ "julie" <> i <> "@example.com"
-                                   , messageText             = MessageText . pack $ "messageText" <> i
+                                   , messageText             = Just . MessageText . pack $ "messageText" <> i
                                    , messageHtml             = Just . MessageHtml . pack $ "messageHtml" <> i
-                                   , messageFiles            = Just $ [ FileUrl . pack $ "http://www.example.com/images/media" <> i <> ".png" ]
-                                   , messagePersonId         = PersonId . pack $ "personId" <> i
-                                   , messagePersonEmail      = Email . pack $ "matt" <> i <> "@example.com"
-                                   , messageCreated          = Timestamp . pack $ "created" <> i
-                                   , messageMentionedPeople  = Just $ [ PersonId . pack $ "memtionedPeople1-" <> i
-                                                                      , PersonId . pack $ "memtionedPeople2-" <> i ]
+                                   , messageFiles            = Just [ FileUrl . pack $ "http://www.example.com/images/media" <> i <> ".png" ]
+                                   , messagePersonId         = Just . PersonId . pack $ "personId" <> i
+                                   , messagePersonEmail      = Just . Email . pack $ "matt" <> i <> "@example.com"
+                                   , messageCreated          = Just . Timestamp . pack $ "created" <> i
+                                   , messageMentionedPeople  = Just [ PersonId . pack $ "memtionedPeople1-" <> i
+                                                                    , PersonId . pack $ "memtionedPeople2-" <> i ]
                                    }
             messageList j = [ messageGen $ j <> show i | i <- [1..3] ]
             messageListList = [ messageList [c] | c <- ['a'..'d'] ]
@@ -1490,12 +1502,14 @@ spec = do
                                \  \"created\" : \"2015-10-18T14:26:16+00:00\"\
                                \}"
             organization = Organization { organizationId            = OrganizationId "OTZhYmMyYWEtM2RjYy0xMWU1LWExNTItZmUzNDgxOWNkYzlh"
-                                        , organizationDisplayName   = OrganizationDisplayName "Cisco, Inc."
-                                        , organizationCreated       = Timestamp "2015-10-18T14:26:16+00:00"
+                                        , organizationErrors        = Nothing
+                                        , organizationDisplayName   = Just $ OrganizationDisplayName "Cisco, Inc."
+                                        , organizationCreated       = Just $ Timestamp "2015-10-18T14:26:16+00:00"
                                         }
             organizationGen i = Organization { organizationId            = OrganizationId . pack $ "organizationId" <> i
-                                             , organizationDisplayName   = OrganizationDisplayName . pack $ "displayName" <> i
-                                             , organizationCreated       = Timestamp . pack $ "timestamp" <> i
+                                             , organizationErrors        = Nothing
+                                             , organizationDisplayName   = Just $ OrganizationDisplayName . pack $ "displayName" <> i
+                                             , organizationCreated       = Just $ Timestamp . pack $ "timestamp" <> i
                                              }
             organizationList j = [ organizationGen $ j <> show i | i <- [1..3] ]
             organizationListList = [ organizationList [c] | c <- ['a'..'d'] ]
@@ -1570,14 +1584,16 @@ spec = do
                           \  \"consumedUnits\" : 8\
                           \}"
             license = License { licenseId               = LicenseId "OTZhYmMyYWEtM2RjYy0xMWU1LWExNTItZmUzNDgxOWNkYzlh"
-                              , licenseName             = LicenseName "Spark Calling"
-                              , licenseTotalUnits       = LicenseUnit 42
-                              , licenseConsumedUnits    = LicenseUnit 8
+                              , licenseErrors           = Nothing
+                              , licenseName             = Just $ LicenseName "Spark Calling"
+                              , licenseTotalUnits       = Just $ LicenseUnit 42
+                              , licenseConsumedUnits    = Just $ LicenseUnit 8
                               }
             licenseGen i = License { licenseId               = LicenseId . pack $ "licenseId" <> i
-                                   , licenseName             = LicenseName . pack $ "licenseName" <> i
-                                   , licenseTotalUnits       = LicenseUnit 42
-                                   , licenseConsumedUnits    = LicenseUnit 8
+                                   , licenseErrors           = Nothing
+                                   , licenseName             = Just $ LicenseName . pack $ "licenseName" <> i
+                                   , licenseTotalUnits       = Just $ LicenseUnit 42
+                                   , licenseConsumedUnits    = Just $ LicenseUnit 8
                                    }
             licenseList j = [ licenseGen $ j <> show i | i <- [1..3] ]
             licenseListList = [ licenseList [c] | c <- ['a'..'d'] ]
@@ -1668,11 +1684,13 @@ spec = do
                        \  \"id\" : \"OTZhYmMyYWEtM2RjYy0xMWU1LWExNTItZmUzNDgxOWNkYzlh\",\
                        \  \"name\" : \"Full Administrator\"\
                        \}"
-            role = Role { roleId    = RoleId "OTZhYmMyYWEtM2RjYy0xMWU1LWExNTItZmUzNDgxOWNkYzlh"
-                        , roleName  = RoleName "Full Administrator"
+            role = Role { roleId        = RoleId "OTZhYmMyYWEtM2RjYy0xMWU1LWExNTItZmUzNDgxOWNkYzlh"
+                        , roleErrors    = Nothing
+                        , roleName      = Just $ RoleName "Full Administrator"
                         }
-            roleGen i = Role { roleId   = RoleId . pack $ "roleId" <> i
-                             , roleName = RoleName . pack $ "roleName" <> i
+            roleGen i = Role { roleId       = RoleId . pack $ "roleId" <> i
+                             , roleErrors   = Nothing
+                             , roleName     = Just . RoleName . pack $ "roleName" <> i
                              }
             roleList j = [ roleGen $ j <> show i | i <- [1..3] ]
             roleListList = [ roleList [c] | c <- ['a'..'d'] ]

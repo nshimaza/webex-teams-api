@@ -53,9 +53,5 @@ but you can make it by yourself so easily as described.
 
 ### Limitation
 
-Following items are not yet implemented.
-
-- WebHook
-- Element level error in List API
-
-Also, relative reference in Link Header is not recognized as next page
+- WebHook API is not implemented.
+- Relative reference in Link Header is not recognized as next page
