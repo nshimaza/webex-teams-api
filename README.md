@@ -24,16 +24,28 @@ See source under app directory of the source package.
 
 ### Sample Usage
 
+Sending a message to a Spark Space (Room).
+
+```haskell
+    let auth        = Authorization "your authorization token"
+        roomId      = RoomId "Room ID your message to be sent"
+        messageText = MessageText "your message"
+        message     = CreateMessage (Just roomId) Nothing Nothing (Just messageText) Nothing Nothing
+    createEntity auth def createMessage >>= print . getResponseBody
+```
+
 Following example is calling List Membership API which returns membership between
 Spark spaces (Room) and Spark users (Person).  You can extract each Membership from
 Conduit pipe.  The streamEntityWithFilter automatically performs pagenation when it is
 asked more element and last response indicated subsequent page in HTTP Link Header.
 
-```Haskell
+```haskell
     let auth   = Authorization "your authorization token"
         filter = MembershipFilter yourRoomId Nothing Nothing
     runConduit $ streamEntityWithFilter auth def filter .| takeC 200 .| mapM_C print
 ```
+
+You can find more examples in app/Main.hs
 
 ### Support for Lens
 
@@ -42,7 +54,7 @@ Those records are designed to allow create lenses by Control.Lens.TH.makeFields.
 
 Following example creates overloaded accessors for 'Person', 'Room' and 'Team'.
 
-```Haskell
+```haskell
 makeFields ''Person
 makeFields ''Room
 makeFields ''Team
@@ -50,7 +62,7 @@ makeFields ''Team
 
 You can access 'personId', 'roomId' and 'teamId' via overloaded accessor function 'id' like this.
 
-```Haskell
+```haskell
     let yourPersonId = yourPerson ^. id
         yourRoomId = yourRoom ^. id
         yourTeamId = yourTeam ^. id

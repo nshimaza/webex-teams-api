@@ -55,6 +55,14 @@ run auth (MembershipDetailCommand membershipId) =
 run auth (MessageDetailCommand messageId) =
     getDetail auth def messageId >>= print . getResponseBody
 
+run auth (CreateMessageCommand roomId messageText) =
+    createEntity auth def message >>= print . getResponseBody
+      where
+        message = CreateMessage (Just roomId) Nothing Nothing (Just messageText) Nothing Nothing
+
+run auth (DeleteMessageCommand messageId) =
+    deleteMessage auth def messageId >>= print . getResponseBody
+
 run auth (TeamDetailCommand teamId) =
     getDetail auth def teamId >>= print . getResponseBody
 
@@ -81,6 +89,8 @@ data Command
     | MembershipDetailCommand MembershipId
     | MessageListCommand Int MessageFilter
     | MessageDetailCommand MessageId
+    | CreateMessageCommand RoomId MessageText
+    | DeleteMessageCommand MessageId
     | TeamListCommand Int
     | TeamDetailCommand TeamId
     | TeamMembershipListCommand Int TeamMembershipFilter
@@ -271,11 +281,25 @@ messageListOptParser = MessageListCommand <$> countParser 10
                                                              <*> optional beforeMessageOptParser
                                                              )
 
+messageIdParser :: Parser MessageId
+messageIdParser = MessageId . T.pack <$> strArgument
+    (  metavar "MESSAGE_ID"
+    <> help    "Identifier of a message")
+
 messageDetailOptParser :: Parser Command
-messageDetailOptParser = MessageDetailCommand <$> (MessageId . T.pack <$> strArgument
-                                                    (  metavar "MESSAGE_ID"
-                                                    <> help    "Identifier of a message"
-                                                    ))
+messageDetailOptParser = MessageDetailCommand <$> messageIdParser
+
+messageTextParser :: Parser MessageText
+messageTextParser = MessageText . T.pack <$> strArgument
+    (  metavar "MESSAGE_TEXT"
+    <> help    "Body of message in text"
+    )
+
+createMessageOptParser :: Parser Command
+createMessageOptParser = CreateMessageCommand <$> roomIdParser <*> messageTextParser
+
+deleteMessageOptParser :: Parser Command
+deleteMessageOptParser = DeleteMessageCommand <$> messageIdParser
 
 {-
     Team specific command line option parsers
@@ -320,6 +344,8 @@ commandSubParser = hsubparser
     <> command "membership-detail" (info membershipDetailOptParser (progDesc "Get detail for a membership by ID"))
     <> command "message-list" (info messageListOptParser (progDesc "List messages in a room"))
     <> command "message-detail" (info messageDetailOptParser (progDesc "Get detail for a message by ID"))
+    <> command "create-message" (info createMessageOptParser (progDesc "Send a message to a room"))
+    <> command "delete-message" (info deleteMessageOptParser (progDesc "Delete a message"))
     <> command "team-list" (info teamListOptParser (progDesc "List belonging teams"))
     <> command "team-detail" (info teamDetailOptParser (progDesc "Get detail for a team by ID"))
     <> command "team-membership-list" (info teamMembershipListOptParser (progDesc "List team memberships of authenticated user"))

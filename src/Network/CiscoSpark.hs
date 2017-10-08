@@ -22,12 +22,16 @@ Also those functions transform chunky response into seamless stream of elements.
 
 = Examples
 
-Obtaining detail of a user.
-
 @
-    -- Obtaining detail of a user.
+    -- Sending a message to a room.
     let auth        = Authorization "your authorization token"
-        personId    = PersonId "your person ID"
+        roomId      = RoomId "Room ID your message to be sent"
+        messageText = MessageText "your message"
+        message     = CreateMessage (Just roomId) Nothing Nothing (Just messageText) Nothing Nothing
+    createEntity auth def createMessage >>= print . getResponseBody
+
+    -- Obtaining detail of a user.
+    let personId    = PersonId "your person ID"
     getDetail auth def personId >>= print . getResponseBody
 
     -- Obtaining membership of a room as stream of object representing each membership relation.
