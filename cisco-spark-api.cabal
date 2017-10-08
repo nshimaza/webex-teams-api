@@ -1,5 +1,5 @@
 name:                cisco-spark-api
-version:             0.0.1.0
+version:             0.1.0.0
 synopsis:            A Haskell bindings for Cisco Spark API
 description:         Cisco-spark-api package provides types and functions for accessing Cisco Spark REST API.
 
