@@ -20,6 +20,28 @@ Some Spark REST API return list of objects.  Those APIs require HTTP Link Header
 Haskell functions for those APIs automatically request subsequent pages as needed.
 Also those functions transform chunky response into seamless stream of elements.
 
+= Examples
+
+Obtaining detail of a user.
+
+@
+    -- Obtaining detail of a user.
+    let auth        = Authorization "your authorization token"
+        personId    = PersonId "your person ID"
+    getDetail auth def personId >>= print . getResponseBody
+
+    -- Obtaining membership of a room as stream of object representing each membership relation.
+    let filter = MembershipFilter yourRoomId Nothing Nothing
+    runConduit $ streamEntityWithFilter auth def filter .| takeC 200 .| mapM_C print
+
+    -- Create a room.
+    let createRoom  = CreateRoom "Title of the new room" Nothing
+    createEntity auth def createRoom >>= print . getResponseBody
+
+    -- Delete a room.
+    deleteRoom auth def roomId >>= print . getResponseBody
+@
+
 = Support for Lens
 
 This package provides many of records representing objects communicated via Cisco Spark REST API.

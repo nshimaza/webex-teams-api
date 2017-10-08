@@ -143,6 +143,9 @@ newtype Timestamp   = Timestamp Text deriving (Eq, Show, Generic, ToJSON, FromJS
 -- | Error code for element level error potentially contained in List API responses.
 newtype ErrorCode   = ErrorCode Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
 
+{-|
+    'ErrorTitle' represent concrete error code and reason.  It appears in 'Errors'.
+-}
 data ErrorTitle = ErrorTitle
     { errorTitleCode   :: ErrorCode -- ^ Error code of element level error in List API response.
     , errorTitleReason :: Text      -- ^ Reason explanation of the error.
@@ -151,6 +154,13 @@ data ErrorTitle = ErrorTitle
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFields = True } ''ErrorTitle)
 -- ^ 'ErrorTitle' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
+{-|
+    'Errors' is used for element level error in List API.
+    When list API failed to retrieve an element, it returns this object for the element
+    and response API status as successful instead of failing entire API request.
+
+    Refer to [API Document](https://developer.ciscospark.com/errors.html) for more detail.
+-}
 newtype Errors = Errors { errorsTitle :: ErrorTitle } deriving (Eq, Show)
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 6, omitNothingFields = True } ''Errors)
 -- ^ 'Errors' derives ToJSON and FromJSON via deriveJSON template haskell function.
@@ -258,6 +268,7 @@ instance SparkResponse PersonId where
 instance SparkDetail PersonId where
     toIdStr (PersonId s) = s
 
+-- | 'PersonList' is decoded from response JSON of List People REST call.  It is list of 'Person'.
 newtype PersonList = PersonList { personListItems :: [Person] } deriving (Eq, Show)
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFields = True } ''PersonList)
 -- ^ 'PersonList' derives ToJSON and FromJSON via deriveJSON template haskell function.
