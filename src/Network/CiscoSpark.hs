@@ -167,7 +167,7 @@ import           Data.Aeson                  (FromJSON, ToJSON)
 import           Data.ByteString             (ByteString)
 import           Data.ByteString.Char8       as C8 (unpack)
 import           Data.Default                (Default (def))
-import           Data.Maybe                  (maybeToList, catMaybes)
+import           Data.Maybe                  (catMaybes, maybeToList)
 import           Data.Monoid                 ((<>))
 import           Data.Text                   (Text)
 import           Data.Text.Encoding          (encodeUtf8)
@@ -182,9 +182,9 @@ import           Network.CiscoSpark.Types
 newtype Authorization = Authorization ByteString deriving (Eq, Show)
 -- | Wrapping 'Request' in order to provide easy default value specifically for Cisco Spark public API.
 data CiscoSparkRequest = CiscoSparkRequest
-    { ciscoSparkRequestRequest      :: Request  -- ^ Holds pre-set 'Request' for REST API.
-    , ciscoSparkRequestScheme       :: String   -- ^ Should be "https:" in production.
-    , ciscoSparkRequestAuthority    :: URIAuth  -- ^ Authority part of request URI.
+    { ciscoSparkRequestRequest   :: Request -- ^ Holds pre-set 'Request' for REST API.
+    , ciscoSparkRequestScheme    :: String  -- ^ Should be "https:" in production.
+    , ciscoSparkRequestAuthority :: URIAuth -- ^ Authority part of request URI.
     } deriving (Show)
 
 -- | Common part of 'Request' against Spark API.

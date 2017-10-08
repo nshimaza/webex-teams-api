@@ -3,9 +3,9 @@
 module Network.CiscoSpark.InternalSpec where
 
 import           Data.Attoparsec.ByteString
-import           Data.ByteString            (pack)
-import           Data.Either                (isLeft)
-import           Network.URI                (URIAuth (..))
+import           Data.ByteString             (pack)
+import           Data.Either                 (isLeft)
+import           Network.URI                 (URIAuth (..))
 
 import           Test.Hspec
 

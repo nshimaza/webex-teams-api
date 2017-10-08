@@ -14,7 +14,7 @@ module Network.CiscoSpark.Internal where
 
 import           Prelude                    hiding (concat, takeWhile)
 
-import           Control.Applicative
+import           Control.Applicative        ((<|>))
 import           Data.Attoparsec.ByteString
 import           Data.ByteString            (ByteString, concat, pack,
                                              singleton)

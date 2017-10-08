@@ -51,7 +51,7 @@ import           Data.Aeson.TH               (constructorTagModifier,
                                               omitNothingFields)
 import           Data.ByteString             (ByteString)
 import           Data.Default                (Default (def))
-import           Data.Maybe                  (maybeToList, catMaybes)
+import           Data.Maybe                  (catMaybes, maybeToList)
 import           Data.Text                   (Text)
 import           Data.Text.Encoding          (encodeUtf8)
 
@@ -144,8 +144,8 @@ newtype Timestamp   = Timestamp Text deriving (Eq, Show, Generic, ToJSON, FromJS
 newtype ErrorCode   = ErrorCode Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
 
 data ErrorTitle = ErrorTitle
-    { errorTitleCode  :: ErrorCode
-    , errorTitleReason :: Text
+    { errorTitleCode   :: ErrorCode -- ^ Error code of element level error in List API response.
+    , errorTitleReason :: Text      -- ^ Reason explanation of the error.
     } deriving (Eq, Show)
 
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFields = True } ''ErrorTitle)
