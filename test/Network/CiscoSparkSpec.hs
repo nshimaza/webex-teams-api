@@ -43,12 +43,12 @@ newtype MockServer = MockServer ThreadMap
 mockBaseRequestRequest
     = C.addRequestHeader "Content-Type" "application/json; charset=utf-8"
     $ C.setRequestPort 3000
-    $ C.setRequestHost "localhost"
+    $ C.setRequestHost "127.0.0.1"
     $ C.setRequestSecure False
     $ C.defaultRequest
 
 mockBaseRequest :: CiscoSparkRequest
-mockBaseRequest = CiscoSparkRequest mockBaseRequestRequest "http:" $ URIAuth "" "localhost" ":3000"
+mockBaseRequest = CiscoSparkRequest mockBaseRequestRequest "http:" $ URIAuth "" "127.0.0.1" ":3000"
 
 dummyAuth :: Authorization
 dummyAuth = Authorization "dummyAuth"
@@ -83,20 +83,20 @@ paginationApp ress req respond = do
     let (cTypes, body) = dispatch $ rawPathInfo req
     respond $ responseLBS status200 cTypes body
       where
-        dispatch "/1"   = ([contentType, ("Link", "<http://localhost:3000/2>; rel=\"next\"")], ress !! 1)
-        dispatch "/2"   = ([contentType, ("Link", "<http://localhost:3000/3>; rel=\"next\"")], ress !! 2)
+        dispatch "/1"   = ([contentType, ("Link", "<http://127.0.0.1:3000/2>; rel=\"next\"")], ress !! 1)
+        dispatch "/2"   = ([contentType, ("Link", "<http://127.0.0.1:3000/3>; rel=\"next\"")], ress !! 2)
         dispatch "/3"   = ([contentType], ress !! 3)
-        dispatch _      = ([contentType, ("Link", "<http://localhost:3000/1>; rel=\"next\"")], ress !! 0)
+        dispatch _      = ([contentType, ("Link", "<http://127.0.0.1:3000/1>; rel=\"next\"")], ress !! 0)
 
 invalidPaginationApp :: [L.ByteString] -> Application
 invalidPaginationApp ress req respond = do
     let (cTypes, body) = dispatch $ rawPathInfo req
     respond $ responseLBS status200 cTypes body
       where
-        dispatch "/1"   = ([contentType, ("Link", "<http://localhost:8888/2>; rel=\"next\"")], ress !! 1)
-        dispatch "/2"   = ([contentType, ("Link", "<http://localhost:3000/3>; rel=\"next\"")], ress !! 2)
+        dispatch "/1"   = ([contentType, ("Link", "<http://127.0.0.1:8888/2>; rel=\"next\"")], ress !! 1)
+        dispatch "/2"   = ([contentType, ("Link", "<http://127.0.0.1:3000/3>; rel=\"next\"")], ress !! 2)
         dispatch "/3"   = ([contentType], ress !! 3)
-        dispatch _      = ([contentType, ("Link", "<http://localhost:3000/1>; rel=\"next\"")], ress !! 0)
+        dispatch _      = ([contentType, ("Link", "<http://127.0.0.1:3000/1>; rel=\"next\"")], ress !! 0)
 
 
 teamGen :: String -> Team
@@ -157,7 +157,7 @@ spec = do
             rawPathInfo receivedReq `shouldBe` "/v1/teams"
 
             let path = getNextUrl res1
-            path `shouldBe` Just "http://localhost:3000/1"
+            path `shouldBe` Just "http://127.0.0.1:3000/1"
 
             req2 <- parseRequest $ "GET " <> C8.unpack (fromJust path)
             res2 <- httpJSON req2

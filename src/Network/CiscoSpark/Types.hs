@@ -199,7 +199,7 @@ data PersonStatus   = PersonStatusActive        -- ^ The 'Person' is currently a
                     | PersonStatusOutOfOffice   -- ^ Email system of the 'Person' currently sets vacation.  Decoded from \"OutOfOffice\".
                     | PersonStatusDoNotDisturb  -- ^ The 'Person' is explicitly indicated do-not-disturb.  Decoded from \"DoNotDisturb\".
                     | PersonStatusUnknown       -- ^ The status of the 'Person' is unknown.  Decoded from \"unknown\".
-                    deriving (Eq, Show, Generic)
+                    deriving (Eq, Generic, Show)
 
 -- | 'PersonStatus' implements 'toEncoding' to encode each constructor into JSON enum value.
 instance ToJSON PersonStatus where
@@ -1049,3 +1049,22 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 8, omitNothingFiel
 instance SparkListItem Role where
     type ToList Role = RoleList
     unwrap = roleListItems
+
+-- | WebHookResource indicates source of event which triggered WebHook access.
+data WebHookResource = WebHookResourceMemberships
+                     | WebHookResourceMessages
+                     | WebHookResourceRooms
+                     deriving (Eq, Show)
+
+$(deriveJSON defaultOptions { constructorTagModifier = dropAndLow 15 } ''WebHookResource)
+-- ^ 'WebHookResource' derives ToJSON and FromJSON via deriveJSON template haskell function.
+
+-- | WebHookEvent indicates which event triggered WebHook access.
+data WebHookEvent = WebHookEventMemberships
+                     | WebHookEventCreated
+                     | WebHookEventUpdated
+                     | WebHookEventDeleted
+                     deriving (Eq, Show)
+
+$(deriveJSON defaultOptions { constructorTagModifier = dropAndLow 12 } ''WebHookEvent)
+-- ^ 'WebHookEvent' derives ToJSON and FromJSON via deriveJSON template haskell function.
