@@ -18,8 +18,8 @@ spec = do
                          \    \"reason\": \"Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html\"\
                          \  }\
                          \}"
-            errors = Errors { errorsTitle = ErrorTitle { errorTitleCode = ErrorCode "kms_failure"
-                                                       , errorTitleReason = "Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html"
+            errors = Errors { errorsTitle = ErrorTitle { errorTitleCode     = ErrorCode "kms_failure"
+                                                       , errorTitleReason   = "Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html"
                                                        }
                             }
 
@@ -110,29 +110,29 @@ spec = do
                               \    }\
                               \  }\
                               \}"
-            personError = Person { personId = PersonId "Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5"
-                                 , personErrors = Just $ Errors
-                                     { errorsTitle = ErrorTitle
-                                         { errorTitleCode = ErrorCode "kms_failure"
+            personError = Person { personId                 = PersonId "Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5"
+                                 , personErrors             = Just $ Errors
+                                     { errorsTitle          = ErrorTitle
+                                         { errorTitleCode   = ErrorCode "kms_failure"
                                          , errorTitleReason = "Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html"
                                          }
                                      }
-                                 ,personEmails        = Nothing
-                                 ,personDisplayName   = Nothing
-                                 ,personNickName      = Nothing
-                                 ,personFirstName     = Nothing
-                                 ,personLastName      = Nothing
-                                 ,personAvatar        = Nothing
-                                 ,personOrgId         = Nothing
-                                 ,personRoles         = Nothing
-                                 ,personLicenses      = Nothing
-                                 ,personCreated       = Nothing
-                                 ,personTimezone      = Nothing
-                                 ,personLastActivity  = Nothing
-                                 ,personStatus        = Nothing
-                                 ,personInvitePending = Nothing
-                                 ,personLoginEnabled  = Nothing
-                                 ,personType          = Nothing
+                                 ,personEmails              = Nothing
+                                 ,personDisplayName         = Nothing
+                                 ,personNickName            = Nothing
+                                 ,personFirstName           = Nothing
+                                 ,personLastName            = Nothing
+                                 ,personAvatar              = Nothing
+                                 ,personOrgId               = Nothing
+                                 ,personRoles               = Nothing
+                                 ,personLicenses            = Nothing
+                                 ,personCreated             = Nothing
+                                 ,personTimezone            = Nothing
+                                 ,personLastActivity        = Nothing
+                                 ,personStatus              = Nothing
+                                 ,personInvitePending       = Nothing
+                                 ,personLoginEnabled        = Nothing
+                                 ,personType                = Nothing
                              }
             personListJson = "{\"items\":[" <> personJson1 <> "," <> personJson2 <> "," <> personErrorJson <> "]}"
             personList = PersonList [ person1, person2, personError ]
@@ -200,16 +200,16 @@ spec = do
                             \    }\
                             \  }\
                             \}"
-            teamError = Team { teamId = TeamId "Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5"
-                             , teamErrors = Just $ Errors
-                                 { errorsTitle = ErrorTitle
-                                     { errorTitleCode = ErrorCode "kms_failure"
+            teamError = Team { teamId                   = TeamId "Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5"
+                             , teamErrors               = Just $ Errors
+                                 { errorsTitle          = ErrorTitle
+                                     { errorTitleCode   = ErrorCode "kms_failure"
                                      , errorTitleReason = "Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html"
                                      }
                                  }
-                             , teamName      = Nothing
-                             , teamCreatorId = Nothing
-                             , teamCreated   = Nothing
+                             , teamName                 = Nothing
+                             , teamCreatorId            = Nothing
+                             , teamCreated              = Nothing
                              }
             teamListJson = "{\"items\":[" <> teamJson <> "," <> teamErrorJson <> "]}"
             teamList = TeamList [ team, teamError ]
@@ -267,11 +267,11 @@ spec = do
                                       \    }\
                                       \  }\
                                       \}"
-            teamMembershipError = TeamMembership { teamMembershipId = TeamMembershipId "Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5"
-                                                 , teamMembershipErrors = Just $ Errors
-                                                     { errorsTitle = ErrorTitle
-                                                         { errorTitleCode = ErrorCode "kms_failure"
-                                                         , errorTitleReason = "Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html"
+            teamMembershipError = TeamMembership { teamMembershipId                 = TeamMembershipId "Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5"
+                                                 , teamMembershipErrors             = Just $ Errors
+                                                     { errorsTitle                  = ErrorTitle
+                                                         { errorTitleCode           = ErrorCode "kms_failure"
+                                                         , errorTitleReason         = "Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html"
                                                          }
                                                      }
                                                  , teamMembershipTeamId             = Nothing
@@ -350,21 +350,21 @@ spec = do
                             \    }\
                             \  }\
                             \}"
-            roomError = Room { roomId = RoomId "Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5"
-                             , roomErrors = Just $ Errors
-                                 { errorsTitle = ErrorTitle
-                                     { errorTitleCode = ErrorCode "kms_failure"
+            roomError = Room { roomId                   = RoomId "Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5"
+                             , roomErrors               = Just $ Errors
+                                 { errorsTitle          = ErrorTitle
+                                     { errorTitleCode   = ErrorCode "kms_failure"
                                      , errorTitleReason = "Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html"
                                      }
                                  }
-                             , roomTitle = Nothing
-                             , roomType = Nothing
-                             , roomIsLocked = Nothing
-                             , roomSipAddress = Nothing
-                             , roomLastActivity = Nothing
-                             , roomTeamId = Nothing
-                             , roomCreatorId = Nothing
-                             , roomCreated = Nothing
+                             , roomTitle                = Nothing
+                             , roomType                 = Nothing
+                             , roomIsLocked             = Nothing
+                             , roomSipAddress           = Nothing
+                             , roomLastActivity         = Nothing
+                             , roomTeamId               = Nothing
+                             , roomCreatorId            = Nothing
+                             , roomCreated              = Nothing
                              }
             roomListJson = "{\"items\":[" <> roomJson <> "," <> roomErrorJson <> "]}"
             roomList = RoomList [ room, roomError ]
@@ -381,7 +381,7 @@ spec = do
             (decode . encode) roomList `shouldBe` Just roomList
 
         it "encodes CreateRoom to JSON" $ do
-            let src = CreateRoom { createRoomTitle = RoomTitle "Project Unicorn - Sprint 0"
+            let src = CreateRoom { createRoomTitle  = RoomTitle "Project Unicorn - Sprint 0"
                                  , createRoomTeamId = Just $ TeamId "Y2lzY29zcGFyazovL3VzL1JPT00vNjRlNDVhZTAtYzQ2Yi0xMWU1LTlkZjktMGQ0MWUzNDIxOTcz"
                                  }
                 dst = "{\
@@ -429,21 +429,21 @@ spec = do
                                   \    }\
                                   \  }\
                                   \}"
-            membershipError = Membership { membershipId = MembershipId "Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5"
-                                         , membershipErrors = Just $ Errors
-                                             { errorsTitle = ErrorTitle
-                                                 { errorTitleCode = ErrorCode "kms_failure"
-                                                 , errorTitleReason = "Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html"
+            membershipError = Membership { membershipId                 = MembershipId "Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5"
+                                         , membershipErrors             = Just $ Errors
+                                             { errorsTitle              = ErrorTitle
+                                                 { errorTitleCode       = ErrorCode "kms_failure"
+                                                 , errorTitleReason     = "Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html"
                                                  }
                                              }
-                                         , membershipRoomId              = Nothing
-                                         , membershipPersonId            = Nothing
-                                         , membershipPersonEmail         = Nothing
-                                         , membershipPersonDisplayName   = Nothing
-                                         , membershipPersonOrgId         = Nothing
-                                         , membershipIsModerator         = Nothing
-                                         , membershipIsMonitor           = Nothing
-                                         , membershipCreated             = Nothing
+                                         , membershipRoomId             = Nothing
+                                         , membershipPersonId           = Nothing
+                                         , membershipPersonEmail        = Nothing
+                                         , membershipPersonDisplayName  = Nothing
+                                         , membershipPersonOrgId        = Nothing
+                                         , membershipIsModerator        = Nothing
+                                         , membershipIsMonitor          = Nothing
+                                         , membershipCreated            = Nothing
                                          }
             membershipListJson = "{\"items\":[" <> membershipJson <> "," <> membershipErrorJson <> "]}"
             membershipList = MembershipList [ membership, membershipError ]
@@ -520,24 +520,24 @@ spec = do
                                \    }\
                                \  }\
                                \}"
-            messageError = Message { messageId = MessageId "Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5"
-                                   , messageErrors = Just $ Errors
-                                       { errorsTitle = ErrorTitle
-                                           { errorTitleCode = ErrorCode "kms_failure"
-                                           , errorTitleReason = "Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html"
+            messageError = Message { messageId                  = MessageId "Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5"
+                                   , messageErrors              = Just $ Errors
+                                       { errorsTitle            = ErrorTitle
+                                           { errorTitleCode     = ErrorCode "kms_failure"
+                                           , errorTitleReason   = "Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html"
                                            }
                                        }
-                                   , messageRoomId           = Nothing
-                                   , messageRoomType         = Nothing
-                                   , messageToPersonId       = Nothing
-                                   , messageToPersonEmail    = Nothing
-                                   , messageText             = Nothing
-                                   , messageHtml             = Nothing
-                                   , messageFiles            = Nothing
-                                   , messagePersonId         = Nothing
-                                   , messagePersonEmail      = Nothing
-                                   , messageCreated          = Nothing
-                                   , messageMentionedPeople  = Nothing
+                                   , messageRoomId              = Nothing
+                                   , messageRoomType            = Nothing
+                                   , messageToPersonId          = Nothing
+                                   , messageToPersonEmail       = Nothing
+                                   , messageText                = Nothing
+                                   , messageHtml                = Nothing
+                                   , messageFiles               = Nothing
+                                   , messagePersonId            = Nothing
+                                   , messagePersonEmail         = Nothing
+                                   , messageCreated             = Nothing
+                                   , messageMentionedPeople     = Nothing
                                    }
             messageListJson = "{\"items\":[" <> messageJson <> "," <> messageErrorJson <> "]}"
             messageList = MessageList [ message, messageError ]
@@ -545,11 +545,11 @@ spec = do
         it "can be unwrapped from MessageList" $ do
             unwrap messageList `shouldBe` [ message, messageError ]
 
-        it "decodes Team Message API response JSON" $ do
+        it "decodes Message API response JSON" $ do
             eitherDecode messageJson `shouldBe` Right message
             (decode . encode) message `shouldBe` Just message
 
-        it "decodes Team Message list" $ do
+        it "decodes Message list" $ do
             eitherDecode messageListJson `shouldBe` Right messageList
             (decode . encode) messageList `shouldBe` Just messageList
 
@@ -593,15 +593,15 @@ spec = do
                                     \    }\
                                     \  }\
                                     \}"
-            organizationError = Organization { organizationId = OrganizationId "Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5"
-                                             , organizationErrors = Just $ Errors
-                                                 { errorsTitle = ErrorTitle
-                                                     { errorTitleCode = ErrorCode "kms_failure"
+            organizationError = Organization { organizationId           = OrganizationId "Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5"
+                                             , organizationErrors       = Just $ Errors
+                                                 { errorsTitle          = ErrorTitle
+                                                     { errorTitleCode   = ErrorCode "kms_failure"
                                                      , errorTitleReason = "Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html"
                                                      }
                                                  }
-                                             , organizationDisplayName   = Nothing
-                                             , organizationCreated       = Nothing
+                                             , organizationDisplayName  = Nothing
+                                             , organizationCreated      = Nothing
                                              }
             organizationListJson = "{\"items\":[" <> organizationJson <> "," <> organizationErrorJson <> "]}"
             organizationList = OrganizationList [ organization, organizationError ]
@@ -609,11 +609,11 @@ spec = do
         it "can be unwrapped from OrganizationList" $ do
             unwrap organizationList `shouldBe` [ organization, organizationError ]
 
-        it "decodes Team Organization API response JSON" $ do
+        it "decodes Organization API response JSON" $ do
             eitherDecode organizationJson `shouldBe` Right organization
             (decode . encode) organization `shouldBe` Just organization
 
-        it "decodes Team Organization list" $ do
+        it "decodes Organization list" $ do
             eitherDecode organizationListJson `shouldBe` Right organizationList
             (decode . encode) organizationList `shouldBe` Just organizationList
 
@@ -631,24 +631,24 @@ spec = do
                               , licenseConsumedUnits    = Just $ LicenseUnit 8
                               }
             licenseErrorJson = "{\
-                                \  \"id\": \"Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5\",\
-                                \  \"errors\": {\
-                                \    \"title\": {\
-                                \      \"code\": \"kms_failure\",\
-                                \      \"reason\": \"Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html\"\
-                                \    }\
-                                \  }\
-                                \}"
-            licenseError = License { licenseId = LicenseId "Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5"
-                                   , licenseErrors = Just $ Errors
-                                       { errorsTitle = ErrorTitle
-                                           { errorTitleCode = ErrorCode "kms_failure"
-                                           , errorTitleReason = "Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html"
+                               \  \"id\": \"Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5\",\
+                               \  \"errors\": {\
+                               \  \"title\": {\
+                               \      \"code\": \"kms_failure\",\
+                               \      \"reason\": \"Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html\"\
+                               \    }\
+                               \  }\
+                               \}"
+            licenseError = License { licenseId                  = LicenseId "Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5"
+                                   , licenseErrors              = Just $ Errors
+                                       { errorsTitle            = ErrorTitle
+                                           { errorTitleCode     = ErrorCode "kms_failure"
+                                           , errorTitleReason   = "Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html"
                                            }
                                        }
-                                   , licenseName             = Nothing
-                                   , licenseTotalUnits       = Nothing
-                                   , licenseConsumedUnits    = Nothing
+                                   , licenseName                = Nothing
+                                   , licenseTotalUnits          = Nothing
+                                   , licenseConsumedUnits       = Nothing
                                    }
             licenseListJson = "{\"items\":[" <> licenseJson <> "," <> licenseErrorJson <> "]}"
             licenseList = LicenseList [ license, licenseError ]
@@ -656,11 +656,11 @@ spec = do
         it "can be unwrapped from LicenseList" $ do
             unwrap licenseList `shouldBe` [ license, licenseError ]
 
-        it "decodes Team License API response JSON" $ do
+        it "decodes License API response JSON" $ do
             eitherDecode licenseJson `shouldBe` Right license
             (decode . encode) license `shouldBe` Just license
 
-        it "decodes Team License list" $ do
+        it "decodes License list" $ do
             eitherDecode licenseListJson `shouldBe` Right licenseList
             (decode . encode) licenseList `shouldBe` Just licenseList
 
@@ -674,22 +674,22 @@ spec = do
                         , roleName   = Just $ RoleName "Full Administrator"
                         }
             roleErrorJson = "{\
-                             \  \"id\": \"Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5\",\
-                             \  \"errors\": {\
-                             \    \"title\": {\
-                             \      \"code\": \"kms_failure\",\
-                             \      \"reason\": \"Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html\"\
-                             \    }\
-                             \  }\
-                             \}"
-            roleError = Role { roleId = RoleId "Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5"
-                             , roleErrors = Just $ Errors
-                                 { errorsTitle = ErrorTitle
-                                     { errorTitleCode = ErrorCode "kms_failure"
+                            \  \"id\": \"Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5\",\
+                            \  \"errors\": {\
+                            \    \"title\": {\
+                            \      \"code\": \"kms_failure\",\
+                            \      \"reason\": \"Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html\"\
+                            \    }\
+                            \  }\
+                            \}"
+            roleError = Role { roleId                   = RoleId "Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5"
+                             , roleErrors               = Just $ Errors
+                                 { errorsTitle          = ErrorTitle
+                                     { errorTitleCode   = ErrorCode "kms_failure"
                                      , errorTitleReason = "Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html"
                                      }
                                  }
-                             , roleName = Nothing
+                             , roleName                 = Nothing
                              }
             roleListJson = "{\"items\":[" <> roleJson <> "]}"
             roleList = RoleList [ role ]
@@ -697,10 +697,96 @@ spec = do
         it "can be unwrapped from RoleList" $ do
             unwrap roleList `shouldBe` [ role ]
 
-        it "decodes Team Role API response JSON" $ do
+        it "decodes Role API response JSON" $ do
             eitherDecode roleJson `shouldBe` Right role
             (decode . encode) role `shouldBe` Just role
 
-        it "decodes Team Role list" $ do
+        it "decodes Role list" $ do
             eitherDecode roleListJson `shouldBe` Right roleList
             (decode . encode) roleList `shouldBe` Just roleList
+
+    describe "Webhook" $ do
+        let webhookJson = "{\
+                          \  \"id\" : \"96abc2aa-3dcc-11e5-a152-fe34819cdc9a\",\
+                          \  \"name\" : \"My Awesome Webhook\",\
+                          \  \"targetUrl\" : \"https://example.com/mywebhook\",\
+                          \  \"resource\" : \"messages\",\
+                          \  \"event\" : \"created\",\
+                          \  \"filter\" : \"roomId=Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0\",\
+                          \  \"secret\" : \"86dacc007724d8ea666f88fc77d918dad9537a15\",\
+                          \  \"created\" : \"2015-10-18T14:26:16+00:00\"\
+                          \}"
+            webhook = Webhook { webhookId           = WebhookId "96abc2aa-3dcc-11e5-a152-fe34819cdc9a"
+                              , webhookErrors       = Nothing
+                              , webhookName         = Just $ WebhookName "My Awesome Webhook"
+                              , webhookTargetUrl    = Just $ WebhookUrl "https://example.com/mywebhook"
+                              , webhookResource     = Just $ WebhookResourceMessages
+                              , webhookEvent        = Just $ WebhookEventCreated
+                              , webhookFilter       = Just $ WebhookFilter "roomId=Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
+                              , webhookSecret       = Just $ WebhookSecret "86dacc007724d8ea666f88fc77d918dad9537a15"
+                              , webhookCreated      = Just $ Timestamp "2015-10-18T14:26:16+00:00"
+                              }
+            webhookErrorJson = "{\
+                               \  \"id\": \"Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5\",\
+                               \  \"errors\": {\
+                               \    \"title\": {\
+                               \      \"code\": \"kms_failure\",\
+                               \      \"reason\": \"Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html\"\
+                               \    }\
+                               \  }\
+                               \}"
+            webhookError = Webhook { webhookId                  = WebhookId "Y2lzY29zcGFyazovL3VzL1JPT00vNTIxN0EyMzYtNDQzQi00NThELTkzNjAtRDRFOTMyMTBBNUU5"
+                                   , webhookErrors              = Just $ Errors
+                                       { errorsTitle            = ErrorTitle
+                                           { errorTitleCode     = ErrorCode "kms_failure"
+                                           , errorTitleReason   = "Key management server failed to respond appropriately. For more information: https://developer.ciscospark.com/errors.html"
+                                           }
+                                       }
+                                   , webhookName                = Nothing
+                                   , webhookTargetUrl           = Nothing
+                                   , webhookResource            = Nothing
+                                   , webhookEvent               = Nothing
+                                   , webhookFilter              = Nothing
+                                   , webhookSecret              = Nothing
+                                   , webhookCreated             = Nothing
+                                   }
+            webhookListJson = "{\"items\":[" <> webhookJson <> "," <> webhookErrorJson <> "]}"
+            webhookList = WebhookList [ webhook, webhookError ]
+
+        it "can be unwrapped from WebhookList" $ do
+            unwrap webhookList `shouldBe` [ webhook, webhookError ]
+
+        it "decodes Webhook API response JSON" $ do
+            eitherDecode webhookJson `shouldBe` Right webhook
+            (decode . encode) webhook `shouldBe` Just webhook
+
+        it "decodes Webhook list" $ do
+            eitherDecode webhookListJson `shouldBe` Right webhookList
+            (decode . encode) webhookList `shouldBe` Just webhookList
+
+        it "encodes CreateWebhook to JSON" $ do
+            let src = CreateWebhook { createWebhookName         = WebhookName "My Awesome Webhook"
+                                    , createWebhookTargetUrl    = WebhookUrl "https://example.com/mywebhook"
+                                    , createWebhookResource     = WebhookResourceMessages
+                                    , createWebhookEvent        = WebhookEventCreated
+                                    , createWebhookFilter       = Just $ WebhookFilter "roomId=Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0"
+                                    , createWebhookSecret       = Just $ WebhookSecret "86dacc007724d8ea666f88fc77d918dad9537a15"
+                                    }
+                dst = "{\
+                      \  \"name\" : \"My Awesome Webhook\",\
+                      \  \"targetUrl\" : \"https://example.com/mywebhook\",\
+                      \  \"resource\" : \"messages\",\
+                      \  \"event\" : \"created\",\
+                      \  \"filter\" : \"roomId=Y2lzY29zcGFyazovL3VzL1JPT00vYmJjZWIxYWQtNDNmMS0zYjU4LTkxNDctZjE0YmIwYzRkMTU0\",\
+                      \  \"secret\" : \"86dacc007724d8ea666f88fc77d918dad9537a15\"\
+                      \}"
+            eitherDecode dst `shouldBe` Right src
+            (decode . encode) src `shouldBe` (decode dst :: Maybe CreateWebhook)
+
+        it "encodes UpdateWebhook to JSON" $ do
+            let src = UpdateWebhook { updateWebhookName         = WebhookName "My Awesome Webhook"
+                                    , updateWebhookTargetUrl    = WebhookUrl "https://example.com/mywebhook"
+                                    }
+                dst = "{\"name\":\"My Awesome Webhook\",\"targetUrl\":\"https://example.com/mywebhook\"}"
+            encode src `shouldBe` dst
+            (decode . encode) src `shouldBe` Just src

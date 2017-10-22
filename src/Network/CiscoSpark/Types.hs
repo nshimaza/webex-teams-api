@@ -94,6 +94,10 @@ licensesPath = "licenses"
 rolesPath :: ByteString
 rolesPath = "roles"
 
+-- | URL path for webhooks API.
+webhooksPath :: ByteString
+webhooksPath = "webhooks"
+
 
 {-|
     SparkListItem is a type class grouping types with following common usage.
@@ -1011,7 +1015,7 @@ instance SparkFilter LicenseFilter where
     toFilterList filter = maybeToList $ (\(OrganizationId o) -> ("orgId", Just $ encodeUtf8 o)) <$> licenseFilterOrgId filter
 
 
--- | Name of 'Role'
+-- | Name of 'Role'.
 newtype RoleName    = RoleName Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
 
 {-|
@@ -1026,7 +1030,7 @@ data Role = Role
     } deriving (Eq, Show)
 
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 4, omitNothingFields = True } ''Role)
--- ^ 'RoleName' derives ToJSON and FromJSON via deriveJSON template haskell function.
+-- ^ 'Role' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | Get detail for role API uses 'RoleId' and path "roles".
 instance SparkApiPath RoleId where
@@ -1050,21 +1054,194 @@ instance SparkListItem Role where
     type ToList Role = RoleList
     unwrap = roleListItems
 
--- | WebHookResource indicates source of event which triggered WebHook access.
-data WebHookResource = WebHookResourceMemberships
-                     | WebHookResourceMessages
-                     | WebHookResourceRooms
+-- | 'Webhook' identifier which can be assigned to user.  See 'Webhook' too.
+newtype WebhookId       = WebhookId Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
+-- | Name of 'Webhook'.
+newtype WebhookName     = WebhookName Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
+-- | URL pointing to webhook target.
+newtype WebhookUrl      = WebhookUrl Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
+-- | URL-encoded set of webhook filtering criteria.
+newtype WebhookFilter   = WebhookFilter Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
+-- | Shared secret supplied by user to authenticate Spark Cloud by webhook receiver.
+newtype WebhookSecret   = WebhookSecret Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
+
+-- | 'WebhookResource' indicates source of event which triggered webhook access.
+data WebhookResource = WebhookResourceAll
+                     | WebhookResourceTeams
+                     | WebhookResourceMemberships
+                     | WebhookResourceMessages
+                     | WebhookResourceRooms
                      deriving (Eq, Show)
 
-$(deriveJSON defaultOptions { constructorTagModifier = dropAndLow 15 } ''WebHookResource)
--- ^ 'WebHookResource' derives ToJSON and FromJSON via deriveJSON template haskell function.
+$(deriveJSON defaultOptions { constructorTagModifier = dropAndLow 15 } ''WebhookResource)
+-- ^ 'WebhookResource' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
--- | WebHookEvent indicates which event triggered WebHook access.
-data WebHookEvent = WebHookEventMemberships
-                     | WebHookEventCreated
-                     | WebHookEventUpdated
-                     | WebHookEventDeleted
-                     deriving (Eq, Show)
+-- | WebhookEvent indicates which event triggered Webhook access.
+data WebhookEvent = WebhookEventAll
+                  | WebhookEventCreated
+                  | WebhookEventUpdated
+                  | WebhookEventDeleted
+                  deriving (Eq, Show)
 
-$(deriveJSON defaultOptions { constructorTagModifier = dropAndLow 12 } ''WebHookEvent)
--- ^ 'WebHookEvent' derives ToJSON and FromJSON via deriveJSON template haskell function.
+$(deriveJSON defaultOptions { constructorTagModifier = dropAndLow 12 } ''WebhookEvent)
+-- ^ 'WebhookEvent' derives ToJSON and FromJSON via deriveJSON template haskell function.
+
+{-|
+    'Webhook' allow your app to be notified via HTTP when a specific event occurs on Spark. For example,
+    your app can register a webhook to be notified when a new message is posted into a specific room.
+-}
+data Webhook = Webhook
+    { webhookId        :: WebhookId             -- ^ Identifier of the Webhook.
+    , webhookErrors    :: Maybe Errors          -- ^ Element level error possibly contained in List API response.
+    , webhookName      :: Maybe WebhookName     -- ^ Name of the Webhook.
+    , webhookTargetUrl :: Maybe WebhookUrl      -- ^ URL pointing to webhook target.
+    , webhookResource  :: Maybe WebhookResource -- ^ Resource type where events are monitored.
+    , webhookEvent     :: Maybe WebhookEvent    -- ^ Event type which will be monitored.
+    , webhookFilter    :: Maybe WebhookFilter   -- ^ URL-encoded set of webhook filtering criteria.
+    , webhookSecret    :: Maybe WebhookSecret   -- ^ User supplied shared secret for authentication.
+    , webhookCreated   :: Maybe Timestamp       -- ^ Timestamp when the Webhook was created.
+    } deriving (Eq, Show)
+
+$(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 7, omitNothingFields = True } ''Webhook)
+-- ^ 'Webhook' derives ToJSON and FromJSON via deriveJSON template haskell function.
+
+-- | Get detail for webhook API uses 'WebhookId' and path "webhooks".
+instance SparkApiPath WebhookId where
+    apiPath _ = webhooksPath
+
+-- | Get detail for a webhook API uses "WebhookId' and responses 'Webhook'.
+instance SparkResponse WebhookId where
+    type ToResponse WebhookId = Webhook
+
+-- | User can get detail of a webhook.
+instance SparkDetail WebhookId where
+    toIdStr (WebhookId s) = s
+
+-- | 'WebhookList' is decoded from response JSON of List Webhook REST call.  It is list of 'Webhook'.
+newtype WebhookList = WebhookList { webhookListItems :: [Webhook] } deriving (Eq, Show)
+$(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 11, omitNothingFields = True } ''WebhookList)
+-- ^ 'WebhookList' derives ToJSON and FromJSON via deriveJSON template haskell function.
+
+-- | 'WebhookList' wraps 'Webhook'
+instance SparkListItem Webhook where
+    type ToList Webhook = WebhookList
+    unwrap = webhookListItems
+
+-- | 'CreateWebhook' is encoded to request body JSON of Create a Webhook REST call.
+data CreateWebhook = CreateWebhook
+    { createWebhookName      :: WebhookName         -- ^ Name of Webhook to be created.
+    , createWebhookTargetUrl :: WebhookUrl          -- ^ URL pointing to webhook target.
+    , createWebhookResource  :: WebhookResource     -- ^ Resource type where events will be monitored.
+    , createWebhookEvent     :: WebhookEvent        -- ^ Event type which will be monitored.
+    , createWebhookFilter    :: Maybe WebhookFilter -- ^ URL-encoded set of webhook filtering criteria.
+    , createWebhookSecret    :: Maybe WebhookSecret -- ^ User supplied shared secret for authentication.
+    } deriving (Eq, Show)
+
+$(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 13, omitNothingFields = True } ''CreateWebhook)
+-- ^ 'CreateWebhook' derives ToJSON and FromJSON via deriveJSON template haskell function.
+
+-- | Create webhook API uses 'CreateWebhook' and path "webhooks".
+instance SparkApiPath CreateWebhook where
+    apiPath _ = webhooksPath
+
+-- | Create webhook API uses "CreateWebhook' and responses 'Webhook'.
+instance SparkResponse CreateWebhook where
+    type ToResponse CreateWebhook = Webhook
+
+-- | User can create a webhook.
+instance SparkCreate CreateWebhook where
+
+-- | 'UpdateWebhook' is encoded to request body JSON of Update a Webhook REST call.
+data UpdateWebhook = UpdateWebhook
+    { updateWebhookName      :: WebhookName -- ^ Name of Webhook to be created.
+    , updateWebhookTargetUrl :: WebhookUrl  -- ^ URL pointing to webhook target.
+    } deriving (Eq, Show)
+
+$(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 13, omitNothingFields = True } ''UpdateWebhook)
+-- ^ 'UpdateWebhook' derives ToJSON and FromJSON via deriveJSON template haskell function.
+
+-- | Update webhook API uses 'UpdateWebhook' and path "webhooks".
+instance SparkApiPath UpdateWebhook where
+    apiPath _ = webhooksPath
+
+-- | Update webhook API uses "UpdateWebhook' and responses 'Webhook'.
+instance SparkResponse UpdateWebhook where
+    type ToResponse UpdateWebhook = Webhook
+
+-- | User can update a webhook.
+instance SparkUpdate UpdateWebhook
+
+-- | Optional query strings for membership event.
+data WebhookMembershipFilter = WebhookMembershipFilter
+    { webhookFilterMembershipRoomId      :: Maybe RoomId    -- ^ Feed events only for given room.
+    , webhookFilterMembershipPersonId    :: Maybe PersonId  -- ^ Feed events only for given person.
+    , webhookFilterMembershipPersonEmail :: Maybe Email     -- ^ Feed events only person who has given email.
+    , webhookFilterMembershipIsModerator :: Maybe Bool      -- ^ Feed events only for moderator membership changes.
+    } deriving (Eq, Show)
+
+-- | Create webhook API accepts 'WebhookMembershipFilter' and uses path "webhooks".
+instance SparkApiPath WebhookMembershipFilter where
+    apiPath _ = webhooksPath
+
+-- | List team memberships API accepts 'WebhookMembershipFilter' and responses 'Webhook'.
+instance SparkResponse WebhookMembershipFilter where
+    type ToResponse WebhookMembershipFilter = Webhook
+
+-- | User can filter Webhook events from membership.
+instance SparkFilter WebhookMembershipFilter where
+    toFilterList filter = catMaybes
+        [ (\(RoomId r) -> ("roomId", Just $ encodeUtf8 r)) <$> webhookFilterMembershipRoomId filter
+        , (\(PersonId p) -> ("personId", Just (encodeUtf8 p))) <$> webhookFilterMembershipPersonId filter
+        , (\(Email e) -> ("personEmail", Just (encodeUtf8 e))) <$> webhookFilterMembershipPersonEmail filter
+        , (\b -> ("isModerator", Just (if b then "true" else "false"))) <$> webhookFilterMembershipIsModerator filter
+        ]
+
+-- | Optional query strings for message event.
+data WebhookMessageFilter = WebhookMessageFilter
+    { webhookFilterMessageRoomId          :: Maybe RoomId           -- ^ Feed events only for given room.
+    , webhookFilterMessageRoomType        :: Maybe RoomType         -- ^ Feed events only for given room type.
+    , webhookFilterMessagePersonId        :: Maybe PersonId         -- ^ Feed events only for given person.
+    , webhookFilterMessagePersonEmail     :: Maybe Email            -- ^ Feed events only person who has given email.
+    , webhookFilterMessagememtionedPeople :: Maybe MentionedPeople  -- ^ Feed events only mentioned for given person.
+    , webhookFilterMessageHasFiles        :: Maybe Bool             -- ^ Feed events only messages with attached file.
+     } deriving (Eq, Show)
+
+-- | Create webhook API accepts 'WebhookMessageFilter' and uses path "webhooks".
+instance SparkApiPath WebhookMessageFilter where
+    apiPath _ = webhooksPath
+
+-- | List team memberships API accepts 'WebhookMessageFilter' and responses 'Webhook'.
+instance SparkResponse WebhookMessageFilter where
+    type ToResponse WebhookMessageFilter = Webhook
+
+-- | User can filter Webhook events from message.
+instance SparkFilter WebhookMessageFilter where
+    toFilterList filter = catMaybes
+        [ (\(RoomId r) -> ("roomId", Just $ encodeUtf8 r)) <$> webhookFilterMessageRoomId filter
+        , (\t -> ("roomType", Just $ roomTypeToFilterString t)) <$> webhookFilterMessageRoomType filter
+        , (\(PersonId p) -> ("personId", Just (encodeUtf8 p))) <$> webhookFilterMessagePersonId filter
+        , (\(Email e) -> ("personEmail", Just (encodeUtf8 e))) <$> webhookFilterMessagePersonEmail filter
+        , (\p -> ("mentionedPeople", Just $ mentionedPeopleToFilterString p)) <$> webhookFilterMessagememtionedPeople filter
+        , (\b -> ("hasFiles", Just (if b then "true" else "false"))) <$> webhookFilterMessageHasFiles filter
+        ]
+
+-- | Optional query strings for room event.
+data WebhookRoomFilter = WebhookRoomFilter
+    { webhookFilterRoomType     :: Maybe RoomType   -- ^ Feed events only for given room type.
+    , webhookFilterRoomIsLocked :: Maybe Bool       -- ^ Feed events only locked unlocked rooms when true.
+     } deriving (Eq, Show)
+
+-- | Create webhook API accepts 'WebhookRoomFilter' and uses path "webhooks".
+instance SparkApiPath WebhookRoomFilter where
+    apiPath _ = webhooksPath
+
+-- | List team memberships API accepts 'WebhookRoomFilter' and responses 'Webhook'.
+instance SparkResponse WebhookRoomFilter where
+    type ToResponse WebhookRoomFilter = Webhook
+
+-- | User can filter Webhook events from room.
+instance SparkFilter WebhookRoomFilter where
+    toFilterList filter = catMaybes
+        [ (\t -> ("type", Just $ roomTypeToFilterString t)) <$> webhookFilterRoomType filter
+        , (\b -> ("isLocked", Just (if b then "true" else "false"))) <$> webhookFilterRoomIsLocked filter
+        ]
