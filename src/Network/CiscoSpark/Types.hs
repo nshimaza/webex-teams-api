@@ -1054,6 +1054,7 @@ instance SparkListItem Role where
     type ToList Role = RoleList
     unwrap = roleListItems
 
+
 -- | 'Webhook' identifier which can be assigned to user.  See 'Webhook' too.
 newtype WebhookId       = WebhookId Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
 -- | Name of 'Webhook'.
@@ -1245,3 +1246,56 @@ instance SparkFilter WebhookRoomFilter where
         [ (\t -> ("type", Just $ roomTypeToFilterString t)) <$> webhookFilterRoomType filter
         , (\b -> ("isLocked", Just (if b then "true" else "false"))) <$> webhookFilterRoomIsLocked filter
         ]
+
+
+-- | Identifier of app.
+newtype AppId = AppId Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
+
+-- | 'WebhookNotifyOwnedBy' indicates if the webhook is owned by the org or the creator.
+data WebhookNotifyOwnedBy = WebhookNotifyOwnedByOrg | WebhookNotifyOwnedByCreator deriving (Eq, Show)
+
+$(deriveJSON defaultOptions { constructorTagModifier = dropAndLow 18 } ''WebhookNotifyOwnedBy)
+-- ^ 'WebhookNotifyOwnedBy' derives ToJSON and FromJSON via deriveJSON template haskell function.
+
+-- | 'WebhookNotifyStatus' indicates if the webhook is active.
+data WebhookNotifyStatus = WebhookNotifyStatusActive | WebhookNotifyStatusDesabled deriving (Eq, Show)
+
+$(deriveJSON defaultOptions { constructorTagModifier = dropAndLow 19 } ''WebhookNotifyStatus)
+-- ^ 'WebhookNotifyStatus' derives ToJSON and FromJSON via deriveJSON template haskell function.
+
+{-|
+    'Webhook' decodes webhook notification from Spark Cloud except data field.
+    Data field can be one of 'Membership', 'Message' or 'Room'.  Type of data field is
+    shown as value of resource field.
+-}
+data WebhookNotify = WebhookNotify
+    { webhookNotifyId        :: WebhookId
+    , webhookNotifyName      :: WebhookName
+    , webhookNotifyResource  :: WebhookResource
+    , webhookNotifyEvent     :: WebhookEvent
+    , webhookNotifyFilter    :: WebhookFilter
+    , webhookNotifyOrgId     :: Organization
+    , webhookNotifyCreatedBy :: PersonId
+    , webhookNotifyAppId     :: AppId
+    , webhookNotifyOwnedBy   :: WebhookNotifyOwnedBy
+    , webhookNotifyStatus    :: WebhookNotifyStatus
+    , webhookNotifyActorId   :: PersonId
+    } deriving (Eq, Show)
+
+$(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 13, omitNothingFields = True } ''WebhookNotify)
+-- ^ 'WebhookNotify' derives ToJSON and FromJSON via deriveJSON template haskell function.
+
+-- | Data part of webhook notification is decoded to 'Membership' when resource field value is "memberships".
+newtype WebhookNotifyMembership = WebhookNotifyMembership { webhookNotifyMembershipData :: Membership } deriving (Eq, Show)
+$(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 23, omitNothingFields = True } ''WebhookNotifyMembership)
+-- ^ 'WebhookNotifyMembership' derives ToJSON and FromJSON via deriveJSON template haskell function.
+
+-- | Data part of webhook notification is decoded to 'Message' when resource field value is "messages".
+newtype WebhookNotifyMessage = WebhookNotifyMessage { webhookNotifyMessageData :: Message } deriving (Eq, Show)
+$(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 20, omitNothingFields = True } ''WebhookNotifyMessage)
+-- ^ 'WebhookNotifyMessage' derives ToJSON and FromJSON via deriveJSON template haskell function.
+
+-- | Data part of webhook notification is decoded to 'Room' when resource field value is "rooms".
+newtype WebhookNotifyRoom = WebhookNotifyRoom { webhookNotifyRoomData :: Room } deriving (Eq, Show)
+$(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 17, omitNothingFields = True } ''WebhookNotifyRoom)
+-- ^ 'WebhookNotifyRoom' derives ToJSON and FromJSON via deriveJSON template haskell function.
