@@ -68,6 +68,7 @@ test-suite cisco-spark-api-test
   build-depends:       base
                      , aeson
                      , attoparsec
+                     , async
                      , bytestring
                      , conduit-combinators
                      , data-default
@@ -79,7 +80,6 @@ test-suite cisco-spark-api-test
                      , warp
                      , hspec
                      , cisco-spark-api
-                     , thread-hierarchy
   ghc-options:         -rtsopts
   default-language:    Haskell2010
 
