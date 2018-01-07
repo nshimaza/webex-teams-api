@@ -1,4 +1,3 @@
-{-# LANGUAGE DataKinds         #-}
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -233,7 +232,7 @@ makeCommonListReq
     :: CiscoSparkRequest    -- ^ Common request components
     -> ByteString           -- ^ API category part of REST URL path
     -> CiscoSparkRequest
-makeCommonListReq base@(CiscoSparkRequest { ciscoSparkRequestRequest = req }) path
+makeCommonListReq base@CiscoSparkRequest { ciscoSparkRequestRequest = req } path
     = base { ciscoSparkRequestRequest = setRequestPath ("/v1/" <> path) $ setRequestMethod "GET" req }
 
 {-|
@@ -250,7 +249,7 @@ streamList auth (CiscoSparkRequest req scheme uriAuth) = do
 -- | Processing pagination by HTTP Link header.
 streamListLoop :: (MonadIO m, FromJSON a, SparkListItem i) => Authorization -> Response a -> String -> URIAuth -> Source m i
 streamListLoop auth res scheme uriAuth
-    = case getNextUrl res >>= validateUrl scheme uriAuth >>= (\url -> parseRequest $ "GET " <> (C8.unpack url)) of
+    = case getNextUrl res >>= validateUrl scheme uriAuth >>= (\url -> parseRequest $ "GET " <> C8.unpack url) of
     Nothing         -> pure ()
     Just nextReq    -> do
         nextRes <- httpJSON $ addAuthorizationHeader auth nextReq
@@ -266,7 +265,7 @@ streamEntityWithFilter :: (MonadIO m, SparkFilter filter, SparkListItem (ToRespo
 streamEntityWithFilter auth base param =
     streamList auth $ setQeuryString $ makeCommonListReq base (apiPath param)
       where
-        setQeuryString comm@(CiscoSparkRequest { ciscoSparkRequestRequest = req })
+        setQeuryString comm@CiscoSparkRequest { ciscoSparkRequestRequest = req }
             = comm { ciscoSparkRequestRequest = setRequestQueryString (toFilterList param) req }
 
 -- | List of 'Team' and stream it into Conduit pipe.  It automatically performs pagination.

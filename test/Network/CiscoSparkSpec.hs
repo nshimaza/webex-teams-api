@@ -1,4 +1,3 @@
-{-# LANGUAGE DataKinds         #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Network.CiscoSparkSpec where
