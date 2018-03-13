@@ -240,14 +240,14 @@ makeCommonListReq base@CiscoSparkRequest { ciscoSparkRequestRequest = req } path
     It accesses List API with given 'Request', unwrap result into list of items, stream them to Conduit pipe
     and finally it automatically accesses next page designated via HTTP Link header if available.
 -}
-streamList :: (MonadIO m, SparkListItem i) => Authorization -> CiscoSparkRequest -> Source m i
+streamList :: (MonadIO m, SparkListItem i) => Authorization -> CiscoSparkRequest -> ConduitT () i m ()
 streamList auth (CiscoSparkRequest req scheme uriAuth) = do
     res <- httpJSON $ addAuthorizationHeader auth req
     yieldMany . unwrap $ getResponseBody res
     streamListLoop auth res scheme uriAuth
 
 -- | Processing pagination by HTTP Link header.
-streamListLoop :: (MonadIO m, FromJSON a, SparkListItem i) => Authorization -> Response a -> String -> URIAuth -> Source m i
+streamListLoop :: (MonadIO m, FromJSON a, SparkListItem i) => Authorization -> Response a -> String -> URIAuth -> ConduitT () i m ()
 streamListLoop auth res scheme uriAuth
     = case getNextUrl res >>= validateUrl scheme uriAuth >>= (\url -> parseRequest $ "GET " <> C8.unpack url) of
     Nothing         -> pure ()
@@ -261,7 +261,7 @@ streamEntityWithFilter :: (MonadIO m, SparkFilter filter, SparkListItem (ToRespo
     => Authorization
     -> CiscoSparkRequest
     -> filter
-    -> Source m (ToResponse filter)
+    -> ConduitT () (ToResponse filter) m ()
 streamEntityWithFilter auth base param =
     streamList auth $ setQeuryString $ makeCommonListReq base (apiPath param)
       where
@@ -269,15 +269,15 @@ streamEntityWithFilter auth base param =
             = comm { ciscoSparkRequestRequest = setRequestQueryString (toFilterList param) req }
 
 -- | List of 'Team' and stream it into Conduit pipe.  It automatically performs pagination.
-streamTeamList :: MonadIO m => Authorization -> CiscoSparkRequest -> Source m Team
+streamTeamList :: MonadIO m => Authorization -> CiscoSparkRequest -> ConduitT () Team m ()
 streamTeamList auth base = streamList auth $ makeCommonListReq base teamsPath
 
 -- | Filter list of 'Organization' and stream it into Conduit pipe.  It automatically performs pagination.
-streamOrganizationList :: MonadIO m => Authorization -> CiscoSparkRequest -> Source m Organization
+streamOrganizationList :: MonadIO m => Authorization -> CiscoSparkRequest -> ConduitT () Organization m ()
 streamOrganizationList auth base = streamList auth $ makeCommonListReq base organizationsPath
 
 -- | List of 'Role' and stream it into Conduit pipe.  It automatically performs pagination.
-streamRoleList :: MonadIO m => Authorization -> CiscoSparkRequest -> Source m Role
+streamRoleList :: MonadIO m => Authorization -> CiscoSparkRequest -> ConduitT () Role m ()
 streamRoleList auth base = streamList auth $ makeCommonListReq base rolesPath
 
 
