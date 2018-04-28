@@ -1,3 +1,7 @@
+## Cisco-spark-api 0.1.0.3
+
+* Cisco Spark is now Cisco Webex Teams.
+
 ## Cisco-spark-api 0.1.0.2
 
 * Catch up to conduit-1.3.0.

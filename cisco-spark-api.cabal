@@ -1,19 +1,8 @@
 name:                cisco-spark-api
-version:             0.1.0.2
-synopsis:            A Haskell bindings for Cisco Spark API
-description:         Cisco-spark-api package provides types and functions for accessing Cisco Spark REST API.
-
-                     This package is designed to improve type safety over the API.  Each entity is separately typed.
-                     JSON messages contained in REST responses are decoded into appropriate type of Haskell record.
-                     JSON messages sent in REST requests are encoded only from correct type of record.
-
-                     Some Spark REST API returning list of objects require HTTP Link Header based pagination.
-                     Haskell functions abstract it.  They automatically request subsequent pages as needed and
-                     seamlessly stream returned elements rather than just return a chunk of elements in a response.
-
-                     This package also provides some sample usage in command line application style.
-                     See source under app directory of the source package.
-homepage:            https://github.com/nshimaza/cisco-spark-api#readme
+version:             0.1.0.3
+synopsis:            A Haskell bindings for Webex Teams API
+description:         Please see the README on Github at <https://github.com/nshimaza/webex-teams-api#readme>
+homepage:            https://github.com/nshimaza/webex-teams-api#readme
 license:             MIT
 license-file:        LICENSE
 author:              Naoto Shimazaki
@@ -85,4 +74,4 @@ test-suite cisco-spark-api-test
 
 source-repository head
   type:     git
-  location: https://github.com/nshimaza/cisco-spark-api
+  location: https://github.com/nshimaza/webex-teams-api
