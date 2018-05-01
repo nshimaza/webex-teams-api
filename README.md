@@ -1,7 +1,7 @@
 # cisco-spark-api
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
-[![Build Status](https://travis-ci.org/nshimaza/cisco-spark-api.svg?branch=master)](https://travis-ci.org/nshimaza/cisco-spark-api)
+[![Build Status](https://travis-ci.org/nshimaza/webex-teams-api.svg?branch=master)](https://travis-ci.org/nshimaza/webex-teams-api)
 [![Hackage](https://img.shields.io/hackage/v/cisco-spark-api.svg?style=flat)](https://hackage.haskell.org/package/cisco-spark-api)
 [![Stackage Nightly](http://stackage.org/package/cisco-spark-api/badge/nightly)](http://stackage.org/nightly/package/cisco-spark-api)
 [![Stackage LTS](http://stackage.org/package/cisco-spark-api/badge/lts)](http://stackage.org/lts/package/cisco-spark-api)
