@@ -1,6 +1,6 @@
 name:                cisco-spark-api
-version:             0.1.0.3
-synopsis:            A Haskell bindings for Webex Teams API
+version:             0.1.0.4
+synopsis:            DEPRECATED in favor of webex-teams-api
 description:         Please see the README on Github at <https://github.com/nshimaza/webex-teams-api#readme>
 homepage:            https://github.com/nshimaza/webex-teams-api#readme
 license:             MIT

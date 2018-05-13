@@ -1,4 +1,6 @@
-# cisco-spark-api
+# cisco-spark-api (DEPRECATED)
+
+Deprecated in favor of webex-teams-api.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
 [![Build Status](https://travis-ci.org/nshimaza/webex-teams-api.svg?branch=master)](https://travis-ci.org/nshimaza/webex-teams-api)
