@@ -103,6 +103,13 @@ teamList j = [ teamGen $ j <> show i | i <- [1..3] ]
 teamListList :: [[Team]]
 teamListList = [ teamList [c] | c <- ['a'..'d'] ]
 
+readAllList :: ListReader i -> IO [i]
+readAllList reader = go []
+  where
+    go xs = reader >>= \chunk -> case chunk of
+        []  -> pure xs
+        ys  -> go (xs <> ys)
+
 spec :: Spec
 spec = do
     describe "Mock Applications" $ do
@@ -422,6 +429,29 @@ spec = do
         it "streamTeamList stops pagination at invalid Link Header" $ do
             withMockServer (invalidPaginationApp $ encode . TeamList <$> teamListList) $ do
                 res <- runConduit $ streamTeamList dummyAuth mockBaseRequest .| sinkList
+                res `shouldBe` concat (take 2 teamListList)
+
+        it "getTeamList returns ListReader of Team" $ do
+            let testData = teamList ['Z']
+            receivedReqMVar <- newEmptyMVar
+
+            withMockServer (\req respond -> do
+                    putMVar receivedReqMVar req
+                    simpleApp (encode (TeamList testData)) req respond
+                ) $ do
+                res <- getTeamList dummyAuth mockBaseRequest >>= readAllList
+                res `shouldBe` testData
+                path <- rawPathInfo <$> takeMVar receivedReqMVar
+                path `shouldBe` "/v1/teams"
+
+        it "getTeamList returns ListReader of Team performing automatic pagination" $ do
+            withMockServer (paginationApp $ encode . TeamList <$> teamListList) $ do
+                res <- getTeamList dummyAuth mockBaseRequest >>= readAllList
+                res `shouldBe` concat teamListList
+
+        it "getTeamList stops pagination at invalid Link Header" $ do
+            withMockServer (invalidPaginationApp $ encode . TeamList <$> teamListList) $ do
+                res <- getTeamList dummyAuth mockBaseRequest >>= readAllList
                 res `shouldBe` concat (take 2 teamListList)
 
         it "getDetail for a team returns a Team" $ do
@@ -1394,6 +1424,29 @@ spec = do
                 res <- runConduit $ streamOrganizationList dummyAuth mockBaseRequest .| sinkList
                 res `shouldBe` concat (take 2 organizationListList)
 
+        it "getOrganizationList returns ListReader of Organization" $ do
+            let testData = organizationList ['Z']
+            receivedReqMVar <- newEmptyMVar
+
+            withMockServer (\req respond -> do
+                    putMVar receivedReqMVar req
+                    simpleApp (encode (OrganizationList testData)) req respond
+                ) $ do
+                res <- getOrganizationList dummyAuth mockBaseRequest >>= readAllList
+                res `shouldBe` testData
+                path <- rawPathInfo <$> takeMVar receivedReqMVar
+                path `shouldBe` "/v1/organizations"
+
+        it "getOrganizationList returns ListReader of Organization performing automatic pagination" $ do
+            withMockServer (paginationApp $ encode . OrganizationList <$> organizationListList) $ do
+                res <- getOrganizationList dummyAuth mockBaseRequest >>= readAllList
+                res `shouldBe` concat organizationListList
+
+        it "getOrganizationList stops pagination at invalid Link Header" $ do
+            withMockServer (invalidPaginationApp $ encode . OrganizationList <$> organizationListList) $ do
+                res <- getOrganizationList dummyAuth mockBaseRequest >>= readAllList
+                res `shouldBe` concat (take 2 organizationListList)
+
         it "getDetail for an organization returns a Organization" $ do
             receivedReqMVar <- newEmptyMVar
 
@@ -1549,6 +1602,29 @@ spec = do
         it "streamRoleList stops pagination at invalid Link Header" $ do
             withMockServer (invalidPaginationApp $ encode . RoleList <$> roleListList) $ do
                 res <- runConduit $ streamRoleList dummyAuth mockBaseRequest .| sinkList
+                res `shouldBe` concat (take 2 roleListList)
+
+        it "getRoleList returns ListReader of Role" $ do
+            let testData = roleList ['Z']
+            receivedReqMVar <- newEmptyMVar
+
+            withMockServer (\req respond -> do
+                    putMVar receivedReqMVar req
+                    simpleApp (encode (RoleList testData)) req respond
+                ) $ do
+                res <- getRoleList dummyAuth mockBaseRequest >>= readAllList
+                res `shouldBe` testData
+                path <- rawPathInfo <$> takeMVar receivedReqMVar
+                path `shouldBe` "/v1/roles"
+
+        it "getRoleList returns ListReader of Role performing automatic pagination" $ do
+            withMockServer (paginationApp $ encode . RoleList <$> roleListList) $ do
+                res <- getRoleList dummyAuth mockBaseRequest >>= readAllList
+                res `shouldBe` concat roleListList
+
+        it "getRoleList stops pagination at invalid Link Header" $ do
+            withMockServer (invalidPaginationApp $ encode . RoleList <$> roleListList) $ do
+                res <- getRoleList dummyAuth mockBaseRequest >>= readAllList
                 res `shouldBe` concat (take 2 roleListList)
 
         it "getDetail for a role returns a Role" $ do

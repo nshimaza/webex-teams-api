@@ -167,6 +167,10 @@ module Network.CiscoSpark
     , streamTeamList
     , streamOrganizationList
     , streamRoleList
+    , ListReader
+    , getTeamList
+    , getOrganizationList
+    , getRoleList
     -- ** Creating an entity
     , createEntity
     , createEntityEither
@@ -189,6 +193,7 @@ import           Data.Aeson                  (FromJSON, ToJSON)
 import           Data.ByteString             (ByteString)
 import           Data.ByteString.Char8       as C8 (unpack)
 import           Data.Default                (Default (def))
+import           Data.IORef                  (IORef, newIORef, readIORef, writeIORef)
 import           Data.Maybe                  (catMaybes, maybeToList)
 import           Data.Monoid                 ((<>))
 import           Data.Text                   (Text)
@@ -280,6 +285,37 @@ streamOrganizationList auth base = streamList auth $ makeCommonListReq base orga
 streamRoleList :: MonadIO m => Authorization -> CiscoSparkRequest -> ConduitT () Role m ()
 streamRoleList auth base = streamList auth $ makeCommonListReq base rolesPath
 
+type ListReader a = IO [a]
+
+getList :: (MonadIO m, SparkListItem i) => Authorization -> CiscoSparkRequest -> m (ListReader i)
+getList auth wxReq = liftIO $ listReader <$> newIORef (Just wxReq)
+  where
+    listReader :: SparkListItem i => IORef (Maybe CiscoSparkRequest) -> ListReader i
+    listReader wxReqRef = do
+        maybeReq <- readIORef wxReqRef
+        case maybeReq of
+            Nothing                                     -> pure []
+            Just (CiscoSparkRequest req scheme uriAuth) -> do
+                res <- httpJSON $ addAuthorizationHeader auth req
+                writeIORef wxReqRef $ do
+                    maybeUrl <- getNextUrl res
+                    maybeValidUrl <-validateUrl scheme uriAuth maybeUrl
+                    maybeNextReq <- parseRequest $ "GET " <> C8.unpack maybeValidUrl
+                    pure (CiscoSparkRequest maybeNextReq scheme uriAuth)
+                rr <- readIORef wxReqRef
+                pure . unwrap $ getResponseBody res
+
+-- | Return 'ListReader' for 'Team'.
+getTeamList :: MonadIO m => Authorization -> CiscoSparkRequest -> m (ListReader Team)
+getTeamList auth base = getList auth $ makeCommonListReq base teamsPath
+
+-- | Return 'ListReader' for 'Team'.
+getOrganizationList :: MonadIO m => Authorization -> CiscoSparkRequest -> m (ListReader Organization)
+getOrganizationList auth base = getList auth $ makeCommonListReq base organizationsPath
+
+-- | Return 'ListReader' for 'Team'.
+getRoleList :: MonadIO m => Authorization -> CiscoSparkRequest -> m (ListReader Role)
+getRoleList auth base = getList auth $ makeCommonListReq base rolesPath
 
 makeCommonDetailReq
     :: CiscoSparkRequest    -- ^ Common request components.
