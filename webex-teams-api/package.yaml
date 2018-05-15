@@ -1,0 +1,65 @@
+name:                webex-teams-api
+version:             0.0.1.0
+github:              "nshimaza/webex-teams-api"
+license:             MIT
+author:              "Naoto Shimazaki"
+maintainer:          "Naoto.Shimazaki@gmail.com"
+copyright:           "2018 Naoto Shimazaki"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+synopsis:            A Haskell bindings for Webex Teams API
+category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on Github at <https://github.com/nshimaza/webex-teams-api#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- aeson
+- bytestring
+- conduit
+- data-default
+- http-conduit
+- text
+
+library:
+  source-dirs: src
+  dependencies:
+  - attoparsec
+  - network-uri
+  - bitset-word8
+
+executables:
+  webex-teams-api-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - webex-teams-api
+    - optparse-applicative
+    - utf8-string
+
+tests:
+  webex-teams-api-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -rtsopts
+    dependencies:
+    - webex-teams-api
+    - async
+    - attoparsec
+    - http-types
+    - network-uri
+    - wai
+    - warp
+    - hspec
