@@ -40,18 +40,22 @@ library:
 #     - optparse-applicative
 #     - utf8-string
 #
-# tests:
-#   webex-teams-conduit-test:
-#     main:                Spec.hs
-#     source-dirs:         test
-#     ghc-options:
-#     - -rtsopts
-#     dependencies:
-#     - webex-teams-conduit
-#     - async
-#     - attoparsec
-#     - http-types
-#     - network-uri
-#     - wai
-#     - warp
-#     - hspec
+tests:
+  webex-teams-conduit-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -rtsopts
+    dependencies:
+    - webex-teams-conduit
+    - aeson
+    - async
+    - bytestring
+    - data-default
+    - http-conduit
+    - http-types
+    - network-uri
+    - text
+    - wai
+    - warp
+    - hspec
