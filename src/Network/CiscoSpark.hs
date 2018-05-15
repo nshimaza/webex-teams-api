@@ -168,6 +168,7 @@ module Network.CiscoSpark
     , streamOrganizationList
     , streamRoleList
     , ListReader
+    , getListWithFilter
     , getTeamList
     , getOrganizationList
     , getRoleList
@@ -287,6 +288,13 @@ streamRoleList auth base = streamList auth $ makeCommonListReq base rolesPath
 
 type ListReader a = IO [a]
 
+{-|
+    Returns common worker function 'ListReader' for List APIs.
+    ListReader accesses List API with given 'Request' then return responded list of items.
+    ListReader also keeps next URL if response is pagenated and next page is available.
+    Next call of ListReader causes another List API access for the next page.
+    ListReader returns [] when there is no more page.
+-}
 getList :: (MonadIO m, SparkListItem i) => Authorization -> CiscoSparkRequest -> m (ListReader i)
 getList auth wxReq = liftIO $ listReader <$> newIORef (Just wxReq)
   where
@@ -304,6 +312,18 @@ getList auth wxReq = liftIO $ listReader <$> newIORef (Just wxReq)
                     pure (CiscoSparkRequest maybeNextReq scheme uriAuth)
                 rr <- readIORef wxReqRef
                 pure . unwrap $ getResponseBody res
+
+-- | Get list with query parameter.
+getListWithFilter :: (MonadIO m, SparkFilter filter, SparkListItem (ToResponse filter))
+    => Authorization
+    -> CiscoSparkRequest
+    -> filter
+    -> m (ListReader (ToResponse filter))
+getListWithFilter auth base param =
+    getList auth $ setQeuryString $ makeCommonListReq base (apiPath param)
+      where
+        setQeuryString comm@CiscoSparkRequest { ciscoSparkRequestRequest = req }
+            = comm { ciscoSparkRequestRequest = setRequestQueryString (toFilterList param) req }
 
 -- | Return 'ListReader' for 'Team'.
 getTeamList :: MonadIO m => Authorization -> CiscoSparkRequest -> m (ListReader Team)

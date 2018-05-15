@@ -240,7 +240,7 @@ spec = do
                                         , updatePersonLicenses      = Just $ [ LicenseId "newLicenseId1", LicenseId "newLicenseId2" ]
                                         }
 
-        it "streamPersonList streams Team" $ do
+        it "streamPersonList streams Person" $ do
             let testData = personList ['Z']
             receivedReqMVar <- newEmptyMVar
 
@@ -276,7 +276,7 @@ spec = do
                                                                  , ("displayName", Just "DisplayNameFilter")
                                                                  , ("email", Just "person@filter.com") ]
 
-        it "streamPersonList streams Team with automatic pagination" $ do
+        it "streamPersonList streams Person with automatic pagination" $ do
             withMockServer (paginationApp $ encode . PersonList <$> personListList) $ do
                 res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: PersonFilter) .| sinkList
                 res `shouldBe` concat personListList
@@ -284,6 +284,52 @@ spec = do
         it "streamPersonList stops pagination at invalid Link Header" $ do
             withMockServer (invalidPaginationApp $ encode . PersonList <$> personListList) $ do
                 res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: PersonFilter) .| sinkList
+                res `shouldBe` concat (take 2 personListList)
+
+        it "getPersonList returns ListReader of Person" $ do
+            let testData = personList ['Z']
+            receivedReqMVar <- newEmptyMVar
+
+            withMockServer (\req respond -> do
+                    putMVar receivedReqMVar req
+                    simpleApp (encode (PersonList testData)) req respond
+                ) $ do
+                res <- getListWithFilter dummyAuth mockBaseRequest (def :: PersonFilter) >>= readAllList
+                res `shouldBe` testData
+
+                receivedReq <- takeMVar receivedReqMVar
+                rawPathInfo receivedReq `shouldBe` "/v1/people"
+                queryString receivedReq `shouldBe` []
+
+        it "getPersonList passes query strings build from PersonFilter to server" $ do
+            let testData = personList ['Z']
+                personFilter = PersonFilter (Just $ Email "person@filter.com")
+                                            (Just $ DisplayName "DisplayNameFilter")
+                                            (Just $ OrganizationId "OrgIdFilter")
+
+            receivedReqMVar <- newEmptyMVar
+
+            withMockServer (\req respond -> do
+                    putMVar receivedReqMVar req
+                    simpleApp (encode (PersonList testData)) req respond
+                ) $ do
+                res <- getListWithFilter dummyAuth mockBaseRequest personFilter >>= readAllList
+                res `shouldBe` testData
+
+                receivedReq <- takeMVar receivedReqMVar
+                rawPathInfo receivedReq `shouldBe` "/v1/people"
+                (sort . queryString) receivedReq `shouldBe` sort [ ("orgId", Just "OrgIdFilter")
+                                                                 , ("displayName", Just "DisplayNameFilter")
+                                                                 , ("email", Just "person@filter.com") ]
+
+        it "getPersonList returns ListReader of Person performing automatic pagination" $ do
+            withMockServer (paginationApp $ encode . PersonList <$> personListList) $ do
+                res <- getListWithFilter dummyAuth mockBaseRequest (def :: PersonFilter) >>= readAllList
+                res `shouldBe` concat personListList
+
+        it "getPersonList stops pagination at invalid Link Header" $ do
+            withMockServer (invalidPaginationApp $ encode . PersonList <$> personListList) $ do
+                res <- getListWithFilter dummyAuth mockBaseRequest (def :: PersonFilter) >>= readAllList
                 res `shouldBe` concat (take 2 personListList)
 
         it "getDetail for a person returns a Person" $ do
