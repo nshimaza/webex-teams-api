@@ -1,3 +1,11 @@
+## Webex-teams-api 0.2.0.0
+
+* First release of webex-teams-api.
+
+## Cisco-spark-api 0.1.0.4
+
+* Final release of cisco-spark-api package.
+
 ## Cisco-spark-api 0.1.0.3
 
 * Cisco Spark is now Cisco Webex Teams.

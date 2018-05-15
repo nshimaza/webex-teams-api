@@ -1,10 +1,10 @@
 name:                webex-teams-api
-version:             0.0.1.0
+version:             0.2.0.0
 github:              "nshimaza/webex-teams-api"
 license:             MIT
 author:              "Naoto Shimazaki"
 maintainer:          "Naoto.Shimazaki@gmail.com"
-copyright:           "2018 Naoto Shimazaki"
+copyright:           "2017,2018 Naoto Shimazaki"
 
 extra-source-files:
 - README.md
