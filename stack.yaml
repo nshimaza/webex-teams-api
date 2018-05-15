@@ -1,3 +1,4 @@
 resolver: nightly-2018-05-01
 packages:
 - webex-teams-api
+- webex-teams-conduit

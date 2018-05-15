@@ -74,8 +74,12 @@ but you can make it by yourself so easily as described.
 module Network.CiscoSpark
     (
     -- * Types
+    -- ** Class and Type Families
+      SparkFilter
+    , SparkListItem
+    , ToResponse
     -- ** Common Types
-      Authorization (..)
+    , Authorization (..)
     , CiscoSparkRequest (..)
     , Timestamp (..)
     , ErrorCode (..)
