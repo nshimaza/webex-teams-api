@@ -11,7 +11,7 @@ extra-source-files:
 - ChangeLog.md
 
 # Metadata used when publishing your package
-synopsis:            A Haskell bindings for Webex Teams API
+synopsis:            Conduit wrapper of Webex Teams List API
 category:            Web
 
 # To avoid duplicated efforts in documentation and dealing with the
@@ -27,19 +27,23 @@ dependencies:
 library:
   source-dirs: src
 
-# executables:
-#   webex-teams-conduit-exe:
-#     main:                Main.hs
-#     source-dirs:         app
-#     ghc-options:
-#     - -threaded
-#     - -rtsopts
-#     - -with-rtsopts=-N
-#     dependencies:
-#     - webex-teams-api
-#     - optparse-applicative
-#     - utf8-string
-#
+executables:
+  webex-teams-conduit-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - webex-teams-conduit
+    - bytestring
+    - data-default
+    - http-conduit
+    - optparse-applicative
+    - text
+    - utf8-string
+
 tests:
   webex-teams-conduit-test:
     main:                Spec.hs
