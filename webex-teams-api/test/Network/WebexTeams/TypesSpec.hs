@@ -1,13 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Network.CiscoSpark.TypesSpec where
+module Network.WebexTeams.TypesSpec where
 
 import           Data.Aeson               (decode, eitherDecode, encode)
 import           Data.Monoid              ((<>))
 
 import           Test.Hspec
 
-import           Network.CiscoSpark.Types
+import           Network.WebexTeams.Types
 
 spec :: Spec
 spec = do

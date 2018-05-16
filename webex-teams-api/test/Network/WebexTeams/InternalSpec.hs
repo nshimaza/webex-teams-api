@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Network.CiscoSpark.InternalSpec where
+module Network.WebexTeams.InternalSpec where
 
 import           Data.Attoparsec.ByteString
 import           Data.ByteString             (pack)
@@ -9,7 +9,7 @@ import           Network.URI                 (URIAuth (..))
 
 import           Test.Hspec
 
-import           Network.CiscoSpark.Internal
+import           Network.WebexTeams.Internal
 
 
 spec :: Spec

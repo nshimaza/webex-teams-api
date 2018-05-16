@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Network.CiscoSparkSpec where
+module Network.WebexTeamsSpec where
 
 import           Conduit
 import           Control.Concurrent.Async     (withAsync)
@@ -28,8 +28,8 @@ import           Network.Wai.Handler.Warp     (Settings, defaultSettings,
 
 import           Test.Hspec
 
-import           Network.CiscoSpark
-import           Network.CiscoSpark.Internal  (LinkHeader (..), LinkParam (..),
+import           Network.WebexTeams
+import           Network.WebexTeams.Internal  (LinkHeader (..), LinkParam (..),
                                                getNextUrl, linkHeader)
 
 
