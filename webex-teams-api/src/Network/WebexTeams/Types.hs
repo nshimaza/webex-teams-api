@@ -54,7 +54,7 @@ import           Data.Maybe                  (catMaybes, maybeToList)
 import           Data.Text                   (Text)
 import           Data.Text.Encoding          (encodeUtf8)
 
-import           Network.CiscoSpark.Internal
+import           Network.WebexTeams.Internal
 
 
 -- | URL path for people API.

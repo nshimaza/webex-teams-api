@@ -23,7 +23,7 @@ module Network.WebexTeams.Conduit
 import           Conduit            (ConduitT, MonadIO, liftIO, yieldMany)
 import           Control.Monad      (unless)
 
-import           Network.CiscoSpark hiding (streamOrganizationList,
+import           Network.WebexTeams hiding (streamOrganizationList,
                                      streamRoleList, streamTeamList)
 
 

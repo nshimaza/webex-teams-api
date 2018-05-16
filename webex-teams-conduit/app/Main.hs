@@ -3,16 +3,16 @@
 module Main where
 
 import           Conduit
-import           Data.ByteString.Char8 as BC8 (pack)
-import           Data.Default          (def)
-import           Data.Semigroup        ((<>))
-import           Data.Text             as T (pack)
-import           Network.HTTP.Simple   (getResponseBody)
+import           Data.ByteString.Char8      as BC8 (pack)
+import           Data.Default               (def)
+import           Data.Semigroup             ((<>))
+import           Data.Text                  as T (pack)
+import           Network.HTTP.Simple        (getResponseBody)
 import           Options.Applicative
-import           System.Environment    (lookupEnv)
-import           System.IO             (hPutStrLn, stderr)
+import           System.Environment         (lookupEnv)
+import           System.IO                  (hPutStrLn, stderr)
 
-import           Network.CiscoSpark hiding (streamTeamList)
+import           Network.WebexTeams         hiding (streamTeamList)
 import           Network.WebexTeams.Conduit
 
 main :: IO ()

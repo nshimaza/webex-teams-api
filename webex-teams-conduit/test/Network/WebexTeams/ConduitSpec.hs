@@ -9,7 +9,7 @@ import           Control.Concurrent.MVar     (MVar, newEmptyMVar, putMVar,
 import           Control.Monad               (void)
 import           Data.Aeson                  (encode)
 import qualified Data.ByteString             as S (ByteString)
-import qualified Data.ByteString.Char8       as C8 (unpack)
+import qualified Data.ByteString.Char8       as C8 (pack, unpack)
 import qualified Data.ByteString.Lazy        as L (ByteString)
 import           Data.Default                (def)
 import           Data.List                   (sort)
@@ -23,25 +23,29 @@ import           Network.HTTP.Types          (Header, status200)
 import           Network.URI                 (URIAuth (..))
 import           Network.Wai
 import           Network.Wai.Handler.Warp    (defaultSettings, runSettings,
-                                              setBeforeMainLoop)
+                                              setBeforeMainLoop, setPort)
 
 import           Test.Hspec
 
-import           Network.CiscoSpark          hiding (streamOrganizationList,
+import           Network.WebexTeams          hiding (streamOrganizationList,
                                               streamRoleList, streamTeamList)
-import           Network.CiscoSpark.Internal (getNextUrl)
+import           Network.WebexTeams.Internal (getNextUrl)
 import           Network.WebexTeams.Conduit
 
 
+listenPort = 3001
+listenPortBS = (C8.pack . show) listenPort
+
 mockBaseRequestRequest
     = C.addRequestHeader "Content-Type" "application/json; charset=utf-8"
-    $ C.setRequestPort 3000
+    $ C.setRequestPort listenPort
     $ C.setRequestHost "127.0.0.1"
     $ C.setRequestSecure False
     $ C.defaultRequest
 
 mockBaseRequest :: CiscoSparkRequest
-mockBaseRequest = CiscoSparkRequest mockBaseRequestRequest "http:" $ URIAuth "" "127.0.0.1" ":3000"
+mockBaseRequest = CiscoSparkRequest mockBaseRequestRequest "http:" $
+    URIAuth "" "127.0.0.1" (":" <> show listenPort)
 
 dummyAuth :: Authorization
 dummyAuth = Authorization "dummyAuth"
@@ -53,7 +57,7 @@ extractRight (Left err) = error $ show err
 withMockServer :: Application -> IO () -> IO ()
 withMockServer app inner = do
     readyToConnect <- newEmptyMVar
-    let set = setBeforeMainLoop (putMVar readyToConnect ()) defaultSettings
+    let set = setBeforeMainLoop (putMVar readyToConnect ()) $ setPort listenPort defaultSettings
     withAsync (runSettings set app) (\_ -> takeMVar readyToConnect >> inner)
 
 helloApp :: Application
@@ -70,10 +74,10 @@ paginationApp ress req respond = do
     let (cTypes, body) = dispatch $ rawPathInfo req
     respond $ responseLBS status200 cTypes body
       where
-        dispatch "/1"   = ([contentType, ("Link", "<http://127.0.0.1:3000/2>; rel=\"next\"")], ress !! 1)
-        dispatch "/2"   = ([contentType, ("Link", "<http://127.0.0.1:3000/3>; rel=\"next\"")], ress !! 2)
+        dispatch "/1"   = ([contentType, ("Link", "<http://127.0.0.1:" <> listenPortBS <> "/2>; rel=\"next\"")], ress !! 1)
+        dispatch "/2"   = ([contentType, ("Link", "<http://127.0.0.1:" <> listenPortBS <> "/3>; rel=\"next\"")], ress !! 2)
         dispatch "/3"   = ([contentType], ress !! 3)
-        dispatch _      = ([contentType, ("Link", "<http://127.0.0.1:3000/1>; rel=\"next\"")], ress !! 0)
+        dispatch _      = ([contentType, ("Link", "<http://127.0.0.1:" <> listenPortBS <> "/1>; rel=\"next\"")], ress !! 0)
 
 invalidPaginationApp :: [L.ByteString] -> Application
 invalidPaginationApp ress req respond = do
@@ -81,9 +85,9 @@ invalidPaginationApp ress req respond = do
     respond $ responseLBS status200 cTypes body
       where
         dispatch "/1"   = ([contentType, ("Link", "<http://127.0.0.1:8888/2>; rel=\"next\"")], ress !! 1)
-        dispatch "/2"   = ([contentType, ("Link", "<http://127.0.0.1:3000/3>; rel=\"next\"")], ress !! 2)
+        dispatch "/2"   = ([contentType, ("Link", "<http://127.0.0.1:" <> listenPortBS <> "/3>; rel=\"next\"")], ress !! 2)
         dispatch "/3"   = ([contentType], ress !! 3)
-        dispatch _      = ([contentType, ("Link", "<http://127.0.0.1:3000/1>; rel=\"next\"")], ress !! 0)
+        dispatch _      = ([contentType, ("Link", "<http://127.0.0.1:" <> listenPortBS <> "/1>; rel=\"next\"")], ress !! 0)
 
 
 teamGen :: String -> Team
@@ -149,7 +153,7 @@ spec = do
                 rawPathInfo receivedReq `shouldBe` "/v1/teams"
 
                 let path = getNextUrl res1
-                path `shouldBe` Just "http://127.0.0.1:3000/1"
+                path `shouldBe` (Just $ "http://127.0.0.1:" <> listenPortBS <> "/1")
 
                 req2 <- parseRequest $ "GET " <> C8.unpack (fromJust path)
                 res2 <- httpJSON req2
@@ -663,7 +667,7 @@ spec = do
                     putMVar receivedReqMVar req
                     simpleApp (encode (MessageList testData)) req respond
                 ) $ do
-                res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest messageFilter .| sinkList
+                res <- runConduit $ streamListWithFilter dummyAuth mockBaseRequest messageFilter .| sinkList
                 res `shouldBe` testData
 
                 receivedReq <- takeMVar receivedReqMVar

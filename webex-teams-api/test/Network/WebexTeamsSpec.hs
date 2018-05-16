@@ -10,7 +10,7 @@ import           Control.Monad                (void)
 import           Data.Aeson                   (decode, encode)
 import           Data.Attoparsec.ByteString   (parseOnly)
 import qualified Data.ByteString              as S (ByteString)
-import qualified Data.ByteString.Char8        as C8 (unpack)
+import qualified Data.ByteString.Char8        as C8 (pack, unpack)
 import qualified Data.ByteString.Lazy         as L (ByteString)
 import           Data.Default                 (def)
 import           Data.List                    (sort)
@@ -23,8 +23,8 @@ import           Network.HTTP.Simple          as C
 import           Network.HTTP.Types           (Header, status200)
 import           Network.URI                  (URIAuth (..))
 import           Network.Wai
-import           Network.Wai.Handler.Warp     (Settings, defaultSettings,
-                                               runSettings, setBeforeMainLoop)
+import           Network.Wai.Handler.Warp     (defaultSettings,
+                                               runSettings, setBeforeMainLoop, setPort)
 
 import           Test.Hspec
 
@@ -36,15 +36,19 @@ import           Network.WebexTeams.Internal  (LinkHeader (..), LinkParam (..),
 import           Data.Typeable                (typeOf)
 
 
+listenPort = 3000
+listenPortBS = (C8.pack . show) listenPort
+
 mockBaseRequestRequest
     = C.addRequestHeader "Content-Type" "application/json; charset=utf-8"
-    $ C.setRequestPort 3000
+    $ C.setRequestPort listenPort
     $ C.setRequestHost "127.0.0.1"
     $ C.setRequestSecure False
     $ C.defaultRequest
 
 mockBaseRequest :: CiscoSparkRequest
-mockBaseRequest = CiscoSparkRequest mockBaseRequestRequest "http:" $ URIAuth "" "127.0.0.1" ":3000"
+mockBaseRequest = CiscoSparkRequest mockBaseRequestRequest "http:" $
+    URIAuth "" "127.0.0.1" (":" <> show listenPort)
 
 dummyAuth :: Authorization
 dummyAuth = Authorization "dummyAuth"
@@ -56,7 +60,7 @@ extractRight (Left err) = error $ show err
 withMockServer :: Application -> IO () -> IO ()
 withMockServer app inner = do
     readyToConnect <- newEmptyMVar
-    let set = setBeforeMainLoop (putMVar readyToConnect ()) defaultSettings
+    let set = setBeforeMainLoop (putMVar readyToConnect ()) $ setPort listenPort defaultSettings
     withAsync (runSettings set app) (\_ -> takeMVar readyToConnect >> inner)
 
 helloApp :: Application
@@ -73,10 +77,10 @@ paginationApp ress req respond = do
     let (cTypes, body) = dispatch $ rawPathInfo req
     respond $ responseLBS status200 cTypes body
       where
-        dispatch "/1"   = ([contentType, ("Link", "<http://127.0.0.1:3000/2>; rel=\"next\"")], ress !! 1)
-        dispatch "/2"   = ([contentType, ("Link", "<http://127.0.0.1:3000/3>; rel=\"next\"")], ress !! 2)
+        dispatch "/1"   = ([contentType, ("Link", "<http://127.0.0.1:" <> listenPortBS <> "/2>; rel=\"next\"")], ress !! 1)
+        dispatch "/2"   = ([contentType, ("Link", "<http://127.0.0.1:" <> listenPortBS <> "/3>; rel=\"next\"")], ress !! 2)
         dispatch "/3"   = ([contentType], ress !! 3)
-        dispatch _      = ([contentType, ("Link", "<http://127.0.0.1:3000/1>; rel=\"next\"")], ress !! 0)
+        dispatch _      = ([contentType, ("Link", "<http://127.0.0.1:" <> listenPortBS <> "/1>; rel=\"next\"")], ress !! 0)
 
 invalidPaginationApp :: [L.ByteString] -> Application
 invalidPaginationApp ress req respond = do
@@ -84,9 +88,9 @@ invalidPaginationApp ress req respond = do
     respond $ responseLBS status200 cTypes body
       where
         dispatch "/1"   = ([contentType, ("Link", "<http://127.0.0.1:8888/2>; rel=\"next\"")], ress !! 1)
-        dispatch "/2"   = ([contentType, ("Link", "<http://127.0.0.1:3000/3>; rel=\"next\"")], ress !! 2)
+        dispatch "/2"   = ([contentType, ("Link", "<http://127.0.0.1:" <> listenPortBS <> "/3>; rel=\"next\"")], ress !! 2)
         dispatch "/3"   = ([contentType], ress !! 3)
-        dispatch _      = ([contentType, ("Link", "<http://127.0.0.1:3000/1>; rel=\"next\"")], ress !! 0)
+        dispatch _      = ([contentType, ("Link", "<http://127.0.0.1:" <> listenPortBS <> "/1>; rel=\"next\"")], ress !! 0)
 
 
 teamGen :: String -> Team
@@ -152,7 +156,7 @@ spec = do
                 rawPathInfo receivedReq `shouldBe` "/v1/teams"
 
                 let path = getNextUrl res1
-                path `shouldBe` Just "http://127.0.0.1:3000/1"
+                path `shouldBe` (Just $ "http://127.0.0.1:" <> listenPortBS <> "/1")
 
                 req2 <- parseRequest $ "GET " <> C8.unpack (fromJust path)
                 res2 <- httpJSON req2
@@ -418,8 +422,10 @@ spec = do
                 ) $ do
                 res <- getTeamList dummyAuth mockBaseRequest >>= readAllList
                 res `shouldBe` testData
-                path <- rawPathInfo <$> takeMVar receivedReqMVar
-                path `shouldBe` "/v1/teams"
+
+                receivedReq <- takeMVar receivedReqMVar
+                rawPathInfo receivedReq `shouldBe` "/v1/teams"
+                queryString receivedReq `shouldBe` []
 
         it "getTeamList returns ListReader of Team performing automatic pagination" $ do
             withMockServer (paginationApp $ encode . TeamList <$> teamListList) $ do
@@ -1228,7 +1234,7 @@ spec = do
                                        , createMessageFiles         = Just $ [ FileUrl "http://www.example.com/images/media.png" ]
                                        }
 
-        it "streamMessageList streams Message" $ do
+        it "getMessageList returns ListReader of Message" $ do
             let testData = messageList ['Z']
             receivedReqMVar <- newEmptyMVar
 
@@ -1236,14 +1242,14 @@ spec = do
                     putMVar receivedReqMVar req
                     simpleApp (encode (MessageList testData)) req respond
                 ) $ do
-                res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest defFilter .| sinkList
+                res <- getListWithFilter dummyAuth mockBaseRequest defFilter >>= readAllList
                 res `shouldBe` testData
 
                 receivedReq <- takeMVar receivedReqMVar
                 rawPathInfo receivedReq `shouldBe` "/v1/messages"
                 queryString receivedReq `shouldBe` [ ("roomId", Just "dummyRoomId") ]
 
-        it "streamMessageList passes query strings build from MessageFilter to server" $ do
+        it "getMessageList passes query strings build from MessageFilter to server" $ do
             let testData = messageList ['Z']
                 messageFilter = MessageFilter (RoomId "dummyRoomId")
                                               (Just $ MentionedPeopleMe)
@@ -1256,7 +1262,7 @@ spec = do
                     putMVar receivedReqMVar req
                     simpleApp (encode (MessageList testData)) req respond
                 ) $ do
-                res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest messageFilter .| sinkList
+                res <- getListWithFilter dummyAuth mockBaseRequest messageFilter >>= readAllList
                 res `shouldBe` testData
 
                 receivedReq <- takeMVar receivedReqMVar
@@ -1266,14 +1272,14 @@ spec = do
                                                                  , ("beforeMessage", Just "beforeMessageFilter")
                                                                  , ("before", Just "beforeFilter") ]
 
-        it "streamMessageList streams Message with automatic pagination" $ do
+        it "getMessageList returns ListReader of Message with automatic pagination" $ do
             withMockServer (paginationApp $ encode . MessageList <$> messageListList) $ do
-                res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest defFilter .| sinkList
+                res <- getListWithFilter dummyAuth mockBaseRequest defFilter >>= readAllList
                 res `shouldBe` concat messageListList
 
-        it "streamMessageList stops pagination at invalid Link Header" $ do
+        it "getMessageList stops pagination at invalid Link Header" $ do
             withMockServer (invalidPaginationApp $ encode . MessageList <$> messageListList) $ do
-                res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest defFilter .| sinkList
+                res <- getListWithFilter dummyAuth mockBaseRequest defFilter >>= readAllList
                 res `shouldBe` concat (take 2 messageListList)
 
         it "getDetail for a message returns a Message" $ do
@@ -1376,32 +1382,6 @@ spec = do
             organizationList j = [ organizationGen $ j <> show i | i <- [1..3] ]
             organizationListList = [ organizationList [c] | c <- ['a'..'d'] ]
 
-{-
-        it "streamOrganizationList streams Organization" $ do
-            let testData = organizationList ['Z']
-            receivedReqMVar <- newEmptyMVar
-
-            withMockServer (\req respond -> do
-                    putMVar receivedReqMVar req
-                    simpleApp (encode (OrganizationList testData)) req respond
-                ) $ do
-                res <- runConduit $ streamOrganizationList dummyAuth mockBaseRequest .| sinkList
-                res `shouldBe` testData
-
-                receivedReq <- takeMVar receivedReqMVar
-                rawPathInfo receivedReq `shouldBe` "/v1/organizations"
-                queryString receivedReq `shouldBe` []
-
-        it "streamOrganizationList streams Organization with automatic pagination" $ do
-            withMockServer (paginationApp $ encode . OrganizationList <$> organizationListList) $ do
-                res <- runConduit $ streamOrganizationList dummyAuth mockBaseRequest .| sinkList
-                res `shouldBe` concat organizationListList
-
-        it "streamOrganizationList stops pagination at invalid Link Header" $ do
-            withMockServer (invalidPaginationApp $ encode . OrganizationList <$> organizationListList) $ do
-                res <- runConduit $ streamOrganizationList dummyAuth mockBaseRequest .| sinkList
-                res `shouldBe` concat (take 2 organizationListList)
-
         it "getOrganizationList returns ListReader of Organization" $ do
             let testData = organizationList ['Z']
             receivedReqMVar <- newEmptyMVar
@@ -1412,9 +1392,10 @@ spec = do
                 ) $ do
                 res <- getOrganizationList dummyAuth mockBaseRequest >>= readAllList
                 res `shouldBe` testData
-                path <- rawPathInfo <$> takeMVar receivedReqMVar
-                path `shouldBe` "/v1/organizations"
--}
+
+                receivedReq <- takeMVar receivedReqMVar
+                rawPathInfo receivedReq `shouldBe` "/v1/organizations"
+                queryString receivedReq `shouldBe` []
 
         it "getOrganizationList returns ListReader of Organization performing automatic pagination" $ do
             withMockServer (paginationApp $ encode . OrganizationList <$> organizationListList) $ do
@@ -1474,7 +1455,7 @@ spec = do
             licenseList j = [ licenseGen $ j <> show i | i <- [1..3] ]
             licenseListList = [ licenseList [c] | c <- ['a'..'d'] ]
 
-        it "streamLicenseList streams License" $ do
+        it "getLicenseList returns ListReader of License" $ do
             let testData = licenseList ['Z']
             receivedReqMVar <- newEmptyMVar
 
@@ -1482,14 +1463,14 @@ spec = do
                     putMVar receivedReqMVar req
                     simpleApp (encode (LicenseList testData)) req respond
                 ) $ do
-                res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: LicenseFilter) .| sinkList
+                res <- getListWithFilter dummyAuth mockBaseRequest (def :: LicenseFilter) >>= readAllList
                 res `shouldBe` testData
 
                 receivedReq <- takeMVar receivedReqMVar
                 rawPathInfo receivedReq `shouldBe` "/v1/licenses"
                 queryString receivedReq `shouldBe` []
 
-        it "streamLicenseList passes query strings build from LicenseFilter to server" $ do
+        it "getLicenseList passes query strings build from LicenseFilter to server" $ do
             let testData = licenseList ['Z']
                 licenseFilter = LicenseFilter (Just $ OrganizationId "orgIdFilter")
 
@@ -1499,21 +1480,21 @@ spec = do
                     putMVar receivedReqMVar req
                     simpleApp (encode (LicenseList testData)) req respond
                 ) $ do
-                res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest licenseFilter .| sinkList
+                res <- getListWithFilter dummyAuth mockBaseRequest licenseFilter >>= readAllList
                 res `shouldBe` testData
 
                 receivedReq <- takeMVar receivedReqMVar
                 rawPathInfo receivedReq `shouldBe` "/v1/licenses"
                 queryString receivedReq `shouldBe` [ ("orgId", Just "orgIdFilter") ]
 
-        it "streamLicenseList streams License with automatic pagination" $ do
+        it "getLicenseList returns ListReader of License with automatic pagination" $ do
             withMockServer (paginationApp $ encode . LicenseList <$> licenseListList) $ do
-                res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: LicenseFilter) .| sinkList
+                res <- getListWithFilter dummyAuth mockBaseRequest (def :: LicenseFilter) >>= readAllList
                 res `shouldBe` concat licenseListList
 
-        it "streamLicenseList stops pagination at invalid Link Header" $ do
+        it "getLicenseList stops pagination at invalid Link Header" $ do
             withMockServer (invalidPaginationApp $ encode . LicenseList <$> licenseListList) $ do
-                res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: LicenseFilter) .| sinkList
+                res <- getListWithFilter dummyAuth mockBaseRequest (def :: LicenseFilter) >>= readAllList
                 res `shouldBe` concat (take 2 licenseListList)
 
         it "getDetail for a license returns a License" $ do
@@ -1557,32 +1538,6 @@ spec = do
                              }
             roleList j = [ roleGen $ j <> show i | i <- [1..3] ]
             roleListList = [ roleList [c] | c <- ['a'..'d'] ]
-{-
-        it "streamRoleList streams Role" $ do
-            let testData = roleList ['Z']
-            receivedReqMVar <- newEmptyMVar
-
-            withMockServer (\req respond -> do
-                    putMVar receivedReqMVar req
-                    simpleApp (encode (RoleList testData)) req respond
-                ) $ do
-                res <- runConduit $ streamRoleList dummyAuth mockBaseRequest .| sinkList
-                res `shouldBe` testData
-
-                receivedReq <- takeMVar receivedReqMVar
-                rawPathInfo receivedReq `shouldBe` "/v1/roles"
-                queryString receivedReq `shouldBe` []
-
-        it "streamRoleList streams Role with automatic pagination" $ do
-            withMockServer (paginationApp $ encode . RoleList <$> roleListList) $ do
-                res <- runConduit $ streamRoleList dummyAuth mockBaseRequest .| sinkList
-                res `shouldBe` concat roleListList
-
-        it "streamRoleList stops pagination at invalid Link Header" $ do
-            withMockServer (invalidPaginationApp $ encode . RoleList <$> roleListList) $ do
-                res <- runConduit $ streamRoleList dummyAuth mockBaseRequest .| sinkList
-                res `shouldBe` concat (take 2 roleListList)
--}
 
         it "getRoleList returns ListReader of Role" $ do
             let testData = roleList ['Z']
@@ -1594,8 +1549,10 @@ spec = do
                 ) $ do
                 res <- getRoleList dummyAuth mockBaseRequest >>= readAllList
                 res `shouldBe` testData
-                path <- rawPathInfo <$> takeMVar receivedReqMVar
-                path `shouldBe` "/v1/roles"
+
+                receivedReq <- takeMVar receivedReqMVar
+                rawPathInfo receivedReq `shouldBe` "/v1/roles"
+                queryString receivedReq `shouldBe` []
 
         it "getRoleList returns ListReader of Role performing automatic pagination" $ do
             withMockServer (paginationApp $ encode . RoleList <$> roleListList) $ do

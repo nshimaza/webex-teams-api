@@ -206,8 +206,8 @@ import           Data.Text.Encoding          (encodeUtf8)
 import           Network.HTTP.Simple
 import           Network.URI                 (URIAuth (..))
 
-import           Network.CiscoSpark.Internal
-import           Network.CiscoSpark.Types
+import           Network.WebexTeams.Internal
+import           Network.WebexTeams.Types
 
 
 -- | Authorization string against Spark API to be contained in HTTP Authorization header of every request.
