@@ -240,52 +240,6 @@ spec = do
                                         , updatePersonLicenses      = Just $ [ LicenseId "newLicenseId1", LicenseId "newLicenseId2" ]
                                         }
 
-        it "streamPersonList streams Person" $ do
-            let testData = personList ['Z']
-            receivedReqMVar <- newEmptyMVar
-
-            withMockServer (\req respond -> do
-                    putMVar receivedReqMVar req
-                    simpleApp (encode (PersonList testData)) req respond
-                ) $ do
-                res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: PersonFilter) .| sinkList
-                res `shouldBe` testData
-
-                receivedReq <- takeMVar receivedReqMVar
-                rawPathInfo receivedReq `shouldBe` "/v1/people"
-                queryString receivedReq `shouldBe` []
-
-        it "streamPersonList passes query strings build from PersonFilter to server" $ do
-            let testData = personList ['Z']
-                personFilter = PersonFilter (Just $ Email "person@filter.com")
-                                            (Just $ DisplayName "DisplayNameFilter")
-                                            (Just $ OrganizationId "OrgIdFilter")
-
-            receivedReqMVar <- newEmptyMVar
-
-            withMockServer (\req respond -> do
-                    putMVar receivedReqMVar req
-                    simpleApp (encode (PersonList testData)) req respond
-                ) $ do
-                res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest personFilter .| sinkList
-                res `shouldBe` testData
-
-                receivedReq <- takeMVar receivedReqMVar
-                rawPathInfo receivedReq `shouldBe` "/v1/people"
-                (sort . queryString) receivedReq `shouldBe` sort [ ("orgId", Just "OrgIdFilter")
-                                                                 , ("displayName", Just "DisplayNameFilter")
-                                                                 , ("email", Just "person@filter.com") ]
-
-        it "streamPersonList streams Person with automatic pagination" $ do
-            withMockServer (paginationApp $ encode . PersonList <$> personListList) $ do
-                res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: PersonFilter) .| sinkList
-                res `shouldBe` concat personListList
-
-        it "streamPersonList stops pagination at invalid Link Header" $ do
-            withMockServer (invalidPaginationApp $ encode . PersonList <$> personListList) $ do
-                res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: PersonFilter) .| sinkList
-                res `shouldBe` concat (take 2 personListList)
-
         it "getPersonList returns ListReader of Person" $ do
             let testData = personList ['Z']
             receivedReqMVar <- newEmptyMVar
@@ -453,29 +407,6 @@ spec = do
                         }
             newTeam = CreateTeam $ TeamName "Build Squad"
             updateTeam = UpdateTeam $ TeamName "updatedTeamName"
-
-        it "streamTeamList streams Team" $ do
-            let testData = teamList ['Z']
-            receivedReqMVar <- newEmptyMVar
-
-            withMockServer (\req respond -> do
-                    putMVar receivedReqMVar req
-                    simpleApp (encode (TeamList testData)) req respond
-                ) $ do
-                res <- runConduit $ streamTeamList dummyAuth mockBaseRequest .| sinkList
-                res `shouldBe` testData
-                path <- rawPathInfo <$> takeMVar receivedReqMVar
-                path `shouldBe` "/v1/teams"
-
-        it "streamTeamList streams Team with automatic pagination" $ do
-            withMockServer (paginationApp $ encode . TeamList <$> teamListList) $ do
-                res <- runConduit $ streamTeamList dummyAuth mockBaseRequest .| sinkList
-                res `shouldBe` concat teamListList
-
-        it "streamTeamList stops pagination at invalid Link Header" $ do
-            withMockServer (invalidPaginationApp $ encode . TeamList <$> teamListList) $ do
-                res <- runConduit $ streamTeamList dummyAuth mockBaseRequest .| sinkList
-                res `shouldBe` concat (take 2 teamListList)
 
         it "getTeamList returns ListReader of Team" $ do
             let testData = teamList ['Z']
@@ -662,7 +593,7 @@ spec = do
                                                      }
             updateTeamMembership = UpdateTeamMembership False
 
-        it "streamTeamMembershipList streams TeamMembership" $ do
+        it "getTeamMembershipList returns ListReader of TeamMembership" $ do
             let testData = teamMembershipList ['Z']
             receivedReqMVar <- newEmptyMVar
 
@@ -670,14 +601,14 @@ spec = do
                     putMVar receivedReqMVar req
                     simpleApp (encode (TeamMembershipList testData)) req respond
                 ) $ do
-                res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest defFilter .| sinkList
+                res <- getListWithFilter dummyAuth mockBaseRequest defFilter >>= readAllList
                 res `shouldBe` testData
 
                 receivedReq <- takeMVar receivedReqMVar
                 rawPathInfo receivedReq `shouldBe` "/v1/team/memberships"
                 queryString receivedReq `shouldBe` [ ("teamId", Just "dummyTeamId") ]
 
-        it "streamMembershipList passes query strings build from TeamMembershipFilter to server" $ do
+        it "getTeamMembershipList passes query strings build from TeamMembershipFilter to server" $ do
             let testData = teamMembershipList ['Z']
                 teamMembershipFilter = TeamMembershipFilter $ TeamId "DummyTeamId"
 
@@ -687,21 +618,21 @@ spec = do
                     putMVar receivedReqMVar req
                     simpleApp (encode (TeamMembershipList testData)) req respond
                 ) $ do
-                res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest teamMembershipFilter .| sinkList
+                res <- getListWithFilter dummyAuth mockBaseRequest teamMembershipFilter >>= readAllList
                 res `shouldBe` testData
 
                 receivedReq <- takeMVar receivedReqMVar
                 rawPathInfo receivedReq `shouldBe` "/v1/team/memberships"
                 queryString receivedReq `shouldBe` [ ("teamId", Just "DummyTeamId") ]
 
-        it "streamTeamMembershipList streams TeamMembership with automatic pagination" $ do
+        it "getTeamMembershipList returns ListReader of TeamMembership performing automatic pagination" $ do
             withMockServer (paginationApp $ encode . TeamMembershipList <$> teamMembershipListList) $ do
-                res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest defFilter .| sinkList
+                res <- getListWithFilter dummyAuth mockBaseRequest defFilter >>= readAllList
                 res `shouldBe` concat teamMembershipListList
 
-        it "streamTeamMembershipList stops pagination at invalid Link Header" $ do
+        it "getTeamMembershipList stops pagination at invalid Link Header" $ do
             withMockServer (invalidPaginationApp $ encode . TeamMembershipList <$> teamMembershipListList) $ do
-                res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest defFilter .| sinkList
+                res <- getListWithFilter dummyAuth mockBaseRequest defFilter >>= readAllList
                 res `shouldBe` concat (take 2 teamMembershipListList)
 
         it "getDetail for a team membership returns a TeamMembership" $ do
@@ -864,7 +795,7 @@ spec = do
             newRoom = CreateRoom (RoomTitle "New Room") (Just $ TeamId "belongingTeam")
             updateRoom = UpdateRoom $ RoomTitle "updatedRoomTitle"
 
-        it "streamRoomList streams Room" $ do
+        it "getRoomList returns ListReader of Room" $ do
             let testData = roomList ['Z']
             receivedReqMVar <- newEmptyMVar
 
@@ -872,14 +803,14 @@ spec = do
                     putMVar receivedReqMVar req
                     simpleApp (encode (RoomList testData)) req respond
                 ) $ do
-                res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: RoomFilter) .| sinkList
+                res <- getListWithFilter dummyAuth mockBaseRequest (def :: RoomFilter) >>= readAllList
                 res `shouldBe` testData
 
                 receivedReq <- takeMVar receivedReqMVar
                 rawPathInfo receivedReq `shouldBe` "/v1/rooms"
                 queryString receivedReq `shouldBe` []
 
-        it "streamRoomList passes query strings build from RoomFilter to server" $ do
+        it "getRoomList passes query strings build from RoomFilter to server" $ do
             let testData = roomList ['Z']
                 roomFilter = RoomFilter (Just $ TeamId "dummyTeamId")
                                         (Just RoomTypeGroup)
@@ -891,7 +822,7 @@ spec = do
                     putMVar receivedReqMVar req
                     simpleApp (encode (RoomList testData)) req respond
                 ) $ do
-                res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest roomFilter .| sinkList
+                res <- getListWithFilter dummyAuth mockBaseRequest roomFilter >>= readAllList
                 res `shouldBe` testData
 
                 receivedReq <- takeMVar receivedReqMVar
@@ -900,14 +831,14 @@ spec = do
                                                                  , ("sortBy", Just "lastactivity")
                                                                  , ("teamId", Just "dummyTeamId") ]
 
-        it "streamRoomList streams Room with automatic pagination" $ do
+        it "getRoomList returns ListReader of Room performing automatic pagination" $ do
             withMockServer (paginationApp $ encode . RoomList <$> roomListList) $ do
-                res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: RoomFilter) .| sinkList
+                res <- getListWithFilter dummyAuth mockBaseRequest (def :: RoomFilter) >>= readAllList
                 res `shouldBe` concat roomListList
 
-        it "streamRoomList stops pagination at invalid Link Header" $ do
+        it "getRoomList stops pagination at invalid Link Header" $ do
             withMockServer (invalidPaginationApp $ encode . RoomList <$> roomListList) $ do
-                res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: RoomFilter) .| sinkList
+                res <- getListWithFilter dummyAuth mockBaseRequest (def :: RoomFilter) >>= readAllList
                 res `shouldBe` concat (take 2 roomListList)
 
         it "getDetail for a room returns a Room" $ do
@@ -1074,7 +1005,7 @@ spec = do
                                              }
             updateMembership = UpdateMembership False
 
-        it "streamMembershipList streams Membership" $ do
+        it "getMembershipList returns ListReader of Membership" $ do
             let testData = membershipList ['Z']
             receivedReqMVar <- newEmptyMVar
 
@@ -1082,14 +1013,14 @@ spec = do
                     putMVar receivedReqMVar req
                     simpleApp (encode (MembershipList testData)) req respond
                 ) $ do
-                res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: MembershipFilter) .| sinkList
+                res <- getListWithFilter dummyAuth mockBaseRequest (def :: MembershipFilter) >>= readAllList
                 res `shouldBe` testData
 
                 receivedReq <- takeMVar receivedReqMVar
                 rawPathInfo receivedReq `shouldBe` "/v1/memberships"
                 queryString receivedReq `shouldBe` []
 
-        it "streamMembershipList passes query strings build from MembershipFilter to server" $ do
+        it "getMembershipList passes query strings build from MembershipFilter to server" $ do
             let testData = membershipList ['Z']
                 membershipFilter = MembershipFilter (Just $ RoomId "dummyRoomId")
                                                     (Just $ PersonId "personIdFilter")
@@ -1101,7 +1032,7 @@ spec = do
                     putMVar receivedReqMVar req
                     simpleApp (encode (MembershipList testData)) req respond
                 ) $ do
-                res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest membershipFilter .| sinkList
+                res <- getListWithFilter dummyAuth mockBaseRequest membershipFilter >>= readAllList
                 res `shouldBe` testData
 
                 receivedReq <- takeMVar receivedReqMVar
@@ -1110,14 +1041,14 @@ spec = do
                                                                  , ("personEmail", Just "personEmailFilter")
                                                                  , ("roomId", Just "dummyRoomId") ]
 
-        it "streamMembershipList streams Membership with automatic pagination" $ do
+        it "getMembershipList returns ListReader of Membership performing automatic pagination" $ do
             withMockServer (paginationApp $ encode . MembershipList <$> membershipListList) $ do
-                res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: MembershipFilter) .| sinkList
+                res <- getListWithFilter dummyAuth mockBaseRequest (def :: MembershipFilter) >>= readAllList
                 res `shouldBe` concat membershipListList
 
-        it "streamMembershipList stops pagination at invalid Link Header" $ do
+        it "getMembershipList stops pagination at invalid Link Header" $ do
             withMockServer (invalidPaginationApp $ encode . MembershipList <$> membershipListList) $ do
-                res <- runConduit $ streamEntityWithFilter dummyAuth mockBaseRequest (def :: MembershipFilter) .| sinkList
+                res <- getListWithFilter dummyAuth mockBaseRequest (def :: MembershipFilter) >>= readAllList
                 res `shouldBe` concat (take 2 membershipListList)
 
         it "getDetail for a menbership returns a Membership" $ do
@@ -1445,6 +1376,7 @@ spec = do
             organizationList j = [ organizationGen $ j <> show i | i <- [1..3] ]
             organizationListList = [ organizationList [c] | c <- ['a'..'d'] ]
 
+{-
         it "streamOrganizationList streams Organization" $ do
             let testData = organizationList ['Z']
             receivedReqMVar <- newEmptyMVar
@@ -1482,6 +1414,7 @@ spec = do
                 res `shouldBe` testData
                 path <- rawPathInfo <$> takeMVar receivedReqMVar
                 path `shouldBe` "/v1/organizations"
+-}
 
         it "getOrganizationList returns ListReader of Organization performing automatic pagination" $ do
             withMockServer (paginationApp $ encode . OrganizationList <$> organizationListList) $ do
@@ -1624,7 +1557,7 @@ spec = do
                              }
             roleList j = [ roleGen $ j <> show i | i <- [1..3] ]
             roleListList = [ roleList [c] | c <- ['a'..'d'] ]
-
+{-
         it "streamRoleList streams Role" $ do
             let testData = roleList ['Z']
             receivedReqMVar <- newEmptyMVar
@@ -1649,6 +1582,7 @@ spec = do
             withMockServer (invalidPaginationApp $ encode . RoleList <$> roleListList) $ do
                 res <- runConduit $ streamRoleList dummyAuth mockBaseRequest .| sinkList
                 res `shouldBe` concat (take 2 roleListList)
+-}
 
         it "getRoleList returns ListReader of Role" $ do
             let testData = roleList ['Z']
