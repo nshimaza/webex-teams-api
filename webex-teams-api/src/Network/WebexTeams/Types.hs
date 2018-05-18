@@ -502,7 +502,7 @@ instance SparkFilter TeamMembershipFilter where
     used for providing consistent API like 'streamEntityWithFilter'.
 -}
 defaultTeamMembershipFilter :: TeamId -> TeamMembershipFilter
-defaultTeamMembershipFilter teamId = TeamMembershipFilter teamId
+defaultTeamMembershipFilter = TeamMembershipFilter
 
 -- | 'CreateTeamMembership' is encoded to request body JSON of Create a Team Membership REST call.
 data CreateTeamMembership = CreateTeamMembership
