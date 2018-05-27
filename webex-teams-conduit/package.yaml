@@ -39,7 +39,7 @@ executables:
     - webex-teams-conduit
     - bytestring
     - data-default
-    - http-conduit
+    - http-client
     - optparse-applicative
     - text
     - utf8-string

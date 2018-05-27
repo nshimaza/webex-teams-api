@@ -7,7 +7,7 @@ import           Data.ByteString.Char8      as BC8 (pack)
 import           Data.Default               (def)
 import           Data.Semigroup             ((<>))
 import           Data.Text                  as T (pack)
-import           Network.HTTP.Simple        (getResponseBody)
+import           Network.HTTP.Client        (responseBody)
 import           Options.Applicative
 import           System.Environment         (lookupEnv)
 import           System.IO                  (hPutStrLn, stderr)
@@ -16,14 +16,13 @@ import           Network.WebexTeams         hiding (streamTeamList)
 import           Network.WebexTeams.Conduit
 
 main :: IO ()
-main = do
-    lookupEnv "SPARK_AUTH" >>= runIfEnvFound
-      where
-        runIfEnvFound Nothing   = hPutStrLn stderr "Missing SPARK_AUTH.  Set Spark authorization string to SPARK_AUTH environment variable."
-        runIfEnvFound (Just s)  = do
-            opts <- execParser programOptions
-            print opts
-            run (Authorization $ BC8.pack s) opts
+main = lookupEnv "SPARK_AUTH" >>= runIfEnvFound
+  where
+    runIfEnvFound Nothing   = hPutStrLn stderr "Missing SPARK_AUTH.  Set Spark authorization string to SPARK_AUTH environment variable."
+    runIfEnvFound (Just s)  = do
+        opts <- execParser programOptions
+        print opts
+        run (Authorization $ BC8.pack s) opts
 
 run :: Authorization -> Command -> IO ()
 run auth (PersonListCommand count filter) =
@@ -45,36 +44,36 @@ run auth (TeamListCommand count) =
     runConduit $ streamTeamList auth def .| takeC count .| mapM_C print
 
 run auth (PersonDetailCommand personId) =
-    getDetail auth def personId >>= print . getResponseBody
+    getDetail auth def personId >>= print . responseBody
 
 run auth (RoomDetailCommand roomId) =
-    getDetail auth def roomId >>= print . getResponseBody
+    getDetail auth def roomId >>= print . responseBody
 
 run auth (MembershipDetailCommand membershipId) =
-    getDetail auth def membershipId >>= print . getResponseBody
+    getDetail auth def membershipId >>= print . responseBody
 
 run auth (MessageDetailCommand messageId) =
-    getDetail auth def messageId >>= print . getResponseBody
+    getDetail auth def messageId >>= print . responseBody
 
 run auth (CreateMessageCommand roomId messageText) =
-    createEntity auth def message >>= print . getResponseBody
+    createEntity auth def message >>= print . responseBody
       where
         message = CreateMessage (Just roomId) Nothing Nothing (Just messageText) Nothing Nothing
 
 run auth (DeleteMessageCommand messageId) =
-    deleteMessage auth def messageId >>= print . getResponseBody
+    deleteMessage auth def messageId >>= print . responseBody
 
 run auth (TeamDetailCommand teamId) =
-    getDetail auth def teamId >>= print . getResponseBody
+    getDetail auth def teamId >>= print . responseBody
 
 run auth (TeamMembershipDetailCommand teamMembershipId) =
-    getDetail auth def teamMembershipId >>= print . getResponseBody
+    getDetail auth def teamMembershipId >>= print . responseBody
 
 run auth (CreateRoomCommand createRoom) =
-    createEntity auth def createRoom >>= print . getResponseBody
+    createEntity auth def createRoom >>= print . responseBody
 
 run auth (DeleteRoomCommand roomId) =
-    deleteRoom auth def roomId >>= print . getResponseBody
+    deleteRoom auth def roomId >>= print . responseBody
 
 {-
     Command line parser
