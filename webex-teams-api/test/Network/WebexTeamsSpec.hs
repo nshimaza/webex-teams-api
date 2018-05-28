@@ -2,38 +2,45 @@
 
 module Network.WebexTeamsSpec where
 
-import           Conduit
-import           Control.Concurrent.Async     (withAsync)
-import           Control.Concurrent.MVar      (MVar, newEmptyMVar, putMVar,
-                                               takeMVar)
-import           Control.Monad                (void)
-import           Data.Aeson                   (decode, encode)
-import           Data.Attoparsec.ByteString   (parseOnly)
-import qualified Data.ByteString              as S (ByteString)
-import qualified Data.ByteString.Char8        as C8 (pack, unpack)
-import qualified Data.ByteString.Lazy         as L (ByteString)
-import           Data.Default                 (def)
-import           Data.List                    (sort)
-import           Data.Maybe                   (fromJust)
-import           Data.Monoid                  ((<>))
-import           Data.Text                    (pack)
-
-import           Network.HTTP.Simple          as C
-
-import           Network.HTTP.Types           (Header, status200)
-import           Network.URI                  (URIAuth (..))
-import           Network.Wai
-import           Network.Wai.Handler.Warp     (defaultSettings,
-                                               runSettings, setBeforeMainLoop, setPort)
+import           Control.Concurrent.Async    (withAsync)
+import           Control.Concurrent.MVar     (MVar, newEmptyMVar, putMVar,
+                                              takeMVar)
+import           Control.Monad               (void)
+import           Data.Aeson                  (decode, encode)
+import           Data.Attoparsec.ByteString  (parseOnly)
+import qualified Data.ByteString             as S (ByteString)
+import qualified Data.ByteString.Char8       as C8 (pack, unpack)
+import qualified Data.ByteString.Lazy        as L (ByteString)
+import           Data.Default                (def)
+import           Data.List                   (sort)
+import           Data.Maybe                  (fromJust)
+import           Data.Monoid                 ((<>))
+import           Data.Text                   (pack)
+import           Network.HTTP.Simple         as C (addRequestHeader,
+                                                   defaultRequest,
+                                                   getResponseBody, httpJSON,
+                                                   parseRequest, setRequestHost,
+                                                   setRequestMethod,
+                                                   setRequestPath,
+                                                   setRequestPort,
+                                                   setRequestSecure)
+import           Network.HTTP.Types          (Header, status200)
+import           Network.URI                 (URIAuth (..))
+import           Network.Wai                 (Application, queryString,
+                                              rawPathInfo, requestHeaders,
+                                              requestMethod, responseLBS,
+                                              strictRequestBody)
+import           Network.Wai.Handler.Warp    (defaultSettings, runSettings,
+                                              setBeforeMainLoop, setPort)
 
 import           Test.Hspec
 
 import           Network.WebexTeams
-import           Network.WebexTeams.Internal  (LinkHeader (..), LinkParam (..),
-                                               getNextUrl, linkHeader)
+import           Network.WebexTeams.Internal (LinkHeader (..), LinkParam (..),
+                                              getNextUrl, linkHeader)
 
 
-import           Data.Typeable                (typeOf)
+import           Data.Typeable               (typeOf)
 
 
 listenPort = 3000
@@ -111,8 +118,8 @@ readAllList :: ListReader i -> IO [i]
 readAllList reader = go []
   where
     go xs = reader >>= \chunk -> case chunk of
-        []  -> pure xs
-        ys  -> go (xs <> ys)
+        [] -> pure xs
+        ys -> go (xs <> ys)
 
 spec :: Spec
 spec = do

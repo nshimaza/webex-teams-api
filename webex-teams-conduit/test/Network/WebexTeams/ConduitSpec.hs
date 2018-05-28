@@ -2,7 +2,7 @@
 
 module Network.WebexTeams.ConduitSpec where
 
-import           Conduit
+import           Conduit                     (runConduit, sinkList, (.|))
 import           Control.Concurrent.Async    (withAsync)
 import           Control.Concurrent.MVar     (MVar, newEmptyMVar, putMVar,
                                               takeMVar)
@@ -16,12 +16,19 @@ import           Data.List                   (sort)
 import           Data.Maybe                  (fromJust)
 import           Data.Monoid                 ((<>))
 import           Data.Text                   (pack)
-
-import           Network.HTTP.Simple         as C
-
+import           Network.HTTP.Simple         as C (addRequestHeader,
+                                                   defaultRequest,
+                                                   getResponseBody, httpJSON,
+                                                   parseRequest, setRequestHost,
+                                                   setRequestMethod,
+                                                   setRequestPath,
+                                                   setRequestPort,
+                                                   setRequestSecure)
 import           Network.HTTP.Types          (Header, status200)
 import           Network.URI                 (URIAuth (..))
-import           Network.Wai
+import           Network.Wai                 (Application, queryString,
+                                              rawPathInfo, requestHeaders,
+                                              requestMethod, responseLBS)
 import           Network.Wai.Handler.Warp    (defaultSettings, runSettings,
                                               setBeforeMainLoop, setPort)
 
@@ -29,8 +36,8 @@ import           Test.Hspec
 
 import           Network.WebexTeams          hiding (streamOrganizationList,
                                               streamRoleList, streamTeamList)
-import           Network.WebexTeams.Internal (getNextUrl)
 import           Network.WebexTeams.Conduit
+import           Network.WebexTeams.Internal (getNextUrl)
 
 
 listenPort = 3001

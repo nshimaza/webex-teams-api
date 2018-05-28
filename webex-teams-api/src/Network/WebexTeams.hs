@@ -193,12 +193,14 @@ module Network.WebexTeams
     , deleteTeamMembership
     ) where
 
-import           Conduit
+import           Conduit                     (ConduitT, yieldMany)
+import           Control.Monad.IO.Class      (MonadIO, liftIO)
 import           Data.Aeson                  (FromJSON, ToJSON)
 import           Data.ByteString             (ByteString)
 import           Data.ByteString.Char8       as C8 (unpack)
 import           Data.Default                (Default (def))
-import           Data.IORef                  (IORef, newIORef, readIORef, writeIORef)
+import           Data.IORef                  (IORef, newIORef, readIORef,
+                                              writeIORef)
 import           Data.Maybe                  (catMaybes, maybeToList)
 import           Data.Monoid                 ((<>))
 import           Data.Text                   (Text)

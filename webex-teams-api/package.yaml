@@ -23,7 +23,6 @@ dependencies:
 - base >= 4.7 && < 5
 - aeson
 - bytestring
-- conduit
 - data-default
 - http-conduit
 - text
@@ -32,6 +31,7 @@ library:
   source-dirs: src
   dependencies:
   - attoparsec
+  - conduit
   - network-uri
   - bitset-word8
 
@@ -45,6 +45,7 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - webex-teams-api
+    - conduit
     - optparse-applicative
     - utf8-string
 

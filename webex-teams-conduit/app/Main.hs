@@ -2,7 +2,7 @@
 
 module Main where
 
-import           Conduit
+import           Conduit                    (mapM_C, runConduit, takeC, (.|))
 import           Data.ByteString.Char8      as BC8 (pack)
 import           Data.Default               (def)
 import           Data.Semigroup             ((<>))
