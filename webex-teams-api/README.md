@@ -2,22 +2,27 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
 [![Build Status](https://travis-ci.org/nshimaza/webex-teams-api.svg?branch=master)](https://travis-ci.org/nshimaza/webex-teams-api)
-[![Hackage](https://img.shields.io/hackage/v/cisco-spark-api.svg?style=flat)](https://hackage.haskell.org/package/cisco-spark-api)
-[![Stackage Nightly](http://stackage.org/package/cisco-spark-api/badge/nightly)](http://stackage.org/nightly/package/cisco-spark-api)
-[![Stackage LTS](http://stackage.org/package/cisco-spark-api/badge/lts)](http://stackage.org/lts/package/cisco-spark-api)
+[![Hackage](https://img.shields.io/hackage/v/webex-teams-api.svg?style=flat)](https://hackage.haskell.org/package/webex-teams-api)
+[![Stackage Nightly](http://stackage.org/package/webex-teams-api/badge/nightly)](http://stackage.org/nightly/package/webex-teams-api)
+[![Stackage LTS](http://stackage.org/package/webex-teams-api/badge/lts)](http://stackage.org/lts/package/webex-teams-api)
 
 A Haskell bindings for Cisco Webex Teams (formerly Cisco Spark) API
 
-Cisco-spark-api package provides types and functions for accessing Cisco Webex Teams REST API.
-The detail of the API is available from [developer site of Cisco Webex](https://developer.webex.com/)
+Webex-teams-api (formerly cisco-spark-api) package provides types and functions
+for accessing Cisco Webex Teams REST API.  Details of the API is available
+from [developer site of Cisco Webex](https://developer.webex.com/)
 
-This package is designed to improve type safety over the API.  Each entity is separately typed.
-JSON messages contained in REST responses are decoded into appropriate type of Haskell record.
-JSON messages sent in REST requests are encoded only from correct type of record.
+This package is designed to improve type safety over the API.  Each entity is
+separately typed.  JSON messages contained in REST responses are decoded into
+appropriate type of Haskell record.  JSON messages sent in REST requests are
+encoded only from correct type of record.
 
-Some Webex Teams REST API return list of objects.  Those APIs require HTTP Link Header based pagination.
-Haskell functions for those APIs automatically request subsequent pages as needed.
-Also those functions transform chunky response into seamless stream of elements.
+Some Webex Teams REST API return list of objects.  Those APIs require HTTP Link
+Header based pagination.  Haskell functions for those APIs automatically request
+subsequent pages as needed.  This repo provides optional packages for streaming
+response of list API.  Webex-teams-conduit and webex-teams-pipes are thin
+wrappers of list API.  They transform chunky response from list API into
+seamless stream of elements.
 
 This package also provides some sample usage in command line application style.
 See source under app directory of the source package.
@@ -36,21 +41,24 @@ Sending a message to a Room.
 
 Following example is calling List Membership API which returns membership between
 Rooms and users (Person).  You can extract each Membership from
-Conduit pipe.  The streamEntityWithFilter automatically performs pagenation when it is
-asked more element and last response indicated subsequent page in HTTP Link Header.
+Conduit pipe.  The `streamListWithFilter`, provided by webex-teams-conduit,
+automatically performs pagenation when it is asked more element and last
+response had link of subsequent page in HTTP Link Header.
 
 ```haskell
     let auth   = Authorization "your authorization token"
         filter = MembershipFilter yourRoomId Nothing Nothing
-    runConduit $ streamEntityWithFilter auth def filter .| takeC 200 .| mapM_C print
+    runConduit $ streamListWithFilter auth def filter .| takeC 200 .| mapM_C print
 ```
 
-You can find more examples in app/Main.hs
+You can find more examples in app/Main.hs under webex-teams-pipes or
+webex-teams-conduit.
 
 ### Support for Lens
 
-This package provides many of records representing objects communicated via Webex Teams REST API.
-Those records are designed to allow create lenses by Control.Lens.TH.makeFields.
+This package provides many of records representing objects communicated via
+Webex Teams REST API.  Those records are designed to allow create lenses by
+Control.Lens.TH.makeFields.
 
 Following example creates overloaded accessors for 'Person', 'Room' and 'Team'.
 
@@ -60,7 +68,8 @@ makeFields ''Room
 makeFields ''Team
 ```
 
-You can access 'personId', 'roomId' and 'teamId' via overloaded accessor function 'id' like this.
+You can access 'personId', 'roomId' and 'teamId' via overloaded accessor
+function 'id' like this.
 
 ```haskell
     let yourPersonId = yourPerson ^. id
@@ -68,8 +77,8 @@ You can access 'personId', 'roomId' and 'teamId' via overloaded accessor functio
         yourTeamId = yourTeam ^. id
 ```
 
-This package does not provide pre-generated lenses for you because not everyone need it
-but you can make it by yourself so easily as described.
+This package does not provide pre-generated lenses for you because not everyone
+need it but you can make it by yourself so easily as described.
 
 ### Limitation
 
