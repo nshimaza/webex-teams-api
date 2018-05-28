@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RankNTypes       #-}
 
 {-|
 Module      : Network.WebexTeams.Pipes
@@ -21,9 +21,9 @@ module Network.WebexTeams.Pipes
     , streamRoleList
     ) where
 
-import           Pipes              (Producer', MonadIO, liftIO, yield)
 import           Control.Monad      (unless)
 import           Data.Foldable      (traverse_)
+import           Pipes              (MonadIO, Producer', liftIO, yield)
 
 import           Network.WebexTeams hiding (streamOrganizationList,
                                      streamRoleList, streamTeamList)

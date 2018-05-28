@@ -15,16 +15,23 @@ import           Data.List                   (sort)
 import           Data.Maybe                  (fromJust)
 import           Data.Monoid                 ((<>))
 import           Data.Text                   (pack)
-
-import           Network.HTTP.Simple         as C
-
+import           Network.HTTP.Simple         as C (addRequestHeader,
+                                                   defaultRequest,
+                                                   getResponseBody, httpJSON,
+                                                   parseRequest, setRequestHost,
+                                                   setRequestMethod,
+                                                   setRequestPath,
+                                                   setRequestPort,
+                                                   setRequestSecure)
 import           Network.HTTP.Types          (Header, status200)
 import           Network.URI                 (URIAuth (..))
-import           Network.Wai
+import           Network.Wai                 (Application, queryString,
+                                              rawPathInfo, requestHeaders,
+                                              requestMethod, responseLBS)
 import           Network.Wai.Handler.Warp    (defaultSettings, runSettings,
                                               setBeforeMainLoop, setPort)
-import           Pipes
-import qualified Pipes.Prelude               as P
+import           Pipes                       (runEffect)
+import qualified Pipes.Prelude               as P (toListM)
 
 import           Test.Hspec
 
@@ -34,7 +41,7 @@ import           Network.WebexTeams.Internal (getNextUrl)
 import           Network.WebexTeams.Pipes
 
 
-listenPort = 3001
+listenPort = 3002
 listenPortBS = (C8.pack . show) listenPort
 
 mockBaseRequestRequest
