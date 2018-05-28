@@ -45,7 +45,6 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - webex-teams-api
-    - conduit
     - optparse-applicative
     - utf8-string
 

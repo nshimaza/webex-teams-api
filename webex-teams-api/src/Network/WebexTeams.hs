@@ -17,7 +17,6 @@ JSON messages sent in REST requests are encoded only from correct type of record
 
 Some Spark REST API return list of objects.  Those APIs require HTTP Link Header based pagination.
 Haskell functions for those APIs automatically request subsequent pages as needed.
-Also those functions transform chunky response into seamless stream of elements.
 
 = Examples
 
@@ -35,7 +34,7 @@ Also those functions transform chunky response into seamless stream of elements.
 
     -- Obtaining membership of a room as stream of object representing each membership relation.
     let filter = MembershipFilter yourRoomId Nothing Nothing
-    runConduit $ streamEntityWithFilter auth def filter .| takeC 200 .| mapM_C print
+    runConduit $ streamListWithFilter auth def filter .| takeC 200 .| mapM_C print
 
     -- Create a room.
     let createRoom  = CreateRoom "Title of the new room" Nothing

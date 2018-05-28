@@ -2,9 +2,9 @@
 
 module Main where
 
-import           Conduit
 import           Data.ByteString.Char8 as BC8 (pack)
 import           Data.Default          (def)
+import           Data.Foldable         (traverse_)
 import           Data.Semigroup        ((<>))
 import           Data.Text             as T (pack)
 import           Network.HTTP.Simple   (getResponseBody)
@@ -12,11 +12,10 @@ import           Options.Applicative
 import           System.Environment    (lookupEnv)
 import           System.IO             (hPutStrLn, stderr)
 
-import           Network.CiscoSpark
+import           Network.WebexTeams
 
 main :: IO ()
-main = do
-    lookupEnv "SPARK_AUTH" >>= runIfEnvFound
+main = lookupEnv "SPARK_AUTH" >>= runIfEnvFound
       where
         runIfEnvFound Nothing   = hPutStrLn stderr "Missing SPARK_AUTH.  Set Spark authorization string to SPARK_AUTH environment variable."
         runIfEnvFound (Just s)  = do
@@ -26,22 +25,22 @@ main = do
 
 run :: Authorization -> Command -> IO ()
 run auth (PersonListCommand count filter) =
-    runConduit $ streamEntityWithFilter auth def filter .| takeC count .| mapM_C print
+    take count <$> (getListWithFilter auth def filter >>= readAllList) >>= traverse_ print
 
 run auth (RoomListCommand count filter) =
-    runConduit $ streamEntityWithFilter auth def filter .| takeC count .| mapM_C print
+    take count <$> (getListWithFilter auth def filter >>= readAllList) >>= traverse_ print
 
 run auth (MembershipListCommand count filter) =
-    runConduit $ streamEntityWithFilter auth def filter .| takeC count .| mapM_C print
+    take count <$> (getListWithFilter auth def filter >>= readAllList) >>= traverse_ print
 
 run auth (MessageListCommand count filter) =
-    runConduit $ streamEntityWithFilter auth def filter .| takeC count .| mapM_C print
+    take count <$> (getListWithFilter auth def filter >>= readAllList) >>= traverse_ print
 
 run auth (TeamMembershipListCommand count filter) =
-    runConduit $ streamEntityWithFilter auth def filter .| takeC count .| mapM_C print
+    take count <$> (getListWithFilter auth def filter >>= readAllList) >>= traverse_ print
 
 run auth (TeamListCommand count) =
-    runConduit $ streamTeamList auth def .| takeC count .| mapM_C print
+    take count <$> (getTeamList auth def >>= readAllList) >>= traverse_ print
 
 run auth (PersonDetailCommand personId) =
     getDetail auth def personId >>= print . getResponseBody
@@ -74,6 +73,18 @@ run auth (CreateRoomCommand createRoom) =
 
 run auth (DeleteRoomCommand roomId) =
     deleteRoom auth def roomId >>= print . getResponseBody
+
+{-
+    NOTE: `readAllList` gets entire list of API response eagerly.
+    It is recommended to use streaming API provided by webex-teams-conduit or
+    webex-teams-pipes instead of this way.
+-}
+readAllList :: ListReader i -> IO [i]
+readAllList reader = go []
+  where
+    go xs = reader >>= \chunk -> case chunk of
+        [] -> pure xs
+        ys -> go (xs <> ys)
 
 {-
     Command line parser
