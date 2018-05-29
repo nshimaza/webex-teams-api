@@ -1,14 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 {-|
-Module      : Network.CiscoSpark.Internal
+Module      : Network.WebexTeams.Internal
 Copyright   : (c) Naoto Shimazaki 2017
 License     : MIT (see the file LICENSE)
 
 Maintainer  : https://github.com/nshimaza
 Stability   : experimental
 
-Implements some internal functions for Cisco Spark API.
+Implements some internal functions for Cisco Webex Teams API.
 -}
 module Network.WebexTeams.Internal where
 
@@ -37,7 +37,7 @@ import           Network.URI                (URI (..), URIAuth (..), parseURI)
     change first character of the remaining string to lowercase.
     This function is intended to be used for 'fieldLabelModifier' and 'constructorTagModifier'
     argument of 'DeriveJSON' from DATA.Aeson.TH.
-    You can find how this function is used in 'Network.CiscoSpark' source code.
+    You can find how this function is used in 'Network.WebexTeams' source code.
 
 -}
 dropAndLow

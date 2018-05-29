@@ -15,9 +15,9 @@ import           System.IO             (hPutStrLn, stderr)
 import           Network.WebexTeams
 
 main :: IO ()
-main = lookupEnv "SPARK_AUTH" >>= runIfEnvFound
+main = lookupEnv "WEBEXTEAMS_AUTH" >>= runIfEnvFound
       where
-        runIfEnvFound Nothing   = hPutStrLn stderr "Missing SPARK_AUTH.  Set Spark authorization string to SPARK_AUTH environment variable."
+        runIfEnvFound Nothing   = hPutStrLn stderr "Missing WEBEXTEAMS_AUTH.  Set Webex Teams authorization string to WEBEXTEAMS_AUTH environment variable."
         runIfEnvFound (Just s)  = do
             opts <- execParser programOptions
             print opts
@@ -366,6 +366,6 @@ commandSubParser = hsubparser
 programOptions :: ParserInfo Command
 programOptions = info (commandSubParser <**> helper)
     (  fullDesc
-    <> progDesc "Sample porgram demonstrating how to use cisco-spark-api"
-    <> header   "cisco-spark-api-exe -- Sample porgram demonstrating how to use cisco-spark-api"
+    <> progDesc "Sample porgram demonstrating how to use webex-teams-api"
+    <> header   "webex-teams-api-exe -- Sample porgram demonstrating how to use webex-teams-api"
     )
