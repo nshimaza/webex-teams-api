@@ -53,8 +53,8 @@ mockBaseRequestRequest
     $ C.setRequestSecure False
     $ C.defaultRequest
 
-mockBaseRequest :: CiscoSparkRequest
-mockBaseRequest = CiscoSparkRequest mockBaseRequestRequest "http:" $
+mockBaseRequest :: WebexTeamsRequest
+mockBaseRequest = WebexTeamsRequest mockBaseRequestRequest "http:" $
     URIAuth "" "127.0.0.1" (":" <> show listenPort)
 
 dummyAuth :: Authorization
@@ -126,7 +126,7 @@ spec = do
     describe "Mock Applications" $ do
         it "simple mock app returns list of team" $ do
             receivedReqMVar <- newEmptyMVar
-            let (CiscoSparkRequest baseReq _ _) = mockBaseRequest
+            let (WebexTeamsRequest baseReq _ _) = mockBaseRequest
                 req = setRequestPath "/v1/teams"
                     $ setRequestMethod "GET"
                     $ baseReq
@@ -146,7 +146,7 @@ spec = do
 
         it "pagenation mock app returns list of team and Link header" $ do
             receivedReqMVar <- newEmptyMVar
-            let (CiscoSparkRequest baseReq _ _) = mockBaseRequest
+            let (WebexTeamsRequest baseReq _ _) = mockBaseRequest
                 req = setRequestPath "/v1/teams"
                     $ setRequestMethod "GET"
                     $ baseReq

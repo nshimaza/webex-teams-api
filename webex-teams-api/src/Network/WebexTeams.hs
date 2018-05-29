@@ -80,6 +80,7 @@ module Network.WebexTeams
     -- ** Common Types
     , Authorization (..)
     , CiscoSparkRequest (..)
+    , WebexTeamsRequest (..)
     , Timestamp (..)
     , ErrorCode (..)
     , ErrorTitle (..)
@@ -214,15 +215,18 @@ import           Network.WebexTeams.Types
 -- | Authorization string against Webex Teams API to be contained in HTTP Authorization header of every request.
 newtype Authorization = Authorization ByteString deriving (Eq, Show)
 -- | Wrapping 'Request' in order to provide easy default value specifically for Webex Teams public API.
-data CiscoSparkRequest = CiscoSparkRequest
-    { ciscoSparkRequestRequest   :: Request -- ^ Holds pre-set 'Request' for REST API.
-    , ciscoSparkRequestScheme    :: String  -- ^ Should be "https:" in production.
-    , ciscoSparkRequestAuthority :: URIAuth -- ^ Authority part of request URI.
+data WebexTeamsRequest = WebexTeamsRequest
+    { webexTeamsRequestRequest   :: Request -- ^ Holds pre-set 'Request' for REST API.
+    , webexTeamsRequestScheme    :: String  -- ^ Should be "https:" in production.
+    , webexTeamsRequestAuthority :: URIAuth -- ^ Authority part of request URI.
     } deriving (Show)
 
+-- | Type synonym for backward compatibility.
+type CiscoSparkRequest = WebexTeamsRequest
+
 -- | Common part of 'Request' against Webex Teams API.
-ciscoSparkBaseRequest :: Request
-ciscoSparkBaseRequest
+webexTeamsBaseRequest :: Request
+webexTeamsBaseRequest
     = addRequestHeader "Content-Type" "application/json; charset=utf-8"
     $ setRequestPort 443
     $ setRequestHost "api.ciscospark.com"
@@ -230,8 +234,8 @@ ciscoSparkBaseRequest
     $ defaultRequest
 
 -- | Default parameters for HTTP request to Webex Teams REST API.
-instance Default CiscoSparkRequest where
-    def = CiscoSparkRequest ciscoSparkBaseRequest "https:" $ URIAuth "" "api.ciscospark.com" ""
+instance Default WebexTeamsRequest where
+    def = WebexTeamsRequest webexTeamsBaseRequest "https:" $ URIAuth "" "api.ciscospark.com" ""
 
 -- | Add given Authorization into request header.
 addAuthorizationHeader :: Authorization -> Request -> Request
@@ -240,19 +244,19 @@ addAuthorizationHeader (Authorization auth) = addRequestHeader "Authorization" (
 
 -- | Building common part of 'Request' for List APIs.
 makeCommonListReq
-    :: CiscoSparkRequest    -- ^ Common request components
+    :: WebexTeamsRequest    -- ^ Common request components
     -> ByteString           -- ^ API category part of REST URL path
-    -> CiscoSparkRequest
-makeCommonListReq base@CiscoSparkRequest { ciscoSparkRequestRequest = req } path
-    = base { ciscoSparkRequestRequest = setRequestPath ("/v1/" <> path) $ setRequestMethod "GET" req }
+    -> WebexTeamsRequest
+makeCommonListReq base@WebexTeamsRequest { webexTeamsRequestRequest = req } path
+    = base { webexTeamsRequestRequest = setRequestPath ("/v1/" <> path) $ setRequestMethod "GET" req }
 
 {-|
     Common worker function for List APIs.
     It accesses List API with given 'Request', unwrap result into list of items, stream them to Conduit pipe
     and finally it automatically accesses next page designated via HTTP Link header if available.
 -}
-streamList :: (MonadIO m, SparkListItem i) => Authorization -> CiscoSparkRequest -> ConduitT () i m ()
-streamList auth (CiscoSparkRequest req scheme uriAuth) = do
+streamList :: (MonadIO m, SparkListItem i) => Authorization -> WebexTeamsRequest -> ConduitT () i m ()
+streamList auth (WebexTeamsRequest req scheme uriAuth) = do
     res <- httpJSON $ addAuthorizationHeader auth req
     yieldMany . unwrap $ getResponseBody res
     streamListLoop auth res scheme uriAuth
@@ -271,28 +275,28 @@ streamListLoop auth res scheme uriAuth
 {-# DEPRECATED streamEntityWithFilter "Use getListWithFilter or streamListWithFilter of webex-teams-conduit" #-}
 streamEntityWithFilter :: (MonadIO m, SparkFilter filter, SparkListItem (ToResponse filter))
     => Authorization
-    -> CiscoSparkRequest
+    -> WebexTeamsRequest
     -> filter
     -> ConduitT () (ToResponse filter) m ()
 streamEntityWithFilter auth base param =
     streamList auth $ setQeuryString $ makeCommonListReq base (apiPath param)
       where
-        setQeuryString comm@CiscoSparkRequest { ciscoSparkRequestRequest = req }
-            = comm { ciscoSparkRequestRequest = setRequestQueryString (toFilterList param) req }
+        setQeuryString comm@WebexTeamsRequest { webexTeamsRequestRequest = req }
+            = comm { webexTeamsRequestRequest = setRequestQueryString (toFilterList param) req }
 
 -- | List of 'Team' and stream it into Conduit pipe.  It automatically performs pagination.
 {-# DEPRECATED streamTeamList "Use getTeamList or streamTeamList of webex-teams-conduit" #-}
-streamTeamList :: MonadIO m => Authorization -> CiscoSparkRequest -> ConduitT () Team m ()
+streamTeamList :: MonadIO m => Authorization -> WebexTeamsRequest -> ConduitT () Team m ()
 streamTeamList auth base = streamList auth $ makeCommonListReq base teamsPath
 
 -- | Filter list of 'Organization' and stream it into Conduit pipe.  It automatically performs pagination.
 {-# DEPRECATED streamOrganizationList "Use getOrganizationList or streamOrganizationList of webex-teams-conduit" #-}
-streamOrganizationList :: MonadIO m => Authorization -> CiscoSparkRequest -> ConduitT () Organization m ()
+streamOrganizationList :: MonadIO m => Authorization -> WebexTeamsRequest -> ConduitT () Organization m ()
 streamOrganizationList auth base = streamList auth $ makeCommonListReq base organizationsPath
 
 -- | List of 'Role' and stream it into Conduit pipe.  It automatically performs pagination.
 {-# DEPRECATED streamRoleList "Use getRoleList or streamRoleList of webex-teams-conduit" #-}
-streamRoleList :: MonadIO m => Authorization -> CiscoSparkRequest -> ConduitT () Role m ()
+streamRoleList :: MonadIO m => Authorization -> WebexTeamsRequest -> ConduitT () Role m ()
 streamRoleList auth base = streamList auth $ makeCommonListReq base rolesPath
 
 type ListReader a = IO [a]
@@ -304,55 +308,55 @@ type ListReader a = IO [a]
     Next call of ListReader causes another List API access for the next page.
     ListReader returns [] when there is no more page.
 -}
-getList :: (MonadIO m, SparkListItem i) => Authorization -> CiscoSparkRequest -> m (ListReader i)
+getList :: (MonadIO m, SparkListItem i) => Authorization -> WebexTeamsRequest -> m (ListReader i)
 getList auth wxReq = liftIO $ listReader <$> newIORef (Just wxReq)
   where
-    listReader :: SparkListItem i => IORef (Maybe CiscoSparkRequest) -> ListReader i
+    listReader :: SparkListItem i => IORef (Maybe WebexTeamsRequest) -> ListReader i
     listReader wxReqRef = do
         maybeReq <- readIORef wxReqRef
         case maybeReq of
             Nothing                                     -> pure []
-            Just (CiscoSparkRequest req scheme uriAuth) -> do
+            Just (WebexTeamsRequest req scheme uriAuth) -> do
                 res <- httpJSON $ addAuthorizationHeader auth req
                 writeIORef wxReqRef $ do
                     maybeUrl <- getNextUrl res
                     maybeValidUrl <-validateUrl scheme uriAuth maybeUrl
                     maybeNextReq <- parseRequest $ "GET " <> C8.unpack maybeValidUrl
-                    pure (CiscoSparkRequest maybeNextReq scheme uriAuth)
+                    pure (WebexTeamsRequest maybeNextReq scheme uriAuth)
                 rr <- readIORef wxReqRef
                 pure . unwrap $ getResponseBody res
 
 -- | Get list with query parameter.
 getListWithFilter :: (MonadIO m, SparkFilter filter, SparkListItem (ToResponse filter))
     => Authorization
-    -> CiscoSparkRequest
+    -> WebexTeamsRequest
     -> filter
     -> m (ListReader (ToResponse filter))
 getListWithFilter auth base param =
     getList auth $ setQeuryString $ makeCommonListReq base (apiPath param)
       where
-        setQeuryString comm@CiscoSparkRequest { ciscoSparkRequestRequest = req }
-            = comm { ciscoSparkRequestRequest = setRequestQueryString (toFilterList param) req }
+        setQeuryString comm@WebexTeamsRequest { webexTeamsRequestRequest = req }
+            = comm { webexTeamsRequestRequest = setRequestQueryString (toFilterList param) req }
 
 -- | Return 'ListReader' for 'Team'.
-getTeamList :: MonadIO m => Authorization -> CiscoSparkRequest -> m (ListReader Team)
+getTeamList :: MonadIO m => Authorization -> WebexTeamsRequest -> m (ListReader Team)
 getTeamList auth base = getList auth $ makeCommonListReq base teamsPath
 
 -- | Return 'ListReader' for 'Team'.
-getOrganizationList :: MonadIO m => Authorization -> CiscoSparkRequest -> m (ListReader Organization)
+getOrganizationList :: MonadIO m => Authorization -> WebexTeamsRequest -> m (ListReader Organization)
 getOrganizationList auth base = getList auth $ makeCommonListReq base organizationsPath
 
 -- | Return 'ListReader' for 'Team'.
-getRoleList :: MonadIO m => Authorization -> CiscoSparkRequest -> m (ListReader Role)
+getRoleList :: MonadIO m => Authorization -> WebexTeamsRequest -> m (ListReader Role)
 getRoleList auth base = getList auth $ makeCommonListReq base rolesPath
 
 makeCommonDetailReq
-    :: CiscoSparkRequest    -- ^ Common request components.
+    :: WebexTeamsRequest    -- ^ Common request components.
     -> Authorization        -- ^ Authorization string against Webex Teams API.
     -> ByteString           -- ^ API category part of REST URL path.
     -> Text                 -- ^ Identifier string part of REST URL path.
     -> Request
-makeCommonDetailReq (CiscoSparkRequest base _ _) auth path idStr
+makeCommonDetailReq (WebexTeamsRequest base _ _) auth path idStr
     = setRequestPath ("/v1/" <> path <> "/" <> encodeUtf8 idStr)
     $ setRequestMethod "GET"
     $ addAuthorizationHeader auth
@@ -368,7 +372,7 @@ makeCommonDetailReq (CiscoSparkRequest base _ _) auth path idStr
 -}
 getDetail :: (MonadIO m, WebexTeamsDetail key)
     => Authorization        -- ^ Authorization string against Webex Teams API.
-    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
+    -> WebexTeamsRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
     -> key                  -- ^ One of PersonId, RoomId, MembershipId, MessageId, TeamId, TeamMembershipId,
                             --   OrganizationId, LicenseId and RoleId.
     -> m (Response (ToResponse key))
@@ -377,14 +381,14 @@ getDetail auth base entityId = httpJSON $ makeCommonDetailReq base auth (apiPath
 -- | Get details of a Webex Teams entity.  A Left value will be returned on an JSON parse errors.
 getDetailEither :: (MonadIO m, WebexTeamsDetail key)
     => Authorization
-    -> CiscoSparkRequest
+    -> WebexTeamsRequest
     -> key
     -> m (Response (Either JSONException (ToResponse key)))
 getDetailEither auth base entityId = httpJSONEither $ makeCommonDetailReq base auth (apiPath entityId) (toIdStr entityId)
 
 
-makeCommonCreateReq :: ToJSON a => CiscoSparkRequest -> Authorization -> ByteString -> a -> Request
-makeCommonCreateReq (CiscoSparkRequest base _ _) auth path body
+makeCommonCreateReq :: ToJSON a => WebexTeamsRequest -> Authorization -> ByteString -> a -> Request
+makeCommonCreateReq (WebexTeamsRequest base _ _) auth path body
     = setRequestBodyJSON body
     $ setRequestPath ("/v1/" <> path)
     $ setRequestMethod "POST"
@@ -400,23 +404,23 @@ makeCommonCreateReq (CiscoSparkRequest base _ _) auth path body
 -}
 createEntity :: (MonadIO m, WebexTeamsCreate createParams)
     => Authorization        -- ^ Authorization string against Webex Teams API.
-    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
+    -> WebexTeamsRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
     -> createParams         -- ^ One of 'CreatePerson', 'CreateRoom', 'CreateMembership', 'CreateMessage',
                             --   'CreateTeam' and 'CreateTeamMembership'.
     -> m (Response (ToResponse createParams))
 createEntity auth base param = httpJSON $ makeCommonCreateReq base auth (apiPath param) param
 
--- | Create a Spark entity with given parameters.  A Left value will be returned on an JSON parse errors.
+-- | Create a Webex Teams entity with given parameters.  A Left value will be returned on an JSON parse errors.
 createEntityEither :: (MonadIO m, WebexTeamsCreate createParams)
     => Authorization
-    -> CiscoSparkRequest
+    -> WebexTeamsRequest
     -> createParams
     -> m (Response (Either JSONException (ToResponse createParams)))
 createEntityEither auth base param = httpJSONEither $ makeCommonCreateReq base auth (apiPath param) param
 
 
-makeCommonUpdateReq :: ToJSON a => CiscoSparkRequest -> Authorization -> ByteString -> a -> Request
-makeCommonUpdateReq (CiscoSparkRequest base _ _) auth path body
+makeCommonUpdateReq :: ToJSON a => WebexTeamsRequest -> Authorization -> ByteString -> a -> Request
+makeCommonUpdateReq (WebexTeamsRequest base _ _) auth path body
     = setRequestBodyJSON body
     $ setRequestPath ("/v1/" <> path)
     $ setRequestMethod "PUT"
@@ -432,7 +436,7 @@ makeCommonUpdateReq (CiscoSparkRequest base _ _) auth path body
 -}
 updateEntity :: (MonadIO m, WebexTeamsUpdate updateParams)
     => Authorization        -- ^ Authorization string against Webex Teams API.
-    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
+    -> WebexTeamsRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
     -> updateParams         -- ^ One of 'UpdatePerson', 'UpdateRoom', 'UpdateMembership',
                             --   'UpdateTeam' and 'UpdateTeamMembership'.
     -> m (Response (ToResponse updateParams))
@@ -441,7 +445,7 @@ updateEntity auth base param = httpJSON $ makeCommonUpdateReq base auth (apiPath
 -- | Update a Webex Teams entity with given parameters.  A Left value will be returned on an JSON parse errors.
 updateEntityEither :: (MonadIO m, WebexTeamsUpdate updateParams)
     => Authorization
-    -> CiscoSparkRequest
+    -> WebexTeamsRequest
     -> updateParams
     -> m (Response (Either JSONException (ToResponse updateParams)))
 updateEntityEither auth base param = httpJSONEither $ makeCommonUpdateReq base auth (apiPath param) param
@@ -462,16 +466,16 @@ makeCommonDeleteReq auth base path idStr
 -- | Polymorphic version of delete.  Intentionally not exposed to outside of the module.
 deleteEntity :: (MonadIO m, WebexTeamsDetail key)
     => Authorization        -- ^ Authorization string against Webex Teams API.
-    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
+    -> WebexTeamsRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
     -> key                  -- ^ One of PersonId, RoomId, MembershipId, MessageId, TeamId, TeamMembershipId.
     -> m (Response ())
-deleteEntity auth (CiscoSparkRequest base _ _) entityId
+deleteEntity auth (WebexTeamsRequest base _ _) entityId
     = httpNoBody $ makeCommonDeleteReq auth base (apiPath entityId) (toIdStr entityId)
 
 -- | Deletes a room, by ID.
 deleteRoom :: MonadIO m
     => Authorization        -- ^ Authorization string against Webex Teams API.
-    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
+    -> WebexTeamsRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
     -> RoomId               -- ^ Identifier of a space to be deleted.
     -> m (Response ())
 deleteRoom = deleteEntity
@@ -479,7 +483,7 @@ deleteRoom = deleteEntity
 -- | Deletes a membership, by ID.
 deleteMembership :: MonadIO m
     => Authorization        -- ^ Authorization string against Webex Teams API.
-    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
+    -> WebexTeamsRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
     -> MembershipId         -- ^ Identifier of a space to be deleted.
     -> m (Response ())
 deleteMembership = deleteEntity
@@ -487,7 +491,7 @@ deleteMembership = deleteEntity
 -- | Deletes a message, by ID.
 deleteMessage :: MonadIO m
     => Authorization        -- ^ Authorization string against Webex Teams API.
-    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
+    -> WebexTeamsRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
     -> MessageId            -- ^ Identifier of a space to be deleted.
     -> m (Response ())
 deleteMessage = deleteEntity
@@ -495,7 +499,7 @@ deleteMessage = deleteEntity
 -- | Deletes a team, by ID.
 deleteTeam :: MonadIO m
     => Authorization        -- ^ Authorization string against Webex Teams API.
-    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
+    -> WebexTeamsRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
     -> TeamId               -- ^ Identifier of a space to be deleted.
     -> m (Response ())
 deleteTeam = deleteEntity
@@ -503,7 +507,7 @@ deleteTeam = deleteEntity
 -- | Deletes a teamMembership, by ID.
 deleteTeamMembership :: MonadIO m
     => Authorization        -- ^ Authorization string against Webex Teams API.
-    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
+    -> WebexTeamsRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
     -> TeamMembershipId     -- ^ Identifier of a space to be deleted.
     -> m (Response ())
 deleteTeamMembership = deleteEntity

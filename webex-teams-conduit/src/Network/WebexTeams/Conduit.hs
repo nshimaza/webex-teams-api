@@ -43,20 +43,20 @@ readerToSource reader = go
 streamListWithFilter
     :: (MonadIO m, SparkFilter filter, SparkListItem (ToResponse filter))
     => Authorization        -- ^ Authorization string against Webex Teams API.
-    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
+    -> WebexTeamsRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
     -> filter               -- ^ Filter criteria of the request.  Type of filter automatically determines
                             --   item type in response.
     -> ConduitT () (ToResponse filter) m ()
 streamListWithFilter auth base param = getListWithFilter auth base param >>= readerToSource
 
 -- | List of 'Team' and stream it into Conduit pipe.  It automatically performs pagination.
-streamTeamList :: MonadIO m => Authorization -> CiscoSparkRequest -> ConduitT () Team m ()
+streamTeamList :: MonadIO m => Authorization -> WebexTeamsRequest -> ConduitT () Team m ()
 streamTeamList auth base = getTeamList auth base >>= readerToSource
 
 -- | Filter list of 'Organization' and stream it into Conduit pipe.  It automatically performs pagination.
-streamOrganizationList :: MonadIO m => Authorization -> CiscoSparkRequest -> ConduitT () Organization m ()
+streamOrganizationList :: MonadIO m => Authorization -> WebexTeamsRequest -> ConduitT () Organization m ()
 streamOrganizationList auth base = getOrganizationList auth base >>= readerToSource
 
 -- | List of 'Role' and stream it into Conduit pipe.  It automatically performs pagination.
-streamRoleList :: MonadIO m => Authorization -> CiscoSparkRequest -> ConduitT () Role m ()
+streamRoleList :: MonadIO m => Authorization -> WebexTeamsRequest -> ConduitT () Role m ()
 streamRoleList auth base = getRoleList auth base >>= readerToSource

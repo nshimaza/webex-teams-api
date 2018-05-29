@@ -46,20 +46,20 @@ readerToProducer reader = go
 -- | Get list of entities with query parameter and stream it into Pipes.  It automatically performs pagination.
 streamListWithFilter :: (MonadIO m, SparkFilter filter, SparkListItem (ToResponse filter))
     => Authorization        -- ^ Authorization string against Webex Teams API.
-    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
+    -> WebexTeamsRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
     -> filter               -- ^ Filter criteria of the request.  Type of filter automatically determines
                             --   item type in response.
     -> Producer' (ToResponse filter) m ()
 streamListWithFilter auth base param = getListWithFilter auth base param >>= readerToProducer
 
 -- | List of 'Team' and stream it into Pipes.  It automatically performs pagination.
-streamTeamList :: MonadIO m => Authorization -> CiscoSparkRequest -> Producer' Team m ()
+streamTeamList :: MonadIO m => Authorization -> WebexTeamsRequest -> Producer' Team m ()
 streamTeamList auth base = getTeamList auth base >>= readerToProducer
 
 -- | Filter list of 'Organization' and stream it into Pipes.  It automatically performs pagination.
-streamOrganizationList :: MonadIO m => Authorization -> CiscoSparkRequest -> Producer' Organization m ()
+streamOrganizationList :: MonadIO m => Authorization -> WebexTeamsRequest -> Producer' Organization m ()
 streamOrganizationList auth base = getOrganizationList auth base >>= readerToProducer
 
 -- | List of 'Role' and stream it into Pipes.  It automatically performs pagination.
-streamRoleList :: MonadIO m => Authorization -> CiscoSparkRequest -> Producer' Role m ()
+streamRoleList :: MonadIO m => Authorization -> WebexTeamsRequest -> Producer' Role m ()
 streamRoleList auth base = getRoleList auth base >>= readerToProducer
