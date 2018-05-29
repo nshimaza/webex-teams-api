@@ -2,20 +2,20 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 {-|
-Module      : Network.CiscoSpark
+Module      : Network.WebexTeams
 Copyright   : (c) Naoto Shimazaki 2017
 License     : MIT (see the file LICENSE)
 
 Maintainer  : https://github.com/nshimaza
 Stability   : experimental
 
-This module provides types and functions for accessing Cisco Spark REST API.
+This module provides types and functions for accessing Cisco Webex Teams REST API.
 
 The module is designed to improve type safety over the API.  Each entity is separately typed.
 JSON messages contained in REST responses are decoded into appropriate type of Haskell record.
 JSON messages sent in REST requests are encoded only from correct type of record.
 
-Some Spark REST API return list of objects.  Those APIs require HTTP Link Header based pagination.
+Some Webex Teams REST API return list of objects.  Those APIs require HTTP Link Header based pagination.
 Haskell functions for those APIs automatically request subsequent pages as needed.
 
 = Examples
@@ -46,7 +46,7 @@ Haskell functions for those APIs automatically request subsequent pages as neede
 
 = Support for Lens
 
-This package provides many of records representing objects communicated via Cisco Spark REST API.
+This package provides many of records representing objects communicated via Webex Teams REST API.
 Those records are designed to allow create lenses by Control.Lens.TH.makeFields.
 
 Following example creates overloaded accessors for 'Person', 'Room' and 'Team'.
@@ -211,16 +211,16 @@ import           Network.WebexTeams.Internal
 import           Network.WebexTeams.Types
 
 
--- | Authorization string against Spark API to be contained in HTTP Authorization header of every request.
+-- | Authorization string against Webex Teams API to be contained in HTTP Authorization header of every request.
 newtype Authorization = Authorization ByteString deriving (Eq, Show)
--- | Wrapping 'Request' in order to provide easy default value specifically for Cisco Spark public API.
+-- | Wrapping 'Request' in order to provide easy default value specifically for Webex Teams public API.
 data CiscoSparkRequest = CiscoSparkRequest
     { ciscoSparkRequestRequest   :: Request -- ^ Holds pre-set 'Request' for REST API.
     , ciscoSparkRequestScheme    :: String  -- ^ Should be "https:" in production.
     , ciscoSparkRequestAuthority :: URIAuth -- ^ Authority part of request URI.
     } deriving (Show)
 
--- | Common part of 'Request' against Spark API.
+-- | Common part of 'Request' against Webex Teams API.
 ciscoSparkBaseRequest :: Request
 ciscoSparkBaseRequest
     = addRequestHeader "Content-Type" "application/json; charset=utf-8"
@@ -229,7 +229,7 @@ ciscoSparkBaseRequest
     $ setRequestSecure True
     $ defaultRequest
 
--- | Default parameters for HTTP request to Cisco Spark REST API.
+-- | Default parameters for HTTP request to Webex Teams REST API.
 instance Default CiscoSparkRequest where
     def = CiscoSparkRequest ciscoSparkBaseRequest "https:" $ URIAuth "" "api.ciscospark.com" ""
 
@@ -348,7 +348,7 @@ getRoleList auth base = getList auth $ makeCommonListReq base rolesPath
 
 makeCommonDetailReq
     :: CiscoSparkRequest    -- ^ Common request components.
-    -> Authorization        -- ^ Authorization string against Spark API.
+    -> Authorization        -- ^ Authorization string against Webex Teams API.
     -> ByteString           -- ^ API category part of REST URL path.
     -> Text                 -- ^ Identifier string part of REST URL path.
     -> Request
@@ -359,7 +359,7 @@ makeCommonDetailReq (CiscoSparkRequest base _ _) auth path idStr
     $ base
 
 {-|
-    Get details of a Spark entity.
+    Get details of a Webex Teams entity.
 
     Obtaining detail of an entity identified by key.  The key can be a value in one of
     following types: 'PersonId', 'RoomId', 'MembershipId', 'MessageId', 'TeamId', 'TeamMembershipId',
@@ -367,14 +367,14 @@ makeCommonDetailReq (CiscoSparkRequest base _ _) auth path idStr
     A JSONException runtime exception will be thrown on an JSON parse errors.
 -}
 getDetail :: (MonadIO m, SparkDetail key)
-    => Authorization        -- ^ Authorization string against Spark API.
-    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API.
+    => Authorization        -- ^ Authorization string against Webex Teams API.
+    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
     -> key                  -- ^ One of PersonId, RoomId, MembershipId, MessageId, TeamId, TeamMembershipId,
                             --   OrganizationId, LicenseId and RoleId.
     -> m (Response (ToResponse key))
 getDetail auth base entityId = httpJSON $ makeCommonDetailReq base auth (apiPath entityId) (toIdStr entityId)
 
--- | Get details of a Spark entity.  A Left value will be returned on an JSON parse errors.
+-- | Get details of a Webex Teams entity.  A Left value will be returned on an JSON parse errors.
 getDetailEither :: (MonadIO m, SparkDetail key)
     => Authorization
     -> CiscoSparkRequest
@@ -392,15 +392,15 @@ makeCommonCreateReq (CiscoSparkRequest base _ _) auth path body
     $ base
 
 {-|
-    Create a Spark entity with given parameters.
+    Create a Webex Teams entity with given parameters.
 
-    Creating a new entity of Spark such as space, team, membership or message.
+    Creating a new entity of Webex Teams such as space, team, membership or message.
     REST API path is automatically selected by type of createParams.
     A JSONException runtime exception will be thrown on an JSON parse errors.
 -}
 createEntity :: (MonadIO m, SparkCreate createParams)
-    => Authorization        -- ^ Authorization string against Spark API.
-    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API.
+    => Authorization        -- ^ Authorization string against Webex Teams API.
+    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
     -> createParams         -- ^ One of 'CreatePerson', 'CreateRoom', 'CreateMembership', 'CreateMessage',
                             --   'CreateTeam' and 'CreateTeamMembership'.
     -> m (Response (ToResponse createParams))
@@ -424,21 +424,21 @@ makeCommonUpdateReq (CiscoSparkRequest base _ _) auth path body
     $ base
 
 {-|
-    Update a Spark entity with given parameters.
+    Update a Webex Teams entity with given parameters.
 
-    Creating a new entity of Spark such as space, team, or membership.
+    Creating a new entity of Webex Teams such as space, team, or membership.
     REST API path is automatically selected by type of updateParams.
     A JSONException runtime exception will be thrown on an JSON parse errors.
 -}
 updateEntity :: (MonadIO m, SparkUpdate updateParams)
-    => Authorization        -- ^ Authorization string against Spark API.
-    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API.
+    => Authorization        -- ^ Authorization string against Webex Teams API.
+    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
     -> updateParams         -- ^ One of 'UpdatePerson', 'UpdateRoom', 'UpdateMembership',
                             --   'UpdateTeam' and 'UpdateTeamMembership'.
     -> m (Response (ToResponse updateParams))
 updateEntity auth base param = httpJSON $ makeCommonUpdateReq base auth (apiPath param) param
 
--- | Update a Spark entity with given parameters.  A Left value will be returned on an JSON parse errors.
+-- | Update a Webex Teams entity with given parameters.  A Left value will be returned on an JSON parse errors.
 updateEntityEither :: (MonadIO m, SparkUpdate updateParams)
     => Authorization
     -> CiscoSparkRequest
@@ -448,7 +448,7 @@ updateEntityEither auth base param = httpJSONEither $ makeCommonUpdateReq base a
 
 
 makeCommonDeleteReq
-    :: Authorization    -- ^ Authorization string against Spark API.
+    :: Authorization    -- ^ Authorization string against Webex Teams API.
     -> Request          -- ^ Common request components.
     -> ByteString       -- ^ API category part of REST URL path.
     -> Text             -- ^ Identifier string part of REST URL path.
@@ -461,8 +461,8 @@ makeCommonDeleteReq auth base path idStr
 
 -- | Polymorphic version of delete.  Intentionally not exposed to outside of the module.
 deleteEntity :: (MonadIO m, SparkDetail key)
-    => Authorization        -- ^ Authorization string against Spark API.
-    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API.
+    => Authorization        -- ^ Authorization string against Webex Teams API.
+    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
     -> key                  -- ^ One of PersonId, RoomId, MembershipId, MessageId, TeamId, TeamMembershipId.
     -> m (Response ())
 deleteEntity auth (CiscoSparkRequest base _ _) entityId
@@ -470,40 +470,40 @@ deleteEntity auth (CiscoSparkRequest base _ _) entityId
 
 -- | Deletes a room, by ID.
 deleteRoom :: MonadIO m
-    => Authorization        -- ^ Authorization string against Spark API.
-    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API.
+    => Authorization        -- ^ Authorization string against Webex Teams API.
+    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
     -> RoomId               -- ^ Identifier of a space to be deleted.
     -> m (Response ())
 deleteRoom = deleteEntity
 
 -- | Deletes a membership, by ID.
 deleteMembership :: MonadIO m
-    => Authorization        -- ^ Authorization string against Spark API.
-    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API.
+    => Authorization        -- ^ Authorization string against Webex Teams API.
+    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
     -> MembershipId         -- ^ Identifier of a space to be deleted.
     -> m (Response ())
 deleteMembership = deleteEntity
 
 -- | Deletes a message, by ID.
 deleteMessage :: MonadIO m
-    => Authorization        -- ^ Authorization string against Spark API.
-    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API.
+    => Authorization        -- ^ Authorization string against Webex Teams API.
+    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
     -> MessageId            -- ^ Identifier of a space to be deleted.
     -> m (Response ())
 deleteMessage = deleteEntity
 
 -- | Deletes a team, by ID.
 deleteTeam :: MonadIO m
-    => Authorization        -- ^ Authorization string against Spark API.
-    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API.
+    => Authorization        -- ^ Authorization string against Webex Teams API.
+    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
     -> TeamId               -- ^ Identifier of a space to be deleted.
     -> m (Response ())
 deleteTeam = deleteEntity
 
 -- | Deletes a teamMembership, by ID.
 deleteTeamMembership :: MonadIO m
-    => Authorization        -- ^ Authorization string against Spark API.
-    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Cisco Spark API.
+    => Authorization        -- ^ Authorization string against Webex Teams API.
+    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
     -> TeamMembershipId     -- ^ Identifier of a space to be deleted.
     -> m (Response ())
 deleteTeamMembership = deleteEntity

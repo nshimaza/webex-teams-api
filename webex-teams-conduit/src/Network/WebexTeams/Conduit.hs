@@ -40,10 +40,12 @@ readerToSource reader = go
         unless (null xs) $ yieldMany xs *> go
 
 -- | Get list of entities with query parameter and stream it into Conduit pipe.  It automatically performs pagination.
-streamListWithFilter :: (MonadIO m, SparkFilter filter, SparkListItem (ToResponse filter))
-    => Authorization
-    -> CiscoSparkRequest
-    -> filter
+streamListWithFilter
+    :: (MonadIO m, SparkFilter filter, SparkListItem (ToResponse filter))
+    => Authorization        -- ^ Authorization string against Webex Teams API.
+    -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
+    -> filter               -- ^ Filter criteria of the request.  Type of filter automatically determines
+                            --   item type in response.
     -> ConduitT () (ToResponse filter) m ()
 streamListWithFilter auth base param = getListWithFilter auth base param >>= readerToSource
 
