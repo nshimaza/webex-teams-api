@@ -6,14 +6,14 @@
 {-# LANGUAGE TypeFamilies      #-}
 
 {-|
-Module      : Network.CiscoSpark.Types
+Module      : Network.WebexTeams.Types
 Copyright   : (c) Naoto Shimazaki 2017
 License     : MIT (see the file LICENSE)
 
 Maintainer  : https://github.com/nshimaza
 Stability   : experimental
 
-This module defines most of types and records used in cisco-spark-api package.
+This module defines most of types and records used in webex-teams-api package.
 Records used for REST communications are designed to be converted from / to JSON using Aeson package.
 Those records are also designed to allow create lenses by Control.Lens.TH.makeFields.
 
@@ -116,26 +116,26 @@ class FromJSON (ToList i) => SparkListItem i where
     unwrap :: ToList i -> [i]
 
 -- | Type class for getting URL path of API category from given type of value.
-class SparkApiPath a where
+class WebexTeamsApiPath a where
     apiPath :: a -> ByteString
 
 -- | Type family to associate a type appears in an argument to response type.
-class FromJSON (ToResponse a) => SparkResponse a where
+class FromJSON (ToResponse a) => WebexTeamsResponse a where
     type ToResponse a :: *
 
 -- | Extract containing entity ID string from given type of value.
-class (SparkApiPath a, SparkResponse a) => SparkDetail a where
+class (WebexTeamsApiPath a, WebexTeamsResponse a) => WebexTeamsDetail a where
     toIdStr :: a -> Text
 
 -- | Convert given filter condition parameter in a concrete type to HTTP query strings.
-class (SparkApiPath a, SparkResponse a) => SparkFilter a where
+class (WebexTeamsApiPath a, WebexTeamsResponse a) => SparkFilter a where
     toFilterList :: a -> [(ByteString, Maybe ByteString)]
 
 -- | Type class for parameter type for create entity API.
-class (SparkApiPath a, SparkResponse a, ToJSON a) => SparkCreate a where
+class (WebexTeamsApiPath a, WebexTeamsResponse a, ToJSON a) => WebexTeamsCreate a where
 
 -- | Type class for parameter type for update entity API.
-class (SparkApiPath a, SparkResponse a, ToJSON a) => SparkUpdate a where
+class (WebexTeamsApiPath a, WebexTeamsResponse a, ToJSON a) => WebexTeamsUpdate a where
 
 
 {-
@@ -162,14 +162,14 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFie
     When list API failed to retrieve an element, it returns this object for the element
     and response API status as successful instead of failing entire API request.
 
-    Refer to [API Document](https://developer.ciscospark.com/errors.html) for more detail.
+    Refer to [API Document](https://developer.webex.com/errors.html) for more detail.
 -}
 newtype Errors = Errors { errorsTitle :: ErrorTitle } deriving (Eq, Show)
 $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 6, omitNothingFields = True } ''Errors)
 -- ^ 'Errors' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- Person
--- | Identifying 'Person' describing detail of Cisco Spark user or bot.
+-- | Identifying 'Person' describing detail of Webex Teams user or bot.
 newtype PersonId        = PersonId Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
 -- | Email address of user.
 newtype Email           = Email Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
@@ -231,7 +231,7 @@ $(deriveJSON defaultOptions { constructorTagModifier = dropAndLow 10 } ''PersonT
 -- ^ 'PersonType' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 {-|
-    'Person' is detail description of Cisco Spark user or bot.
+    'Person' is detail description of Webex Teams user or bot.
     Person is decoded from response JSON of Get Person Details REST call.
     It is also element type of response of List People call.
 -}
@@ -260,15 +260,15 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 6, omitNothingFiel
 -- ^ 'Person' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | Get detail for a person API uses 'PersonId' and path "people".
-instance SparkApiPath PersonId where
+instance WebexTeamsApiPath PersonId where
     apiPath _ = peoplePath
 
 -- | Get detail for a person API uses "PersonId' and responses 'Person'.
-instance SparkResponse PersonId where
+instance WebexTeamsResponse PersonId where
     type ToResponse PersonId = Person
 
 -- | User can get detail of a person.
-instance SparkDetail PersonId where
+instance WebexTeamsDetail PersonId where
     toIdStr (PersonId s) = s
 
 -- | 'PersonList' is decoded from response JSON of List People REST call.  It is list of 'Person'.
@@ -289,11 +289,11 @@ data PersonFilter = PersonFilter
     } deriving (Default, Eq, Generic, Show)
 
 -- | List people API uses 'PersonFilter' and path "people".
-instance SparkApiPath PersonFilter where
+instance WebexTeamsApiPath PersonFilter where
     apiPath _ = peoplePath
 
 -- | List people API uses 'PersonFilter' and responses 'Person'.
-instance SparkResponse PersonFilter where
+instance WebexTeamsResponse PersonFilter where
     type ToResponse PersonFilter = Person
 
 -- | User can list people with filter parameter.
@@ -320,15 +320,15 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 12, omitNothingFie
 -- ^ 'CreatePerson' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | Create person API uses 'CreatePerson' and path "people".
-instance SparkApiPath CreatePerson where
+instance WebexTeamsApiPath CreatePerson where
     apiPath _ = peoplePath
 
 -- | Create person API uses "CreatePerson' and responses 'Person'.
-instance SparkResponse CreatePerson where
+instance WebexTeamsResponse CreatePerson where
     type ToResponse CreatePerson = Person
 
 -- | User can create a person.
-instance SparkCreate CreatePerson where
+instance WebexTeamsCreate CreatePerson where
 
 -- | 'UpdatePerson' is encoded to request body JSON of Update a Person REST call.
 data UpdatePerson = UpdatePerson
@@ -345,15 +345,15 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 12, omitNothingFie
 -- ^ 'UpdatePerson' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | Update person API uses 'UpdatePerson' and path "people".
-instance SparkApiPath UpdatePerson where
+instance WebexTeamsApiPath UpdatePerson where
     apiPath _ = peoplePath
 
 -- | Update person API uses "UpdatePerson' and responses 'Person'.
-instance SparkResponse UpdatePerson where
+instance WebexTeamsResponse UpdatePerson where
     type ToResponse UpdatePerson = Person
 
 -- | User can update a person.
-instance SparkUpdate UpdatePerson
+instance WebexTeamsUpdate UpdatePerson
 
 -- | Identifying Team.
 newtype TeamId      = TeamId Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
@@ -378,15 +378,15 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 4, omitNothingFiel
 -- ^ 'Team' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | Get detail for a team API uses 'TeamId' and path "teams".
-instance SparkApiPath TeamId where
+instance WebexTeamsApiPath TeamId where
     apiPath _ = teamsPath
 
 -- | Get detail for a team API uses "TeamId' and responses 'Team'.
-instance SparkResponse TeamId where
+instance WebexTeamsResponse TeamId where
     type ToResponse TeamId = Team
 
 -- | User can get detail of a team.
-instance SparkDetail TeamId where
+instance WebexTeamsDetail TeamId where
     toIdStr (TeamId s) = s
 
 -- | 'TeamList' is decoded from response JSON of List Teams REST call.  It is list of 'Team'.
@@ -405,15 +405,15 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFie
 -- ^ 'CreateTeam' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | Create team API uses 'CreateTeam' and path "teams".
-instance SparkApiPath CreateTeam where
+instance WebexTeamsApiPath CreateTeam where
     apiPath _ = teamsPath
 
 -- | Create team API uses "CreateTeam' and responses 'Team'.
-instance SparkResponse CreateTeam where
+instance WebexTeamsResponse CreateTeam where
     type ToResponse CreateTeam = Team
 
 -- | User can create a team.
-instance SparkCreate CreateTeam where
+instance WebexTeamsCreate CreateTeam where
 
 -- | 'UpdateTeam' is encoded to request body JSON of Update a Team REST call.
 newtype UpdateTeam = UpdateTeam { updateTeamName :: TeamName } deriving (Eq, Show)
@@ -421,15 +421,15 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFie
 -- ^ 'UpdateTeam' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | Update team API uses 'UpdateTeam' and path "teams".
-instance SparkApiPath UpdateTeam where
+instance WebexTeamsApiPath UpdateTeam where
     apiPath _ = teamsPath
 
 -- | Update team API uses "UpdateTeam' and responses 'Team'.
-instance SparkResponse UpdateTeam where
+instance WebexTeamsResponse UpdateTeam where
     type ToResponse UpdateTeam = Team
 
 -- | User can update a team.
-instance SparkUpdate UpdateTeam
+instance WebexTeamsUpdate UpdateTeam
 
 
 -- | Identifying TeamMembership.
@@ -457,15 +457,15 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 14, omitNothingFie
 -- ^ 'TeamMembership' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | Get detail for a team membership API uses 'TeamMembershipId' and path "team/memberships".
-instance SparkApiPath TeamMembershipId where
+instance WebexTeamsApiPath TeamMembershipId where
     apiPath _ = teamMembershipsPath
 
 -- | Get detail for a team membership API uses "TeamMembershipId' and responses 'TeamMembership'.
-instance SparkResponse TeamMembershipId where
+instance WebexTeamsResponse TeamMembershipId where
     type ToResponse TeamMembershipId = TeamMembership
 
 -- | User can get detail of a team membership.
-instance SparkDetail TeamMembershipId where
+instance WebexTeamsDetail TeamMembershipId where
     toIdStr (TeamMembershipId s) = s
 
 -- | 'TeamMembershipList' is decoded from response JSON of List Team Memberships REST call.  It is list of 'TeamMembership'.
@@ -484,11 +484,11 @@ newtype TeamMembershipFilter = TeamMembershipFilter
     } deriving (Eq, Show)
 
 -- | List team memberships API uses 'TeamMembershipFilter' and path "team/memberships".
-instance SparkApiPath TeamMembershipFilter where
+instance WebexTeamsApiPath TeamMembershipFilter where
     apiPath _ = teamMembershipsPath
 
 -- | List team memberships API uses 'TeamMembershipFilter' and responses 'TeamMembership'.
-instance SparkResponse TeamMembershipFilter where
+instance WebexTeamsResponse TeamMembershipFilter where
     type ToResponse TeamMembershipFilter = TeamMembership
 
 -- | User can list team membership with filter parameter.
@@ -516,15 +516,15 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 20, omitNothingFie
 -- ^ 'CreateTeamMembership' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | Create teamMembership API uses 'CreateTeamMembership' and path "team/memberships".
-instance SparkApiPath CreateTeamMembership where
+instance WebexTeamsApiPath CreateTeamMembership where
     apiPath _ = teamMembershipsPath
 
 -- | Create teamMembership API uses "CreateTeamMembership' and responses 'TeamMembership'.
-instance SparkResponse CreateTeamMembership where
+instance WebexTeamsResponse CreateTeamMembership where
     type ToResponse CreateTeamMembership = TeamMembership
 
 -- | User can create a teamMembership.
-instance SparkCreate CreateTeamMembership where
+instance WebexTeamsCreate CreateTeamMembership where
 
 -- | 'UpdateTeamMembership' is encoded to request body JSON of Update a Team Membership REST call.
 newtype UpdateTeamMembership = UpdateTeamMembership { updateTeamMembershipIsModerator :: Bool } deriving (Eq, Show)
@@ -532,15 +532,15 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 20, omitNothingFie
 -- ^ 'UpdateTeamMembership' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | Update teamMembership API uses 'UpdateTeamMembership' and path "team/memberships".
-instance SparkApiPath UpdateTeamMembership where
+instance WebexTeamsApiPath UpdateTeamMembership where
     apiPath _ = teamMembershipsPath
 
 -- | Update teamMembership API uses "UpdateTeamMembership' and responses 'TeamMembership'.
-instance SparkResponse UpdateTeamMembership where
+instance WebexTeamsResponse UpdateTeamMembership where
     type ToResponse UpdateTeamMembership = TeamMembership
 
 -- | User can update a teamMembership.
-instance SparkUpdate UpdateTeamMembership
+instance WebexTeamsUpdate UpdateTeamMembership
 
 
 -- | Identifying 'Room'.
@@ -559,9 +559,9 @@ $(deriveJSON defaultOptions { constructorTagModifier = dropAndLow 8 } ''RoomType
 -- ^ 'RoomType' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 {-|
-    'Room' is communication space in Cisco Spark and called \"Space\" on UI.
+    'Room' is communication space in Webex Teams and called \"Space\" on UI.
     Historically it was called Room on UI too but UI has been changed to \"Space\" in order to avoid
-    confusion with the concept \"Room\" associated to hardware facility of video conferencing on Spark.
+    confusion with the concept \"Room\" associated to hardware facility of video conferencing on Webex Teams.
     The name of Room is kept unchanged for backward compatibility.
 
     Room is decoded from response JSON of Get Room Details REST call.
@@ -584,15 +584,15 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 4, omitNothingFiel
 -- ^ 'Room' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | Get detail for a room API uses 'RoomId' and path "rooms".
-instance SparkApiPath RoomId where
+instance WebexTeamsApiPath RoomId where
     apiPath _ = roomsPath
 
 -- | Get detail for a room API uses "RoomId' and responses 'Room'.
-instance SparkResponse RoomId where
+instance WebexTeamsResponse RoomId where
     type ToResponse RoomId = Room
 
 -- | User can get detail of a room.
-instance SparkDetail RoomId where
+instance WebexTeamsDetail RoomId where
     toIdStr (RoomId s) = s
 
 -- | 'RoomList' is decoded from response JSON of List Rooms REST call.  It is list of 'Room'.
@@ -627,11 +627,11 @@ roomFilterSortByToFilterString RoomFilterSortByLastActivity = "lastactivity"
 roomFilterSortByToFilterString RoomFilterSortByCreated      = "created"
 
 -- | List rooms API uses 'RoomFilter' and path "rooms".
-instance SparkApiPath RoomFilter where
+instance WebexTeamsApiPath RoomFilter where
     apiPath _ = roomsPath
 
 -- | List rooms API uses 'RoomFilter' and responses 'Room'.
-instance SparkResponse RoomFilter where
+instance WebexTeamsResponse RoomFilter where
     type ToResponse RoomFilter = Room
 
 -- | User can list rooms with filter parameter.
@@ -652,15 +652,15 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFie
 -- ^ 'CreateRoom' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | Create room API uses 'CreateRoom' and path "rooms".
-instance SparkApiPath CreateRoom where
+instance WebexTeamsApiPath CreateRoom where
     apiPath _ = roomsPath
 
 -- | Create room API uses "CreateRoom' and responses 'Room'.
-instance SparkResponse CreateRoom where
+instance WebexTeamsResponse CreateRoom where
     type ToResponse CreateRoom = Room
 
 -- | User can create a room.
-instance SparkCreate CreateRoom where
+instance WebexTeamsCreate CreateRoom where
 
 -- | 'UpdateRoom' is encoded to request body JSON of Update a Room REST call.
 newtype UpdateRoom = UpdateRoom { updateRoomTitle :: RoomTitle } deriving (Eq, Show)
@@ -668,15 +668,15 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFie
 -- ^ 'UpdateRoom' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | Update room API uses 'UpdateRoom' and path "rooms".
-instance SparkApiPath UpdateRoom where
+instance WebexTeamsApiPath UpdateRoom where
     apiPath _ = roomsPath
 
 -- | Update room API uses "UpdateRoom' and responses 'Room'.
-instance SparkResponse UpdateRoom where
+instance WebexTeamsResponse UpdateRoom where
     type ToResponse UpdateRoom = Room
 
 -- | User can update a room.
-instance SparkUpdate UpdateRoom
+instance WebexTeamsUpdate UpdateRoom
 
 
 -- | Identifying 'Membership'.
@@ -705,15 +705,15 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFie
 -- ^ 'Membership' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | Get detail for a membership API uses 'MembershipId' and path "memberships".
-instance SparkApiPath MembershipId where
+instance WebexTeamsApiPath MembershipId where
     apiPath _ = membershipsPath
 
 -- | Get detail for a membership API uses "MembershipId' and responses 'Membership'.
-instance SparkResponse MembershipId where
+instance WebexTeamsResponse MembershipId where
     type ToResponse MembershipId = Membership
 
 -- | User can get detail of a membership.
-instance SparkDetail MembershipId where
+instance WebexTeamsDetail MembershipId where
     toIdStr (MembershipId s) = s
 
 -- | 'MembershipList' is decoded from response JSON of List Memberships REST call.  It is list of 'Membership'.
@@ -734,11 +734,11 @@ data MembershipFilter = MembershipFilter
     } deriving (Default, Eq, Generic, Show)
 
 -- | List memberships API uses 'MembershipFilter' and path "memberships".
-instance SparkApiPath MembershipFilter where
+instance WebexTeamsApiPath MembershipFilter where
     apiPath _ = membershipsPath
 
 -- | List memberships API uses 'MembershipFilter' and responses 'Membership'.
-instance SparkResponse MembershipFilter where
+instance WebexTeamsResponse MembershipFilter where
     type ToResponse MembershipFilter = Membership
 
 -- | User can list memberships with filter parameter.
@@ -761,15 +761,15 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 16, omitNothingFie
 -- ^ 'CreateMembership' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | Create membership API uses 'CreateMembership' and path "memberships".
-instance SparkApiPath CreateMembership where
+instance WebexTeamsApiPath CreateMembership where
     apiPath _ = membershipsPath
 
 -- | Create membership API uses "CreateMembership' and responses 'Membership'.
-instance SparkResponse CreateMembership where
+instance WebexTeamsResponse CreateMembership where
     type ToResponse CreateMembership = Membership
 
 -- | User can create a membership.
-instance SparkCreate CreateMembership where
+instance WebexTeamsCreate CreateMembership where
 
 -- | 'UpdateMembership' is encoded to request body JSON of Update a Membership REST call.
 newtype UpdateMembership = UpdateMembership { updateMembershipIsModerator :: Bool } deriving (Eq, Show)
@@ -777,15 +777,15 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 16, omitNothingFie
 -- ^ 'UpdateMembership' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | Update membership API uses 'UpdateMembership' and path "memberships".
-instance SparkApiPath UpdateMembership where
+instance WebexTeamsApiPath UpdateMembership where
     apiPath _ = membershipsPath
 
 -- | Update membership API uses "UpdateMembership' and responses 'Membership'.
-instance SparkResponse UpdateMembership where
+instance WebexTeamsResponse UpdateMembership where
     type ToResponse UpdateMembership = Membership
 
 -- | User can update a membership.
-instance SparkUpdate UpdateMembership
+instance WebexTeamsUpdate UpdateMembership
 
 
 -- | Identifying 'Message'.
@@ -824,15 +824,15 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 7, omitNothingFiel
 -- ^ 'Message' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | Get detail for message API uses 'MessageId' and path "messages".
-instance SparkApiPath MessageId where
+instance WebexTeamsApiPath MessageId where
     apiPath _ = messagesPath
 
 -- | Get detail for a message API uses "MessageId' and responses 'Message'.
-instance SparkResponse MessageId where
+instance WebexTeamsResponse MessageId where
     type ToResponse MessageId = Message
 
 -- | User can get detail of a message.
-instance SparkDetail MessageId where
+instance WebexTeamsDetail MessageId where
     toIdStr (MessageId s) = s
 
 -- | 'MessageList' is decoded from response JSON of List Messages REST call.  It is list of 'Message'.
@@ -869,11 +869,11 @@ mentionedPeopleToFilterString MentionedPeopleMe                     = "me"
 mentionedPeopleToFilterString (MentionedPeople (PersonId personId)) = encodeUtf8 personId
 
 -- | List messages API uses 'MessageFilter' and path "messages".
-instance SparkApiPath MessageFilter where
+instance WebexTeamsApiPath MessageFilter where
     apiPath _ = messagesPath
 
 -- | List messages API uses 'MessageFilter' and responses 'Message'.
-instance SparkResponse MessageFilter where
+instance WebexTeamsResponse MessageFilter where
     type ToResponse MessageFilter = Message
 
 -- | User can list messages with filter parameter.
@@ -900,22 +900,22 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 13, omitNothingFie
 -- ^ 'CreateMessage' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | Create message API uses 'CreateMessage' and path "messages".
-instance SparkApiPath CreateMessage where
+instance WebexTeamsApiPath CreateMessage where
     apiPath _ = messagesPath
 
 -- | Create message API uses "CreateMessage' and responses 'Message'.
-instance SparkResponse CreateMessage where
+instance WebexTeamsResponse CreateMessage where
     type ToResponse CreateMessage = Message
 
 -- | User can create a message.
-instance SparkCreate CreateMessage where
+instance WebexTeamsCreate CreateMessage where
 
 
 -- | Display name of 'Organization'
 newtype OrganizationDisplayName  = OrganizationDisplayName Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
 
 {-|
-    'Organization' is an administrative group of Cisco Spark users.
+    'Organization' is an administrative group of Webex Teams users.
     Each 'Person' belongs to one Organization.
     Organization is decoded from response JSON of Get Organization Details REST call.
     It is also element type of response of List Organizations call.
@@ -931,15 +931,15 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 12, omitNothingFie
 -- ^ 'Organization' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | Get detail for organization API uses 'OrganizationId' and path "organizations".
-instance SparkApiPath OrganizationId where
+instance WebexTeamsApiPath OrganizationId where
     apiPath _ = organizationsPath
 
 -- | Get detail for a organization API uses "OrganizationId' and responses 'Organization'.
-instance SparkResponse OrganizationId where
+instance WebexTeamsResponse OrganizationId where
     type ToResponse OrganizationId = Organization
 
 -- | User can get detail of a organization.
-instance SparkDetail OrganizationId where
+instance WebexTeamsDetail OrganizationId where
     toIdStr (OrganizationId s) = s
 
 -- | 'OrganizationList' is decoded from response JSON of List Organizations REST call.  It is list of 'Organization'.
@@ -959,7 +959,7 @@ newtype LicenseName  = LicenseName Text deriving (Eq, Show, Generic, ToJSON, Fro
 newtype LicenseUnit         = LicenseUnit Integer deriving (Eq, Show, Generic, ToJSON, FromJSON)
 
 {-|
-    'License' is allowance for features and services of Cisco Spark subscription.
+    'License' is allowance for features and services of Webex Teams subscription.
     License is decoded from response JSON of Get License Details REST call.
     It is also element type of response of List Licenses call.
 -}
@@ -975,15 +975,15 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 7, omitNothingFiel
 -- ^ 'License' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | Get detail for license API uses 'LicenseId' and path "licenses".
-instance SparkApiPath LicenseId where
+instance WebexTeamsApiPath LicenseId where
     apiPath _ = licensesPath
 
 -- | Get detail for a license API uses "LicenseId' and responses 'License'.
-instance SparkResponse LicenseId where
+instance WebexTeamsResponse LicenseId where
     type ToResponse LicenseId = License
 
 -- | User can get detail of a license.
-instance SparkDetail LicenseId where
+instance WebexTeamsDetail LicenseId where
     toIdStr (LicenseId s) = s
 
 -- | 'LicenseList' is decoded from response JSON of List Licenses REST call.  It is list of 'License'.
@@ -1002,11 +1002,11 @@ newtype LicenseFilter = LicenseFilter
     } deriving (Default, Eq, Generic, Show)
 
 -- | List licenses API uses 'LicenseFilter' and path "licenses".
-instance SparkApiPath LicenseFilter where
+instance WebexTeamsApiPath LicenseFilter where
     apiPath _ = licensesPath
 
 -- | List licenses API uses 'LicenseFilter' and responses 'License'.
-instance SparkResponse LicenseFilter where
+instance WebexTeamsResponse LicenseFilter where
     type ToResponse LicenseFilter = License
 
 -- | User can list licenses with filter parameter.
@@ -1032,15 +1032,15 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 4, omitNothingFiel
 -- ^ 'Role' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | Get detail for role API uses 'RoleId' and path "roles".
-instance SparkApiPath RoleId where
+instance WebexTeamsApiPath RoleId where
     apiPath _ = rolesPath
 
 -- | Get detail for a role API uses "RoleId' and responses 'Role'.
-instance SparkResponse RoleId where
+instance WebexTeamsResponse RoleId where
     type ToResponse RoleId = Role
 
 -- | User can get detail of a role.
-instance SparkDetail RoleId where
+instance WebexTeamsDetail RoleId where
     toIdStr (RoleId s) = s
 
 -- | 'RoleList' is decoded from response JSON of List Role REST call.  It is list of 'Role'.
@@ -1062,7 +1062,7 @@ newtype WebhookName     = WebhookName Text deriving (Eq, Show, Generic, ToJSON, 
 newtype WebhookUrl      = WebhookUrl Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
 -- | URL-encoded set of webhook filtering criteria.
 newtype WebhookFilter   = WebhookFilter Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
--- | Shared secret supplied by user to authenticate Spark Cloud by webhook receiver.
+-- | Shared secret supplied by user to authenticate Webex Cloud by webhook receiver.
 newtype WebhookSecret   = WebhookSecret Text deriving (Eq, Show, Generic, ToJSON, FromJSON)
 
 -- | 'WebhookResource' indicates source of event which triggered webhook access.
@@ -1087,7 +1087,7 @@ $(deriveJSON defaultOptions { constructorTagModifier = dropAndLow 12 } ''Webhook
 -- ^ 'WebhookEvent' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 {-|
-    'Webhook' allow your app to be notified via HTTP when a specific event occurs on Spark. For example,
+    'Webhook' allow your app to be notified via HTTP when a specific event occurs on Webex Teams. For example,
     your app can register a webhook to be notified when a new message is posted into a specific room.
 -}
 data Webhook = Webhook
@@ -1106,15 +1106,15 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 7, omitNothingFiel
 -- ^ 'Webhook' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | Get detail for webhook API uses 'WebhookId' and path "webhooks".
-instance SparkApiPath WebhookId where
+instance WebexTeamsApiPath WebhookId where
     apiPath _ = webhooksPath
 
 -- | Get detail for a webhook API uses "WebhookId' and responses 'Webhook'.
-instance SparkResponse WebhookId where
+instance WebexTeamsResponse WebhookId where
     type ToResponse WebhookId = Webhook
 
 -- | User can get detail of a webhook.
-instance SparkDetail WebhookId where
+instance WebexTeamsDetail WebhookId where
     toIdStr (WebhookId s) = s
 
 -- | 'WebhookList' is decoded from response JSON of List Webhook REST call.  It is list of 'Webhook'.
@@ -1141,15 +1141,15 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 13, omitNothingFie
 -- ^ 'CreateWebhook' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | Create webhook API uses 'CreateWebhook' and path "webhooks".
-instance SparkApiPath CreateWebhook where
+instance WebexTeamsApiPath CreateWebhook where
     apiPath _ = webhooksPath
 
 -- | Create webhook API uses "CreateWebhook' and responses 'Webhook'.
-instance SparkResponse CreateWebhook where
+instance WebexTeamsResponse CreateWebhook where
     type ToResponse CreateWebhook = Webhook
 
 -- | User can create a webhook.
-instance SparkCreate CreateWebhook where
+instance WebexTeamsCreate CreateWebhook where
 
 -- | 'UpdateWebhook' is encoded to request body JSON of Update a Webhook REST call.
 data UpdateWebhook = UpdateWebhook
@@ -1161,15 +1161,15 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 13, omitNothingFie
 -- ^ 'UpdateWebhook' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | Update webhook API uses 'UpdateWebhook' and path "webhooks".
-instance SparkApiPath UpdateWebhook where
+instance WebexTeamsApiPath UpdateWebhook where
     apiPath _ = webhooksPath
 
 -- | Update webhook API uses "UpdateWebhook' and responses 'Webhook'.
-instance SparkResponse UpdateWebhook where
+instance WebexTeamsResponse UpdateWebhook where
     type ToResponse UpdateWebhook = Webhook
 
 -- | User can update a webhook.
-instance SparkUpdate UpdateWebhook
+instance WebexTeamsUpdate UpdateWebhook
 
 -- | Optional query strings for membership event.
 data WebhookMembershipFilter = WebhookMembershipFilter
@@ -1180,11 +1180,11 @@ data WebhookMembershipFilter = WebhookMembershipFilter
     } deriving (Eq, Show)
 
 -- | Create webhook API accepts 'WebhookMembershipFilter' and uses path "webhooks".
-instance SparkApiPath WebhookMembershipFilter where
+instance WebexTeamsApiPath WebhookMembershipFilter where
     apiPath _ = webhooksPath
 
 -- | List team memberships API accepts 'WebhookMembershipFilter' and responses 'Webhook'.
-instance SparkResponse WebhookMembershipFilter where
+instance WebexTeamsResponse WebhookMembershipFilter where
     type ToResponse WebhookMembershipFilter = Webhook
 
 -- | User can filter Webhook events from membership.
@@ -1207,11 +1207,11 @@ data WebhookMessageFilter = WebhookMessageFilter
      } deriving (Eq, Show)
 
 -- | Create webhook API accepts 'WebhookMessageFilter' and uses path "webhooks".
-instance SparkApiPath WebhookMessageFilter where
+instance WebexTeamsApiPath WebhookMessageFilter where
     apiPath _ = webhooksPath
 
 -- | List team memberships API accepts 'WebhookMessageFilter' and responses 'Webhook'.
-instance SparkResponse WebhookMessageFilter where
+instance WebexTeamsResponse WebhookMessageFilter where
     type ToResponse WebhookMessageFilter = Webhook
 
 -- | User can filter Webhook events from message.
@@ -1232,11 +1232,11 @@ data WebhookRoomFilter = WebhookRoomFilter
      } deriving (Eq, Show)
 
 -- | Create webhook API accepts 'WebhookRoomFilter' and uses path "webhooks".
-instance SparkApiPath WebhookRoomFilter where
+instance WebexTeamsApiPath WebhookRoomFilter where
     apiPath _ = webhooksPath
 
 -- | List team memberships API accepts 'WebhookRoomFilter' and responses 'Webhook'.
-instance SparkResponse WebhookRoomFilter where
+instance WebexTeamsResponse WebhookRoomFilter where
     type ToResponse WebhookRoomFilter = Webhook
 
 -- | User can filter Webhook events from room.
@@ -1263,7 +1263,7 @@ $(deriveJSON defaultOptions { constructorTagModifier = dropAndLow 19 } ''Webhook
 -- ^ 'WebhookNotifyStatus' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 {-|
-    'Webhook' decodes webhook notification from Spark Cloud except data field.
+    'Webhook' decodes webhook notification from Webex Cloud except data field.
     Data field can be one of 'Membership', 'Message' or 'Room'.  Type of data field is
     shown as value of resource field.
 -}

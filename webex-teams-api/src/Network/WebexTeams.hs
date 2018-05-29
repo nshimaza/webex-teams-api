@@ -366,7 +366,7 @@ makeCommonDetailReq (CiscoSparkRequest base _ _) auth path idStr
     'OrganizationId', 'LicenseId', 'RoleId'.  API is automatically selected by type of the key.
     A JSONException runtime exception will be thrown on an JSON parse errors.
 -}
-getDetail :: (MonadIO m, SparkDetail key)
+getDetail :: (MonadIO m, WebexTeamsDetail key)
     => Authorization        -- ^ Authorization string against Webex Teams API.
     -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
     -> key                  -- ^ One of PersonId, RoomId, MembershipId, MessageId, TeamId, TeamMembershipId,
@@ -375,7 +375,7 @@ getDetail :: (MonadIO m, SparkDetail key)
 getDetail auth base entityId = httpJSON $ makeCommonDetailReq base auth (apiPath entityId) (toIdStr entityId)
 
 -- | Get details of a Webex Teams entity.  A Left value will be returned on an JSON parse errors.
-getDetailEither :: (MonadIO m, SparkDetail key)
+getDetailEither :: (MonadIO m, WebexTeamsDetail key)
     => Authorization
     -> CiscoSparkRequest
     -> key
@@ -398,7 +398,7 @@ makeCommonCreateReq (CiscoSparkRequest base _ _) auth path body
     REST API path is automatically selected by type of createParams.
     A JSONException runtime exception will be thrown on an JSON parse errors.
 -}
-createEntity :: (MonadIO m, SparkCreate createParams)
+createEntity :: (MonadIO m, WebexTeamsCreate createParams)
     => Authorization        -- ^ Authorization string against Webex Teams API.
     -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
     -> createParams         -- ^ One of 'CreatePerson', 'CreateRoom', 'CreateMembership', 'CreateMessage',
@@ -407,7 +407,7 @@ createEntity :: (MonadIO m, SparkCreate createParams)
 createEntity auth base param = httpJSON $ makeCommonCreateReq base auth (apiPath param) param
 
 -- | Create a Spark entity with given parameters.  A Left value will be returned on an JSON parse errors.
-createEntityEither :: (MonadIO m, SparkCreate createParams)
+createEntityEither :: (MonadIO m, WebexTeamsCreate createParams)
     => Authorization
     -> CiscoSparkRequest
     -> createParams
@@ -430,7 +430,7 @@ makeCommonUpdateReq (CiscoSparkRequest base _ _) auth path body
     REST API path is automatically selected by type of updateParams.
     A JSONException runtime exception will be thrown on an JSON parse errors.
 -}
-updateEntity :: (MonadIO m, SparkUpdate updateParams)
+updateEntity :: (MonadIO m, WebexTeamsUpdate updateParams)
     => Authorization        -- ^ Authorization string against Webex Teams API.
     -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
     -> updateParams         -- ^ One of 'UpdatePerson', 'UpdateRoom', 'UpdateMembership',
@@ -439,7 +439,7 @@ updateEntity :: (MonadIO m, SparkUpdate updateParams)
 updateEntity auth base param = httpJSON $ makeCommonUpdateReq base auth (apiPath param) param
 
 -- | Update a Webex Teams entity with given parameters.  A Left value will be returned on an JSON parse errors.
-updateEntityEither :: (MonadIO m, SparkUpdate updateParams)
+updateEntityEither :: (MonadIO m, WebexTeamsUpdate updateParams)
     => Authorization
     -> CiscoSparkRequest
     -> updateParams
@@ -460,7 +460,7 @@ makeCommonDeleteReq auth base path idStr
     $ base
 
 -- | Polymorphic version of delete.  Intentionally not exposed to outside of the module.
-deleteEntity :: (MonadIO m, SparkDetail key)
+deleteEntity :: (MonadIO m, WebexTeamsDetail key)
     => Authorization        -- ^ Authorization string against Webex Teams API.
     -> CiscoSparkRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
     -> key                  -- ^ One of PersonId, RoomId, MembershipId, MessageId, TeamId, TeamMembershipId.
