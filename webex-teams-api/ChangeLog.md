@@ -1,6 +1,10 @@
 ## Webex-teams-api 0.2.0.0
 
 * First release of webex-teams-api.
+* Module name was changed but most of functions remain same.
+* Some key type classes with type families changed.
+* Streaming API is moved to separate packages.
+* Old streaming API is still available but deprecated.
 
 ## Cisco-spark-api 0.1.0.4
 
