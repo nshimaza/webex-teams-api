@@ -74,8 +74,8 @@ module Network.WebexTeams
     (
     -- * Types
     -- ** Class and Type Families
-      SparkFilter
-    , SparkListItem
+      WebexTeamsFilter
+    , WebexTeamsListItem
     , ToResponse
     -- ** Common Types
     , Authorization (..)
@@ -255,14 +255,14 @@ makeCommonListReq base@WebexTeamsRequest { webexTeamsRequestRequest = req } path
     It accesses List API with given 'Request', unwrap result into list of items, stream them to Conduit pipe
     and finally it automatically accesses next page designated via HTTP Link header if available.
 -}
-streamList :: (MonadIO m, SparkListItem i) => Authorization -> WebexTeamsRequest -> ConduitT () i m ()
+streamList :: (MonadIO m, WebexTeamsListItem i) => Authorization -> WebexTeamsRequest -> ConduitT () i m ()
 streamList auth (WebexTeamsRequest req scheme uriAuth) = do
     res <- httpJSON $ addAuthorizationHeader auth req
     yieldMany . unwrap $ getResponseBody res
     streamListLoop auth res scheme uriAuth
 
 -- | Processing pagination by HTTP Link header.
-streamListLoop :: (MonadIO m, FromJSON a, SparkListItem i) => Authorization -> Response a -> String -> URIAuth -> ConduitT () i m ()
+streamListLoop :: (MonadIO m, FromJSON a, WebexTeamsListItem i) => Authorization -> Response a -> String -> URIAuth -> ConduitT () i m ()
 streamListLoop auth res scheme uriAuth
     = case getNextUrl res >>= validateUrl scheme uriAuth >>= (\url -> parseRequest $ "GET " <> C8.unpack url) of
     Nothing         -> pure ()
@@ -273,7 +273,7 @@ streamListLoop auth res scheme uriAuth
 
 -- | Get list of entities with query parameter and stream it into Conduit pipe.  It automatically performs pagination.
 {-# DEPRECATED streamEntityWithFilter "Use getListWithFilter or streamListWithFilter of webex-teams-conduit" #-}
-streamEntityWithFilter :: (MonadIO m, SparkFilter filter, SparkListItem (ToResponse filter))
+streamEntityWithFilter :: (MonadIO m, WebexTeamsFilter filter, WebexTeamsListItem (ToResponse filter))
     => Authorization
     -> WebexTeamsRequest
     -> filter
@@ -308,10 +308,10 @@ type ListReader a = IO [a]
     Next call of ListReader causes another List API access for the next page.
     ListReader returns [] when there is no more page.
 -}
-getList :: (MonadIO m, SparkListItem i) => Authorization -> WebexTeamsRequest -> m (ListReader i)
+getList :: (MonadIO m, WebexTeamsListItem i) => Authorization -> WebexTeamsRequest -> m (ListReader i)
 getList auth wxReq = liftIO $ listReader <$> newIORef (Just wxReq)
   where
-    listReader :: SparkListItem i => IORef (Maybe WebexTeamsRequest) -> ListReader i
+    listReader :: WebexTeamsListItem i => IORef (Maybe WebexTeamsRequest) -> ListReader i
     listReader wxReqRef = do
         maybeReq <- readIORef wxReqRef
         case maybeReq of
@@ -327,7 +327,7 @@ getList auth wxReq = liftIO $ listReader <$> newIORef (Just wxReq)
                 pure . unwrap $ getResponseBody res
 
 -- | Get list with query parameter.
-getListWithFilter :: (MonadIO m, SparkFilter filter, SparkListItem (ToResponse filter))
+getListWithFilter :: (MonadIO m, WebexTeamsFilter filter, WebexTeamsListItem (ToResponse filter))
     => Authorization
     -> WebexTeamsRequest
     -> filter

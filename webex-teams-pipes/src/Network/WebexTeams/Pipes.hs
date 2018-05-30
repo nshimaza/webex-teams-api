@@ -44,7 +44,7 @@ readerToProducer reader = go
             go
 
 -- | Get list of entities with query parameter and stream it into Pipes.  It automatically performs pagination.
-streamListWithFilter :: (MonadIO m, SparkFilter filter, SparkListItem (ToResponse filter))
+streamListWithFilter :: (MonadIO m, WebexTeamsFilter filter, WebexTeamsListItem (ToResponse filter))
     => Authorization        -- ^ Authorization string against Webex Teams API.
     -> WebexTeamsRequest    -- ^ Predefined part of 'Request' commonly used for Webex Teams API.
     -> filter               -- ^ Filter criteria of the request.  Type of filter automatically determines

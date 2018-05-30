@@ -99,17 +99,17 @@ webhooksPath = "webhooks"
 
 
 {-|
-    SparkListItem is a type class grouping types with following common usage.
+    WebexTeamsListItem is a type class grouping types with following common usage.
 
     * It is used for return value of get-detail APIs.
     * It is used for element of return value of list APIs.
 
-    SparkListItem also associates the above type to wrapping list type (e.g. associates 'Person' to 'PersonList').
+    WebexTeamsListItem also associates the above type to wrapping list type (e.g. associates 'Person' to 'PersonList').
     Wrapping type (PersonList in this case) is necessary for parsing JSON from REST API but what we are
     interested in is bare list such like [Person].  Type family association defined in this class
     is used for type translation from type of items to type of wrapper.
 -}
-class FromJSON (ToList i) => SparkListItem i where
+class FromJSON (ToList i) => WebexTeamsListItem i where
     -- | Associate item type to wrapping list type.
     type ToList i :: *
     -- | Get bare list from wrapped type which can be parsed directly from JSON.
@@ -128,7 +128,7 @@ class (WebexTeamsApiPath a, WebexTeamsResponse a) => WebexTeamsDetail a where
     toIdStr :: a -> Text
 
 -- | Convert given filter condition parameter in a concrete type to HTTP query strings.
-class (WebexTeamsApiPath a, WebexTeamsResponse a) => SparkFilter a where
+class (WebexTeamsApiPath a, WebexTeamsResponse a) => WebexTeamsFilter a where
     toFilterList :: a -> [(ByteString, Maybe ByteString)]
 
 -- | Type class for parameter type for create entity API.
@@ -277,7 +277,7 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 10, omitNothingFie
 -- ^ 'PersonList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | 'PersonList' wraps 'Person'.
-instance SparkListItem Person where
+instance WebexTeamsListItem Person where
     type ToList Person = PersonList
     unwrap = personListItems
 
@@ -297,7 +297,7 @@ instance WebexTeamsResponse PersonFilter where
     type ToResponse PersonFilter = Person
 
 -- | User can list people with filter parameter.
-instance SparkFilter PersonFilter where
+instance WebexTeamsFilter PersonFilter where
     toFilterList filter = catMaybes
         [ (\(Email e) -> ("email", Just $ encodeUtf8 e)) <$> personFilterEmail filter
         , (\(DisplayName n) -> ("displayName", Just (encodeUtf8 n))) <$> personFilterDisplayName filter
@@ -395,7 +395,7 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 8, omitNothingFiel
 -- ^ 'TeamList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | 'TeamList' wraps 'Team'
-instance SparkListItem Team where
+instance WebexTeamsListItem Team where
     type ToList Team = TeamList
     unwrap = teamListItems
 
@@ -474,7 +474,7 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 18, omitNothingFie
 -- ^ 'TeamMembershipList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | 'TeamMembershipList' wraps 'TeamMembership'
-instance SparkListItem TeamMembership where
+instance WebexTeamsListItem TeamMembership where
     type ToList TeamMembership = TeamMembershipList
     unwrap = teamMembershipListItems
 
@@ -492,7 +492,7 @@ instance WebexTeamsResponse TeamMembershipFilter where
     type ToResponse TeamMembershipFilter = TeamMembership
 
 -- | User can list team membership with filter parameter.
-instance SparkFilter TeamMembershipFilter where
+instance WebexTeamsFilter TeamMembershipFilter where
     toFilterList filter = let (TeamId t) = teamMembershipFilterTeamId filter in [("teamId", Just $ encodeUtf8 t)]
 
 {-|
@@ -601,7 +601,7 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 8, omitNothingFiel
 -- ^ 'RoomList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | 'RoomList' wraps 'Room'
-instance SparkListItem Room where
+instance WebexTeamsListItem Room where
     type ToList Room = RoomList
     unwrap = roomListItems
 
@@ -635,7 +635,7 @@ instance WebexTeamsResponse RoomFilter where
     type ToResponse RoomFilter = Room
 
 -- | User can list rooms with filter parameter.
-instance SparkFilter RoomFilter where
+instance WebexTeamsFilter RoomFilter where
     toFilterList filter = catMaybes
         [ (\(TeamId e) -> ("teamId", Just $ encodeUtf8 e)) <$> roomFilterTeamId filter
         , (\t -> ("type", Just $ roomTypeToFilterString t)) <$> roomFilterRoomType filter
@@ -722,7 +722,7 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 14, omitNothingFie
 -- ^ 'MembershipList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | 'MembershipList' wraps 'Membership'
-instance SparkListItem Membership where
+instance WebexTeamsListItem Membership where
     type ToList Membership = MembershipList
     unwrap = membershipListItems
 
@@ -742,7 +742,7 @@ instance WebexTeamsResponse MembershipFilter where
     type ToResponse MembershipFilter = Membership
 
 -- | User can list memberships with filter parameter.
-instance SparkFilter MembershipFilter where
+instance WebexTeamsFilter MembershipFilter where
     toFilterList filter = catMaybes
         [ (\(RoomId r) -> ("roomId", Just $ encodeUtf8 r)) <$> membershipFilterRoomId filter
         , (\(PersonId p) -> ("personId", Just $ encodeUtf8 p)) <$> membershipFilterPersonId filter
@@ -841,7 +841,7 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 11, omitNothingFie
 -- ^ 'MessageList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | 'MessageList' wraps 'Message'
-instance SparkListItem Message where
+instance WebexTeamsListItem Message where
     type ToList Message = MessageList
     unwrap = messageListItems
 
@@ -877,7 +877,7 @@ instance WebexTeamsResponse MessageFilter where
     type ToResponse MessageFilter = Message
 
 -- | User can list messages with filter parameter.
-instance SparkFilter MessageFilter where
+instance WebexTeamsFilter MessageFilter where
     toFilterList filter = ("roomId", Just $ encodeUtf8 rid) : catMaybes
         [ (\p -> ("mentionedPeople", Just $ mentionedPeopleToFilterString p)) <$> messageFilterMentionedPeople filter
         , (\(Timestamp t) -> ("before", Just $ encodeUtf8 t)) <$> messageFilterBefore filter
@@ -948,7 +948,7 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 16, omitNothingFie
 -- ^ 'OrganizationList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | 'OrganizationList' wraps 'Organization'
-instance SparkListItem Organization where
+instance WebexTeamsListItem Organization where
     type ToList Organization = OrganizationList
     unwrap = organizationListItems
 
@@ -992,7 +992,7 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 11, omitNothingFie
 -- ^ 'LicenseList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | 'LicenseList' wraps 'License'
-instance SparkListItem License where
+instance WebexTeamsListItem License where
     type ToList License = LicenseList
     unwrap = licenseListItems
 
@@ -1010,7 +1010,7 @@ instance WebexTeamsResponse LicenseFilter where
     type ToResponse LicenseFilter = License
 
 -- | User can list licenses with filter parameter.
-instance SparkFilter LicenseFilter where
+instance WebexTeamsFilter LicenseFilter where
     toFilterList filter = maybeToList $ (\(OrganizationId o) -> ("orgId", Just $ encodeUtf8 o)) <$> licenseFilterOrgId filter
 
 
@@ -1049,7 +1049,7 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 8, omitNothingFiel
 -- ^ 'RoleList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | 'RoleList' wraps 'Role'
-instance SparkListItem Role where
+instance WebexTeamsListItem Role where
     type ToList Role = RoleList
     unwrap = roleListItems
 
@@ -1123,7 +1123,7 @@ $(deriveJSON defaultOptions { fieldLabelModifier = dropAndLow 11, omitNothingFie
 -- ^ 'WebhookList' derives ToJSON and FromJSON via deriveJSON template haskell function.
 
 -- | 'WebhookList' wraps 'Webhook'
-instance SparkListItem Webhook where
+instance WebexTeamsListItem Webhook where
     type ToList Webhook = WebhookList
     unwrap = webhookListItems
 
@@ -1188,7 +1188,7 @@ instance WebexTeamsResponse WebhookMembershipFilter where
     type ToResponse WebhookMembershipFilter = Webhook
 
 -- | User can filter Webhook events from membership.
-instance SparkFilter WebhookMembershipFilter where
+instance WebexTeamsFilter WebhookMembershipFilter where
     toFilterList filter = catMaybes
         [ (\(RoomId r) -> ("roomId", Just $ encodeUtf8 r)) <$> webhookFilterMembershipRoomId filter
         , (\(PersonId p) -> ("personId", Just (encodeUtf8 p))) <$> webhookFilterMembershipPersonId filter
@@ -1215,7 +1215,7 @@ instance WebexTeamsResponse WebhookMessageFilter where
     type ToResponse WebhookMessageFilter = Webhook
 
 -- | User can filter Webhook events from message.
-instance SparkFilter WebhookMessageFilter where
+instance WebexTeamsFilter WebhookMessageFilter where
     toFilterList filter = catMaybes
         [ (\(RoomId r) -> ("roomId", Just $ encodeUtf8 r)) <$> webhookFilterMessageRoomId filter
         , (\t -> ("roomType", Just $ roomTypeToFilterString t)) <$> webhookFilterMessageRoomType filter
@@ -1240,7 +1240,7 @@ instance WebexTeamsResponse WebhookRoomFilter where
     type ToResponse WebhookRoomFilter = Webhook
 
 -- | User can filter Webhook events from room.
-instance SparkFilter WebhookRoomFilter where
+instance WebexTeamsFilter WebhookRoomFilter where
     toFilterList filter = catMaybes
         [ (\t -> ("type", Just $ roomTypeToFilterString t)) <$> webhookFilterRoomType filter
         , (\b -> ("isLocked", Just (if b then "true" else "false"))) <$> webhookFilterRoomIsLocked filter
