@@ -3,7 +3,7 @@
 
 {-|
 Module      : Network.WebexTeams
-Copyright   : (c) Naoto Shimazaki 2017
+Copyright   : (c) Naoto Shimazaki 2017,2018
 License     : MIT (see the file LICENSE)
 
 Maintainer  : https://github.com/nshimaza
