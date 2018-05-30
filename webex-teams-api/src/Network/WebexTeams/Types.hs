@@ -121,6 +121,7 @@ class WebexTeamsApiPath a where
 
 -- | Type family to associate a type appears in an argument to response type.
 class FromJSON (ToResponse a) => WebexTeamsResponse a where
+    -- | Associate response type to input parameter type such as filter criteria, entity key or create / update parameters.
     type ToResponse a :: *
 
 -- | Extract containing entity ID string from given type of value.

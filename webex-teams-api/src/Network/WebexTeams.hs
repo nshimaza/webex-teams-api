@@ -44,6 +44,13 @@ Haskell functions for those APIs automatically request subsequent pages as neede
     deleteRoom auth def roomId >>= print . getResponseBody
 @
 
+= List and steaming
+
+The 'WebexTeams' module doesn't provide streaming API for REST response returning list of entities.
+It is because the author of the package wants to keep it streaming library agnostic.  Instead, it provides
+'ListReader' IO action to read list responses with automatic pagenation.  Streaming APIs can be found in
+separate packages like webex-teams-pipes or webex-teams-conduit.
+
 = Support for Lens
 
 This package provides many of records representing objects communicated via Webex Teams REST API.
@@ -167,15 +174,15 @@ module Network.WebexTeams
     , getDetail
     , getDetailEither
     -- ** Streaming response of List API with auto pagenation
-    , streamEntityWithFilter
-    , streamTeamList
-    , streamOrganizationList
-    , streamRoleList
     , ListReader
     , getListWithFilter
     , getTeamList
     , getOrganizationList
     , getRoleList
+    , streamEntityWithFilter
+    , streamTeamList
+    , streamOrganizationList
+    , streamRoleList
     -- ** Creating an entity
     , createEntity
     , createEntityEither
@@ -299,6 +306,27 @@ streamOrganizationList auth base = streamList auth $ makeCommonListReq base orga
 streamRoleList :: MonadIO m => Authorization -> WebexTeamsRequest -> ConduitT () Role m ()
 streamRoleList auth base = streamList auth $ makeCommonListReq base rolesPath
 
+{-|
+    'ListReader' is IO action returned by functions for list API ('getListWithFilter', 'getTeamList' etc).
+    It is containing URL inside to be accessed.  When you call the IO action, it accesses to Webex Teams REST API,
+    parse next page URL if available, then return new IO action.  The new IO action contains list of responded items and
+    new URL for next page so you can call the new IO action to get the next page.
+
+    Following example demonstrates how you can get all items into single list.
+
+@
+    readAllList :: ListReader i -> IO [i]
+    readAllList reader = go []
+      where
+        go xs = reader >>= \chunk -> case chunk of
+            [] -> pure xs
+            ys -> go (xs <> ys)
+@
+
+    Note that this example is only for explaining how 'ListReader' works.  Practically you should not do the above
+    because it eagerly creates entire list.  You should use streaming APIs instead.  Streaming APIs are available via
+    webex-teams-conduit and webex-teams-pipes package.
+-}
 type ListReader a = IO [a]
 
 {-|
