@@ -1,4 +1,4 @@
-## Cisco-spark-api 0.1.0.3
+## Cisco-spark-api 0.1.0.4
 
 * Deprecated in favor of webex-teams-api.
 
