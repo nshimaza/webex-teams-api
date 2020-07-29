@@ -1,5 +1,0 @@
-resolver: lts-15.0
-packages:
-- webex-teams-api
-- webex-teams-conduit
-- webex-teams-pipes

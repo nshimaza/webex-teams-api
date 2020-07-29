@@ -1,7 +1,7 @@
 # webex-teams-api
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
-[![Build Status](https://travis-ci.org/nshimaza/webex-teams-api.svg?branch=master)](https://travis-ci.org/nshimaza/webex-teams-api)
+[![Build Status](https://github.com/nshimaza/webex-teams-api/workflows/build/badge.svg)](https://github.com/nshimaza/webex-teams-api/actions?query=workflow%3Abuild)
 [![Hackage](https://img.shields.io/hackage/v/webex-teams-api.svg?style=flat)](https://hackage.haskell.org/package/webex-teams-api)
 [![Stackage Nightly](http://stackage.org/package/webex-teams-api/badge/nightly)](http://stackage.org/nightly/package/webex-teams-api)
 [![Stackage LTS](http://stackage.org/package/webex-teams-api/badge/lts)](http://stackage.org/lts/package/webex-teams-api)
